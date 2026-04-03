@@ -502,7 +502,7 @@ class Utilisateur
     {
         if (!$this->emailsEmployee->contains($emailsEmployee)) {
             $this->emailsEmployee->add($emailsEmployee);
-            $emailsEmployee->setUtilisateur($this);
+            $emailsEmployee->setUtilisateurReceiver($this);
         }
 
         return $this;
@@ -512,8 +512,8 @@ class Utilisateur
     {
         if ($this->emailsEmployee->removeElement($emailsEmployee)) {
             // set the owning side to null (unless already changed)
-            if ($emailsEmployee->getUtilisateur() === $this) {
-                $emailsEmployee->setUtilisateur(null);
+            if ($emailsEmployee->getUtilisateurReceiver() === $this) {
+                $emailsEmployee->setUtilisateurReceiver(null);
             }
         }
 
@@ -524,7 +524,7 @@ class Utilisateur
     {
         if (!$this->emailsCandidat->contains($emailsCandidat)) {
             $this->emailsCandidat->add($emailsCandidat);
-            $emailsCandidat->setUtilisateur($this);
+            $emailsCandidat->setUtilisateurSender($this);
         }
 
         return $this;
@@ -534,8 +534,8 @@ class Utilisateur
     {
         if ($this->emailsCandidat->removeElement($emailsCandidat)) {
             // set the owning side to null (unless already changed)
-            if ($emailsCandidat->getUtilisateur() === $this) {
-                $emailsCandidat->setUtilisateur(null);
+            if ($emailsCandidat->getUtilisateurSender() === $this) {
+                $emailsCandidat->setUtilisateurSender(null);
             }
         }
 
