@@ -520,7 +520,7 @@ class Ordre
     {
         if (!$this->demandeCongesDebut->contains($demandeCongesDebut)) {
             $this->demandeCongesDebut->add($demandeCongesDebut);
-            $demandeCongesDebut->setOrdre($this);
+            $demandeCongesDebut->setOrdreDebut($this);
         }
 
         return $this;
@@ -530,8 +530,8 @@ class Ordre
     {
         if ($this->demandeCongesDebut->removeElement($demandeCongesDebut)) {
             // set the owning side to null (unless already changed)
-            if ($demandeCongesDebut->getOrdre() === $this) {
-                $demandeCongesDebut->setOrdre(null);
+            if ($demandeCongesDebut->getOrdreDebut() === $this) {
+                $demandeCongesDebut->setOrdreDebut(null);
             }
         }
 
@@ -542,7 +542,7 @@ class Ordre
     {
         if (!$this->demandeCongesFin->contains($demandeCongesFin)) {
             $this->demandeCongesFin->add($demandeCongesFin);
-            $demandeCongesFin->setOrdre($this);
+            $demandeCongesFin->setOrdreFin($this);
         }
 
         return $this;
@@ -552,8 +552,8 @@ class Ordre
     {
         if ($this->demandeCongesFin->removeElement($demandeCongesFin)) {
             // set the owning side to null (unless already changed)
-            if ($demandeCongesFin->getOrdre() === $this) {
-                $demandeCongesFin->setOrdre(null);
+            if ($demandeCongesFin->getOrdreFin() === $this) {
+                $demandeCongesFin->setOrdreFin(null);
             }
         }
 
@@ -564,7 +564,7 @@ class Ordre
     {
         if (!$this->evenementsDebut->contains($evenementsDebut)) {
             $this->evenementsDebut->add($evenementsDebut);
-            $evenementsDebut->setOrdre($this);
+            $evenementsDebut->setOrdreDebut($this);
         }
 
         return $this;
@@ -574,8 +574,8 @@ class Ordre
     {
         if ($this->evenementsDebut->removeElement($evenementsDebut)) {
             // set the owning side to null (unless already changed)
-            if ($evenementsDebut->getOrdre() === $this) {
-                $evenementsDebut->setOrdre(null);
+            if ($evenementsDebut->getOrdreDebut() === $this) {
+                $evenementsDebut->setOrdreDebut(null);
             }
         }
 
@@ -586,7 +586,7 @@ class Ordre
     {
         if (!$this->evenementsFin->contains($evenementsFin)) {
             $this->evenementsFin->add($evenementsFin);
-            $evenementsFin->setOrdre($this);
+            $evenementsFin->setOrdreFin($this);
         }
 
         return $this;
@@ -596,8 +596,8 @@ class Ordre
     {
         if ($this->evenementsFin->removeElement($evenementsFin)) {
             // set the owning side to null (unless already changed)
-            if ($evenementsFin->getOrdre() === $this) {
-                $evenementsFin->setOrdre(null);
+            if ($evenementsFin->getOrdreFin() === $this) {
+                $evenementsFin->setOrdreFin(null);
             }
         }
 
@@ -608,7 +608,7 @@ class Ordre
     {
         if (!$this->evenementsCreation->contains($evenementsCreation)) {
             $this->evenementsCreation->add($evenementsCreation);
-            $evenementsCreation->setOrdre($this);
+            $evenementsCreation->setOrdreCreation($this);
         }
 
         return $this;
@@ -618,8 +618,8 @@ class Ordre
     {
         if ($this->evenementsCreation->removeElement($evenementsCreation)) {
             // set the owning side to null (unless already changed)
-            if ($evenementsCreation->getOrdre() === $this) {
-                $evenementsCreation->setOrdre(null);
+            if ($evenementsCreation->getOrdreCreation() === $this) {
+                $evenementsCreation->setOrdreCreation(null);
             }
         }
 
@@ -630,7 +630,7 @@ class Ordre
     {
         if (!$this->offresCreation->contains($offresCreation)) {
             $this->offresCreation->add($offresCreation);
-            $offresCreation->setOrdre($this);
+            $offresCreation->setOrdreCreation($this);
         }
 
         return $this;
@@ -640,8 +640,8 @@ class Ordre
     {
         if ($this->offresCreation->removeElement($offresCreation)) {
             // set the owning side to null (unless already changed)
-            if ($offresCreation->getOrdre() === $this) {
-                $offresCreation->setOrdre(null);
+            if ($offresCreation->getOrdreCreation() === $this) {
+                $offresCreation->setOrdreCreation(null);
             }
         }
 
@@ -652,7 +652,7 @@ class Ordre
     {
         if (!$this->offresExpiration->contains($offresExpiration)) {
             $this->offresExpiration->add($offresExpiration);
-            $offresExpiration->setOrdre($this);
+            $offresExpiration->setOrdreExpiration($this);
         }
 
         return $this;
@@ -662,8 +662,8 @@ class Ordre
     {
         if ($this->offresExpiration->removeElement($offresExpiration)) {
             // set the owning side to null (unless already changed)
-            if ($offresExpiration->getOrdre() === $this) {
-                $offresExpiration->setOrdre(null);
+            if ($offresExpiration->getOrdreExpiration() === $this) {
+                $offresExpiration->setOrdreExpiration(null);
             }
         }
 
