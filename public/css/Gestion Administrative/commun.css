@@ -21,6 +21,7 @@
     color: var(--text-main);
 }
 
+
 /* KPI */
 .kpi-grid {
     display: grid;
@@ -203,3 +204,15 @@ tbody tr:hover {
     background: var(--bg-hover);
 }
 
+.checkbox-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.checkbox-control input {
+    accent-color: var(--primary);
+    cursor: pointer;
+}

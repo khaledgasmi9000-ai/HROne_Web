@@ -1,4 +1,4 @@
-{% extends 'employee/layout.html.twig' %}
+{% extends 'Gestion Administrative/layout.html.twig' %}
 
 {% set activeTab = 'overview' %}
 
@@ -121,7 +121,7 @@
                         <td>{{ employee.heures|default('160') }}</td>
 
                        <td class="actions-cell">
-                            {% include 'employee/components/row_actions.html.twig' with {
+                            {% include 'Gestion Administrative/components/row_actions.html.twig' with {
                                 employeeId: loop.index,
                                 actions: [
                                     {
@@ -143,7 +143,7 @@
         </table>
     </div>
 
-    {% include 'employee/components/pagination.html.twig' with {
+    {% include 'Gestion Administrative/components/pagination.html.twig' with {
         currentPage: currentPage,
         totalPages: totalPages,
         rowsPerPage: rowsPerPage,
