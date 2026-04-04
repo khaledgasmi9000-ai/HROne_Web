@@ -1,12 +1,62 @@
 {% extends 'Gestion Administrative/layout.html.twig' %}
-
 {% set activeTab = 'conges' %}
 
 {% block title %}Gestion des congés{% endblock %}
 
 {% block employee_content %}
+
 <div class="table-section">
-    <h2>Gestion des congés</h2>
-    <p>Contenu à implémenter...</p>
+
+    <div class="table-container fixed">
+        <table>
+            <thead>
+                <tr>
+                    <th style="display:none;">ID</th>
+                    <th>Employé</th>
+                    <th>Date début</th>
+                    <th>Date fin</th>
+                    <th>Nombre de jours</th>
+                    <th></th> {# Actions #}
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for conge in conges %}
+                    <tr data-id="{{ conge.id }}">
+                        <td style="display:none;">{{ conge.id }}</td>
+
+                        <td>{{ conge.name }}</td>
+                        <td>{{ conge.start }}</td>
+                        <td>{{ conge.end }}</td>
+                        <td>{{ conge.days }}</td>
+
+                        <td class="actions-cell conge-actions">
+                            <button class="btn success btn-sm" data-action="accept" data-id="{{ conge.id }}">
+                                ✔ Accepter
+                            </button>
+
+                            <button class="btn danger btn-sm" data-action="reject" data-id="{{ conge.id }}">
+                                ✖ Refuser
+                            </button>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6">Aucune demande de congé</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% include 'Gestion Administrative/components/pagination.html.twig' with {
+        currentPage: currentPage,
+        totalPages: totalPages,
+        rowsPerPage: rowsPerPage,
+        totalEmployees: totalConges,
+        currentCount: conges|length
+    } %}
+
 </div>
+
 {% endblock %}
