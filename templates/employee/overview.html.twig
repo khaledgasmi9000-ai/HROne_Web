@@ -1,0 +1,157 @@
+{% extends 'employee/layout.html.twig' %}
+
+{% set activeTab = 'overview' %}
+
+{% block title %}Employee Overview{% endblock %}
+
+{% block employee_content %}
+
+<!-- KPI -->
+<div class="kpi-grid compact">
+
+    <div class="kpi-card">
+        <span class="kpi-title">Total Employees</span>
+        <div class="kpi-row">
+            <h3 class="kpi-value">{{ kpi.totalEmployees|default('1,250') }}</h3>
+            <span class="kpi-change positive">+12%</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <span class="kpi-title">New Hires</span>
+        <div class="kpi-row">
+            <h3 class="kpi-value">{{ kpi.newHires|default('45') }}</h3>
+            <span class="kpi-change positive">+8%</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <span class="kpi-title">Departures</span>
+        <div class="kpi-row">
+            <h3 class="kpi-value">{{ kpi.departures|default('12') }}</h3>
+            <span class="kpi-change negative">-3%</span>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <span class="kpi-title">Contracts</span>
+        <div class="kpi-row">
+            <h3 class="kpi-value">{{ kpi.contracts|default('980') }}</h3>
+            <span class="kpi-change positive">+5%</span>
+        </div>
+    </div>
+
+</div>
+
+<!-- Table Section -->
+<div class="table-section">
+
+    <div class="table-header">
+
+        <!-- LEFT -->
+        <div class="table-controls-left">
+
+            <!-- Work hours filter -->
+            <select class="filter-select">
+                <option value="">Heures / mois ≥</option>
+                <option value="80">≥ 80h</option>
+                <option value="120">≥ 120h</option>
+                <option value="160">≥ 160h</option>
+            </select>
+
+            <!-- Salary filter -->
+            <select class="filter-select">
+                <option value="">Salaire ≥</option>
+                <option value="1000">≥ 1000</option>
+                <option value="2000">≥ 2000</option>
+                <option value="3000">≥ 3000</option>
+            </select>
+
+            <!-- Search -->
+            <div class="search-box">
+                <input type="text" placeholder="Rechercher un employé..." />
+            </div>
+
+        </div>
+
+        <!-- RIGHT -->
+        <div class="table-controls-right">
+
+            <button class="btn secondary with-icon">
+                <span class="icon">⬇</span>
+                Export
+            </button>
+
+            <button class="btn primary with-icon">
+                <span class="icon">＋</span>
+                Ajouter nouvel employé
+            </button>
+
+        </div>
+
+    </div>
+
+    <div class="table-container fixed">
+        <table>
+            <thead>
+                <tr>
+                    <th style="display:none;">ID</th>
+                    <th>Nom</th>
+                    <th>Email</th>
+                    <th>Solde Congé</th>
+                    <th>Solde Restant</th>
+                    <th>Salaire</th>
+                    <th>Heures / mois</th>
+                    <th></th> {# Operations column #}
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for employee in employees %}
+                    <tr data-id="{{ employee.id|default(0) }}">
+
+                        <!-- Hidden ID -->
+                        <td style="display:none;">{{ employee.id|default(0) }}</td>
+
+                        <td>{{ employee.name }}</td>
+                        <td>{{ employee.email|default('email@domain.com') }}</td>
+                        <td>{{ employee.soldeConge|default('20') }}</td>
+                        <td>{{ employee.soldeRestant|default('12') }}</td>
+                        <td>{{ employee.salaire|default('2500') }}</td>
+                        <td>{{ employee.heures|default('160') }}</td>
+
+                       <td class="actions-cell">
+                            {% include 'employee/components/row_actions.html.twig' with {
+                                employeeId: loop.index,
+                                actions: [
+                                    {
+                                        name: 'tools',
+                                        label: 'Gérer outils',
+                                        icon: '🧰'
+                                    }
+                                ]
+                            } %}
+                        </td>
+
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8">Aucun employé trouvé</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% include 'employee/components/pagination.html.twig' with {
+        currentPage: currentPage,
+        totalPages: totalPages,
+        rowsPerPage: rowsPerPage,
+        totalEmployees: totalEmployees,
+        currentCount: employees|length
+    } %}
+
+</div>
+
+
+{% endblock %}

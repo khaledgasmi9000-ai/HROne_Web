@@ -1,0 +1,45 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ asset('css/employee.css') }}">
+<link rel="stylesheet" href="{{ asset('css/layout.css') }}">
+<link rel="stylesheet" href="{{ asset('css/components/pagination.css') }}">
+<link rel="stylesheet" href="{{ asset('css/components/row_actions.css') }}">
+{% block page_styles %}{% endblock %}
+{% endblock %}
+
+{% block body %}
+
+<div class="employee-dashboard">
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <a class="tab {{ activeTab == 'overview' ? 'active' : '' }}"
+        href="{{ path('employee_overview') }}">
+            Aperçu
+        </a>
+
+        <a class="tab {{ activeTab == 'outils' ? 'active' : '' }}"
+        href="{{ path('employee_outils') }}">
+            Outils
+        </a>
+
+        <a class="tab {{ activeTab == 'conges' ? 'active' : '' }}"
+        href="{{ path('employee_conges') }}">
+            Gestion des congés
+        </a>
+    </div>
+
+    <!-- Page content injected here -->
+    {% block employee_content %}{% endblock %}
+
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+<script src="{{ asset('js/employee.js') }}"></script>
+<script src="{{ asset('js/components/pagination.js') }}"></script>
+<script src="{{ asset('js/components/row_actions.js') }}"></script>
+{% block page_scripts %}{% endblock %}
+{% endblock %}

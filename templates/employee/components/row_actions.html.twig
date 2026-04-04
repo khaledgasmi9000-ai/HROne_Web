@@ -1,0 +1,38 @@
+{% set actions = actions|default([]) %}
+
+<div class="row-actions"
+     data-id="{{ employeeId|default(0) }}">
+
+    <button class="action-btn" title="Actions">
+        ⚙
+    </button>
+
+    <div class="dropdown-menu">
+
+        {# Default actions #}
+        <button class="dropdown-item" data-action="edit">
+            ✏ Modifier
+        </button>
+
+        <button class="dropdown-item danger" data-action="delete">
+            🗑 Supprimer
+        </button>
+
+        <button class="dropdown-item" data-action="view">
+            👁 Voir détails
+        </button>
+
+        {# Custom actions #}
+        {% for action in actions %}
+            <button class="dropdown-item {{ action.class|default('') }}"
+                    data-action="{{ action.name }}"
+                    {% if action.url is defined %}
+                        data-url="{{ action.url }}"
+                    {% endif %}>
+                {{ action.icon|default('•') }} {{ action.label }}
+            </button>
+        {% endfor %}
+
+    </div>
+
+</div>
