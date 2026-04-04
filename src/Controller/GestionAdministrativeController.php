@@ -112,10 +112,54 @@ class GestionAdministrativeController extends AbstractController
     }
 
     #[Route('/Gestion_Administrative/conges', name: 'employee_conges')]
-    public function conges(): Response
+    public function conges(Request $request): Response
     {
+        $allConges = [
+            ['id' => 1, 'name' => 'John Doe', 'start' => '2024-01-10', 'end' => '2024-01-15', 'days' => 5],
+            ['id' => 2, 'name' => 'Jane Smith', 'start' => '2024-02-01', 'end' => '2024-02-03', 'days' => 2],
+            ['id' => 3, 'name' => 'Alice Brown', 'start' => '2024-03-05', 'end' => '2024-03-10', 'days' => 5],
+            ['id' => 4, 'name' => 'Bob White', 'start' => '2024-04-12', 'end' => '2024-04-14', 'days' => 2],
+            ['id' => 5, 'name' => 'Emma Green', 'start' => '2024-05-01', 'end' => '2024-05-07', 'days' => 6],
+            ['id' => 6, 'name' => 'Tom Black', 'start' => '2024-06-10', 'end' => '2024-06-12', 'days' => 2],
+            ['id' => 7, 'name' => 'Sara Blue', 'start' => '2024-07-15', 'end' => '2024-07-20', 'days' => 5],
+            ['id' => 8, 'name' => 'John Doe', 'start' => '2024-01-10', 'end' => '2024-01-15', 'days' => 5],
+            ['id' => 9, 'name' => 'Jane Smith', 'start' => '2024-02-01', 'end' => '2024-02-03', 'days' => 2],
+            ['id' => 10, 'name' => 'Alice Brown', 'start' => '2024-03-05', 'end' => '2024-03-10', 'days' => 5],
+            ['id' => 11, 'name' => 'Bob White', 'start' => '2024-04-12', 'end' => '2024-04-14', 'days' => 2],
+            ['id' => 12, 'name' => 'Emma Green', 'start' => '2024-05-01', 'end' => '2024-05-07', 'days' => 6],
+            ['id' => 13, 'name' => 'Tom Black', 'start' => '2024-06-10', 'end' => '2024-06-12', 'days' => 2],
+            ['id' => 14, 'name' => 'Sara Blue', 'start' => '2024-07-15', 'end' => '2024-07-20', 'days' => 5],
+            ['id' => 1, 'name' => 'John Doe', 'start' => '2024-01-10', 'end' => '2024-01-15', 'days' => 5],
+            ['id' => 2, 'name' => 'Jane Smith', 'start' => '2024-02-01', 'end' => '2024-02-03', 'days' => 2],
+            ['id' => 3, 'name' => 'Alice Brown', 'start' => '2024-03-05', 'end' => '2024-03-10', 'days' => 5],
+            ['id' => 4, 'name' => 'Bob White', 'start' => '2024-04-12', 'end' => '2024-04-14', 'days' => 2],
+            ['id' => 5, 'name' => 'Emma Green', 'start' => '2024-05-01', 'end' => '2024-05-07', 'days' => 6],
+            ['id' => 6, 'name' => 'Tom Black', 'start' => '2024-06-10', 'end' => '2024-06-12', 'days' => 2],
+            ['id' => 7, 'name' => 'Sara Blue', 'start' => '2024-07-15', 'end' => '2024-07-20', 'days' => 5],
+            ['id' => 8, 'name' => 'John Doe', 'start' => '2024-01-10', 'end' => '2024-01-15', 'days' => 5],
+            ['id' => 9, 'name' => 'Jane Smith', 'start' => '2024-02-01', 'end' => '2024-02-03', 'days' => 2],
+            ['id' => 10, 'name' => 'Alice Brown', 'start' => '2024-03-05', 'end' => '2024-03-10', 'days' => 5],
+            ['id' => 11, 'name' => 'Bob White', 'start' => '2024-04-12', 'end' => '2024-04-14', 'days' => 2],
+            ['id' => 12, 'name' => 'Emma Green', 'start' => '2024-05-01', 'end' => '2024-05-07', 'days' => 6],
+            ['id' => 13, 'name' => 'Tom Black', 'start' => '2024-06-10', 'end' => '2024-06-12', 'days' => 2],
+            ['id' => 14, 'name' => 'Sara Blue', 'start' => '2024-07-15', 'end' => '2024-07-20', 'days' => 5],
+        ];
+
+        $rowsPerPage = 7;
+        $currentPage = max(1, (int)$request->query->get('page', 1));
+
+        $total = count($allConges);
+        $totalPages = (int) ceil($total / $rowsPerPage);
+
+        $offset = ($currentPage - 1) * $rowsPerPage;
+        $conges = array_slice($allConges, $offset, $rowsPerPage);
+
         return $this->render('Gestion Administrative/conges.html.twig',[
-            'totalPages' => 5,
+            'conges' => $conges,
+            'currentPage' => $currentPage,
+            'totalPages' => $totalPages,
+            'rowsPerPage' => $rowsPerPage,
+            'totalConges' => $total,
         ]);
     }
 }
