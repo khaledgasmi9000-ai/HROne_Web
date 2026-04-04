@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ page_title|default('HR One') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/navbarRH/logo.png') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/Topnavbar/topNavbar-shared.css') }}" />
+    {% if page_css is defined and page_css %}
+      <link rel="stylesheet" href="{{ asset('assets/Topnavbar/' ~ page_css) }}" />
+    {% endif %}
+  </head>
+  <body class="{{ page_class|default('') }}" data-page="{{ page_key|default('') }}">
+    <div class="app-shell">
+      <header class="top-navbar">
+        <nav class="top-nav">
+          <button id="btnBackRH" class="nav-link" type="button" data-href="{{ path('rh_users') }}">Retour Espace RH</button>
+          <button id="btnOffres" class="nav-link" type="button" data-page="offres" data-href="{{ path('topnav_offres') }}">Offres d'emploi</button>
+          <button id="btnTraining" class="nav-link" type="button" data-page="formations" data-href="{{ path('topnav_formations') }}">Formations</button>
+          <button id="btnEvents" class="nav-link" type="button" data-page="evenements" data-href="{{ path('topnav_evenements') }}">Evenements</button>
+          <button id="btnParticipation" class="nav-link" type="button" data-page="participations" data-href="{{ path('topnav_participations') }}">Mes participations</button>
+          <button id="btnDemandeConge" class="nav-link" type="button" data-page="demande-conge" data-href="{{ path('topnav_demande_conge') }}">Demande de conge</button>
+          <button id="btnCommunaute" class="nav-link" type="button" data-page="communaute" data-href="{{ path('topnav_communaute') }}">Communaute</button>
+        </nav>
+      </header>
+
+      <main class="page-placeholder">
+        <section class="interface-shell">
+          <h1>{% block content_title %}{% endblock %}</h1>
+          {% block content_body %}{% endblock %}
+        </section>
+      </main>
+    </div>
+
+    <script src="{{ asset('assets/Topnavbar/topNavbar.js') }}"></script>
+  </body>
+</html>

@@ -1,0 +1,132 @@
+{% extends 'Topnavbar/base.html.twig' %}
+
+{% set page_title = 'HR One - Mes candidatures' %}
+{% set page_class = 'page-mes-candidatures' %}
+{% set page_css = 'mes-candidatures.css' %}
+{% set page_key = 'mes-candidatures' %}
+
+{% block content_title %}{% endblock %}
+
+{% block content_body %}
+  <main class="page">
+    <header class="hero">
+      <div class="hero__text">
+        <p class="eyebrow">Tableau de suivi</p>
+        <h1>Mes candidatures</h1>
+        <p class="subtitle">Consulte les offres postulees, mets a jour ta candidature ou supprime-la.</p>
+      </div>
+      <div class="hero__meta">
+        <div class="pill">Total: 4</div>
+        <div class="pill pill--accent">En cours: 2</div>
+      </div>
+    </header>
+
+    <section class="toolbar">
+      <div class="search">
+        <input type="search" placeholder="Rechercher une offre, une entreprise..." aria-label="Rechercher" />
+        <button class="btn btn--ghost" type="button">Filtrer</button>
+      </div>
+      <div class="toolbar__actions">
+        <button id="btnNouvelleCandidature" class="btn" type="button" data-href="{{ path('topnav_offres') }}">Nouvelle candidature</button>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <div class="card__head">
+          <div>
+            <h2>Chef de projet digital</h2>
+            <p class="muted">Studio Meridian - Casablanca</p>
+          </div>
+          <span class="status status--review">En review</span>
+        </div>
+        <div class="card__body">
+          <p class="muted">Postulee le 02 fev 2026 - Ref: MD-204</p>
+          <div class="tags">
+            <span>CDI</span>
+            <span>Hybride</span>
+            <span>Marketing</span>
+          </div>
+        </div>
+        <div class="card__actions">
+          <button class="btn btn--ghost" type="button">Modifier</button>
+          <button class="btn btn--danger" type="button">Supprimer</button>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card__head">
+          <div>
+            <h2>Ingenieur logiciel</h2>
+            <p class="muted">Atlas Core - Rabat</p>
+          </div>
+          <span class="status status--sent">Envoyee</span>
+        </div>
+        <div class="card__body">
+          <p class="muted">Postulee le 25 jan 2026 - Ref: AC-981</p>
+          <div class="tags">
+            <span>CDI</span>
+            <span>On-site</span>
+            <span>Java</span>
+          </div>
+        </div>
+        <div class="card__actions">
+          <button class="btn btn--ghost" type="button">Modifier</button>
+          <button class="btn btn--danger" type="button">Supprimer</button>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card__head">
+          <div>
+            <h2>UX designer</h2>
+            <p class="muted">North Wind - Tanger</p>
+          </div>
+          <span class="status status--meet">Entretien</span>
+        </div>
+        <div class="card__body">
+          <p class="muted">Postulee le 18 jan 2026 - Ref: NW-113</p>
+          <div class="tags">
+            <span>CDD</span>
+            <span>Remote</span>
+            <span>Design</span>
+          </div>
+        </div>
+        <div class="card__actions">
+          <button class="btn btn--ghost" type="button">Modifier</button>
+          <button class="btn btn--danger" type="button">Supprimer</button>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card__head">
+          <div>
+            <h2>Assistant RH</h2>
+            <p class="muted">People Bridge - Agadir</p>
+          </div>
+          <span class="status status--closed">Refusee</span>
+        </div>
+        <div class="card__body">
+          <p class="muted">Postulee le 10 jan 2026 - Ref: PB-552</p>
+          <div class="tags">
+            <span>Stage</span>
+            <span>On-site</span>
+            <span>RH</span>
+          </div>
+        </div>
+        <div class="card__actions">
+          <button class="btn btn--ghost" type="button">Modifier</button>
+          <button class="btn btn--danger" type="button">Supprimer</button>
+        </div>
+      </article>
+    </section>
+
+    <script>
+      const btnNouvelleCandidature = document.getElementById("btnNouvelleCandidature");
+
+      btnNouvelleCandidature.addEventListener("click", () => {
+        window.location.href = btnNouvelleCandidature.dataset.href;
+      });
+    </script>
+  </main>
+{% endblock %}

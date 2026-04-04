@@ -1,0 +1,163 @@
+{% extends 'Topnavbar/base.html.twig' %}
+
+{% set page_title = "HR One - Offres d'emploi" %}
+{% set page_class = 'page-offres' %}
+{% set page_css = 'offres.css' %}
+{% set page_key = 'offres' %}
+
+{% block content_title %}{% endblock %}
+
+{% block content_body %}
+  <section class="hero">
+    <div>
+      <h1>Trouvez l'offre qui vous correspond</h1>
+      <p>Parcourez les offres actives, filtrez par localisation et postulez en quelques clics.</p>
+    </div>
+    <div class="hero-search">
+      <input id="offerSearch" type="text" placeholder="Rechercher un poste, une competence..." />
+      <input id="offerLocation" type="text" placeholder="Ville (ex: Casablanca)" />
+      <div class="hero-search-actions">
+        <button class="btn btn-primary" type="button">Rechercher</button>
+        <button id="btnMesCandidatures" class="btn btn-ghost" type="button" data-href="{{ path('topnav_mes_candidatures') }}">Mes candidatures</button>
+      </div>
+    </div>
+  </section>
+
+  <main class="content">
+    <section class="offers">
+      <div class="offers-header">
+        <h2>Offres disponibles</h2>
+        <span class="count" id="offerCount">4 offres</span>
+      </div>
+      <div class="offers-grid" id="offersGrid">
+        <article class="offer-card" data-location="Casablanca">
+          <div class="offer-card-header">
+            <h3>Chef de projet digital</h3>
+            <span class="tag">CDI</span>
+          </div>
+          <p class="offer-meta">Casablanca - 3-5 ans - Hybride</p>
+          <p class="offer-desc">Pilotez la strategie digitale, coordonnez les equipes et suivez les KPIs.</p>
+          <div class="offer-footer">
+            <button class="btn btn-ghost" type="button">Voir details</button>
+            <button class="btn btn-primary" type="button">Postuler</button>
+          </div>
+        </article>
+
+        <article class="offer-card" data-location="Rabat">
+          <div class="offer-card-header">
+            <h3>Analyste RH</h3>
+            <span class="tag">CDD</span>
+          </div>
+          <p class="offer-meta">Rabat - 0-2 ans - Sur site</p>
+          <p class="offer-desc">Analysez les donnees RH et proposez des actions d'amelioration.</p>
+          <div class="offer-footer">
+            <button class="btn btn-ghost" type="button">Voir details</button>
+            <button class="btn btn-primary" type="button">Postuler</button>
+          </div>
+        </article>
+
+        <article class="offer-card" data-location="Tanger">
+          <div class="offer-card-header">
+            <h3>Charge de communication</h3>
+            <span class="tag">CDI</span>
+          </div>
+          <p class="offer-meta">Tanger - 3-5 ans - Sur site</p>
+          <p class="offer-desc">Gerez les campagnes internes et developpez la marque employeur.</p>
+          <div class="offer-footer">
+            <button class="btn btn-ghost" type="button">Voir details</button>
+            <button class="btn btn-primary" type="button">Postuler</button>
+          </div>
+        </article>
+
+        <article class="offer-card" data-location="Remote">
+          <div class="offer-card-header">
+            <h3>Developpeur Frontend</h3>
+            <span class="tag">Freelance</span>
+          </div>
+          <p class="offer-meta">Remote - 6-10 ans - En ligne</p>
+          <p class="offer-desc">Concevez des interfaces modernes et maintenables pour nos clients.</p>
+          <div class="offer-footer">
+            <button class="btn btn-ghost" type="button">Voir details</button>
+            <button class="btn btn-primary" type="button">Postuler</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <aside class="apply-panel">
+      <h3>Postuler rapidement</h3>
+      <p class="muted">Selectionnez une offre et envoyez votre candidature.</p>
+      <form class="apply-form">
+        <div class="field">
+          <label for="selectedOffer">Offre selectionnee</label>
+          <select id="selectedOffer">
+            <option value="">Choisir une offre</option>
+            <option>Chef de projet digital</option>
+            <option>Analyste RH</option>
+            <option>Charge de communication</option>
+            <option>Developpeur Frontend</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="candidateName">Nom complet</label>
+          <input id="candidateName" type="text" placeholder="Votre nom" />
+        </div>
+        <div class="field">
+          <label for="candidateEmail">Email</label>
+          <input id="candidateEmail" type="email" placeholder="email@exemple.com" />
+        </div>
+        <div class="field">
+          <label for="portfolioUrl">Lien du portfolio</label>
+          <input id="portfolioUrl" type="url" placeholder="https://" />
+        </div>
+        <div class="field">
+          <label for="cvFile">CV</label>
+          <input id="cvFile" type="file" />
+        </div>
+        <div class="field">
+          <label for="motivationLetter">Lettre de motivation</label>
+          <textarea id="motivationLetter" rows="4" placeholder="Expliquez brievement votre motivation..."></textarea>
+        </div>
+        <div class="field">
+          <label for="recommendationLetter">Lettre de recommandation</label>
+          <input id="recommendationLetter" type="file" />
+        </div>
+        <button class="btn btn-primary" type="button">Envoyer ma candidature</button>
+      </form>
+    </aside>
+  </main>
+
+  <script>
+    const offerSearch = document.getElementById("offerSearch");
+    const offerLocation = document.getElementById("offerLocation");
+    const offersGrid = document.getElementById("offersGrid");
+    const offerCount = document.getElementById("offerCount");
+    const btnMesCandidatures = document.getElementById("btnMesCandidatures");
+
+    const filterOffers = () => {
+      const query = offerSearch.value.trim().toLowerCase();
+      const location = offerLocation.value.trim().toLowerCase();
+      let visible = 0;
+
+      offersGrid.querySelectorAll(".offer-card").forEach((card) => {
+        const text = card.textContent.trim().toLowerCase();
+        const cardLocation = card.dataset.location.toLowerCase();
+        const matchesQuery = text.includes(query);
+        const matchesLocation = !location || cardLocation === location;
+        const show = matchesQuery && matchesLocation;
+        card.style.display = show ? "flex" : "none";
+        if (show) {
+          visible += 1;
+        }
+      });
+
+      offerCount.textContent = `${visible} offre${visible > 1 ? "s" : ""}`;
+    };
+
+    offerSearch.addEventListener("input", filterOffers);
+    offerLocation.addEventListener("input", filterOffers);
+    btnMesCandidatures.addEventListener("click", () => {
+      window.location.href = btnMesCandidatures.dataset.href;
+    });
+  </script>
+{% endblock %}

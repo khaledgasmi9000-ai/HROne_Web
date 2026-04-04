@@ -1,0 +1,381 @@
+{% extends 'navbarRH/base.html.twig' %}
+
+{% set page_title = "HR One - Gestion des offres d'emploi" %}
+{% set page_class = 'page-gestion-offres' %}
+{% set page_css = 'gestion-offres.css' %}
+
+{% block content_title %}{% endblock %}
+
+{% block content_body %}
+  <main class="main">
+    <header class="topbar">
+      <div class="user">
+        <div class="user-info">
+          <div class="user-name">Agent RH</div>
+          <div class="user-role">Recruter</div>
+        </div>
+        <div class="avatar">AR</div>
+      </div>
+    </header>
+
+    <section class="page-title">
+      <h1>Gestion d'offre d'emploi</h1>
+      <p>Creez, modifiez et suivez vos offres d'emploi en temps reel.</p>
+    </section>
+
+    <section class="stats" id="statsSection">
+      <div class="stat">
+        <div class="stat-value">12</div>
+        <div class="stat-label">Offres actives</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">86</div>
+        <div class="stat-label">Candidatures recues</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">4</div>
+        <div class="stat-label">Offres en validation</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">5 j</div>
+        <div class="stat-label">Delai moyen</div>
+      </div>
+    </section>
+
+    <section class="grid" id="offersSection">
+      <div class="card">
+        <div class="card-header">
+          <h2>Offres en cours</h2>
+          <div class="card-actions">
+            <input class="offer-search" id="offerSearch" type="text" placeholder="Rechercher une offre..." />
+          </div>
+        </div>
+        <div class="offer-list" id="offerList"></div>
+      </div>
+
+      <div class="card">
+        <h2>Creer une offre</h2>
+        <p class="muted">Completez les informations principales de l'offre.</p>
+
+        <form class="offer-form" id="offerForm">
+          <div class="field">
+            <label for="offerTitle">Titre du poste</label>
+            <input id="offerTitle" type="text" placeholder="Ex: Responsable Marketing" />
+          </div>
+          <div class="field">
+            <label for="offerLocation">Lieu</label>
+            <input id="offerLocation" type="text" placeholder="Ex: Casablanca" />
+          </div>
+          <div class="field">
+            <label for="offerContract">Type de contrat</label>
+            <select id="offerContract">
+              {% for contrat in typeContrats %}
+                <option value="{{ contrat.codeTypeContrat }}">{{ contrat.descriptionContrat }}</option>
+              {% else %}
+                <option value="">Aucun type de contrat disponible</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="offerWorkType">Type de travail</label>
+            <select id="offerWorkType">
+              <option>En ligne</option>
+              <option>Sur site</option>
+              <option>Hybride</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="offerExperience">Experience</label>
+            <select id="offerExperience">
+              <option>0-2 ans</option>
+              <option>3-5 ans</option>
+              <option>6-10 ans</option>
+              <option>10+ ans</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Intervalle de salaire (MAD)</label>
+            <div class="range-field">
+              <input type="number" min="0" placeholder="Min" />
+              <span class="range-sep">-</span>
+              <input type="number" min="0" placeholder="Max" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Date d'expiration de l'offre</label>
+            <input type="date" />
+          </div>
+          <div class="field">
+            <label>Niveau d'etude requis</label>
+            <select id="offerEducationLevel">
+              {% for niveau in typeNiveauxEtude %}
+                <option value="{{ niveau.codeTypeNiveauEtude }}">{{ niveau.descriptionTypeEtude }}</option>
+              {% else %}
+                <option value="">Aucun niveau d'etude disponible</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field full">
+            <label>Description</label>
+            <textarea rows="4" placeholder="Decrivez le poste et les missions..."></textarea>
+          </div>
+
+          <div class="field full">
+            <label>Competences cles</label>
+            <div class="choice-panel">
+              <div class="choice-toolbar">
+                <input class="choice-search" type="text" id="skillsSearch" placeholder="Rechercher une competence..." />
+              </div>
+              <div class="choice-list" id="skillsSelect" aria-describedby="skillsHelp">
+                {% for competence in typeCompetences %}
+                  <label class="choice-item"><input type="checkbox" name="skills" value="{{ competence.codeTypeCompetence }}" />{{ competence.descriptionCompetence }}</label>
+                {% else %}
+                  <div class="choice-item">Aucune competence disponible</div>
+                {% endfor %}
+              </div>
+            </div>
+            <small class="help" id="skillsHelp">Minimum 2 competences.</small>
+          </div>
+
+          <div class="field full">
+            <label>Langues necessaires</label>
+            <div class="choice-panel">
+              <div class="choice-toolbar">
+                <input class="choice-search" type="text" id="languagesSearch" placeholder="Rechercher une langue..." />
+              </div>
+              <div class="choice-list" id="languagesSelect" aria-describedby="languagesHelp">
+                {% for langue in typeLangues %}
+                  <label class="choice-item"><input type="checkbox" name="languages" value="{{ langue.codeTypeLangue }}" />{{ langue.descriptionLangue }}</label>
+                {% else %}
+                  <div class="choice-item">Aucune langue disponible</div>
+                {% endfor %}
+              </div>
+            </div>
+            <small class="help" id="languagesHelp">Optionnel - plusieurs selections possibles.</small>
+          </div>
+
+          <div class="field full">
+            <label>Background d'etude necessaire</label>
+            <div class="choice-panel">
+              <div class="choice-toolbar">
+                <input class="choice-search" type="text" id="backgroundSearch" placeholder="Rechercher un background..." />
+              </div>
+              <div class="choice-list" id="backgroundSelect" aria-describedby="backgroundHelp">
+                {% for background in typeBackgroundEtudes %}
+                  <label class="choice-item"><input type="checkbox" name="background" value="{{ background.codeTypeBackgroundEtude }}" />{{ background.descriptionTypeBackgroundEtude }}</label>
+                {% else %}
+                  <div class="choice-item">Aucun background disponible</div>
+                {% endfor %}
+              </div>
+            </div>
+            <small class="help" id="backgroundHelp">Minimum 1 background.</small>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-ghost" type="button">Enregistrer en brouillon</button>
+            <button class="btn btn-primary" id="publishBtn" type="button">Publier l'offre</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const publishBtn = document.getElementById("publishBtn");
+    const skillsSelect = document.getElementById("skillsSelect");
+    const languagesSelect = document.getElementById("languagesSelect");
+    const backgroundSelect = document.getElementById("backgroundSelect");
+    const skillsSearch = document.getElementById("skillsSearch");
+    const languagesSearch = document.getElementById("languagesSearch");
+    const backgroundSearch = document.getElementById("backgroundSearch");
+    const offerSearch = document.getElementById("offerSearch");
+
+    const attachFilter = (input, list) => {
+      if (!input || !list) {
+        return;
+      }
+      input.addEventListener("input", () => {
+        const query = input.value.trim().toLowerCase();
+        list.querySelectorAll(".choice-item").forEach((item) => {
+          const text = item.textContent.trim().toLowerCase();
+          item.style.display = text.includes(query) ? "flex" : "none";
+        });
+      });
+    };
+
+    attachFilter(skillsSearch, skillsSelect);
+    attachFilter(languagesSearch, languagesSelect);
+    attachFilter(backgroundSearch, backgroundSelect);
+
+    if (offerSearch) {
+      offerSearch.addEventListener("input", () => {
+        const query = offerSearch.value.trim().toLowerCase();
+        document.querySelectorAll(".offer-item").forEach((item) => {
+          const text = item.textContent.trim().toLowerCase();
+          item.style.display = text.includes(query) ? "flex" : "none";
+        });
+      });
+    }
+
+    const offerForm = document.getElementById("offerForm");
+    const offerTitleInput = document.getElementById("offerTitle");
+    const offerLocationInput = document.getElementById("offerLocation");
+    const offerContractSelect = document.getElementById("offerContract");
+    const offerWorkTypeSelect = document.getElementById("offerWorkType");
+    const offerExperienceSelect = document.getElementById("offerExperience");
+    const offerList = document.getElementById("offerList");
+
+    const offers = [
+      {
+        id: 1,
+        title: "Chef de projet digital",
+        location: "Casablanca",
+        contract: "CDI",
+        experience: "3-5 ans",
+        status: "En ligne",
+        statusClass: "status-live",
+      },
+      {
+        id: 2,
+        title: "Analyste RH",
+        location: "Rabat",
+        contract: "CDD",
+        experience: "0-2 ans",
+        status: "En validation",
+        statusClass: "status-review",
+      },
+      {
+        id: 3,
+        title: "Charge de communication",
+        location: "Tanger",
+        contract: "CDI",
+        experience: "3-5 ans",
+        status: "Brouillon",
+        statusClass: "status-draft",
+      },
+    ];
+    let editingOfferId = null;
+
+    const renderOffers = () => {
+      if (!offerList) {
+        return;
+      }
+      offerList.innerHTML = "";
+      offers.forEach((offer) => {
+        const item = document.createElement("div");
+        item.className = "offer-item";
+
+        const info = document.createElement("div");
+        const title = document.createElement("div");
+        title.className = "offer-title";
+        title.textContent = offer.title;
+        const meta = document.createElement("div");
+        meta.className = "offer-meta";
+        meta.textContent = `${offer.location} - ${offer.contract} - ${offer.experience}`;
+        info.append(title, meta);
+
+        const actions = document.createElement("div");
+        actions.className = "list-item-actions";
+        const status = document.createElement("span");
+        status.className = `status ${offer.statusClass}`;
+        status.textContent = offer.status;
+
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "btn btn-small";
+        editBtn.textContent = "Modifier";
+        editBtn.addEventListener("click", () => {
+          editingOfferId = offer.id;
+          if (offerTitleInput) {
+            offerTitleInput.value = offer.title;
+          }
+          if (offerLocationInput) {
+            offerLocationInput.value = offer.location;
+          }
+          if (offerContractSelect) {
+            offerContractSelect.value = offer.contract;
+          }
+          if (offerWorkTypeSelect) {
+            offerWorkTypeSelect.value = offer.workType || offerWorkTypeSelect.value;
+          }
+          if (offerExperienceSelect) {
+            offerExperienceSelect.value = offer.experience;
+          }
+          offerTitleInput?.focus();
+        });
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "btn btn-small btn-danger";
+        deleteBtn.textContent = "Supprimer";
+        deleteBtn.addEventListener("click", () => {
+          const index = offers.findIndex((entry) => entry.id === offer.id);
+          if (index >= 0) {
+            offers.splice(index, 1);
+            renderOffers();
+          }
+        });
+
+        actions.append(status, editBtn, deleteBtn);
+        item.append(info, actions);
+        offerList.appendChild(item);
+      });
+    };
+
+    publishBtn?.addEventListener("click", () => {
+      const skillsCount = skillsSelect ? skillsSelect.querySelectorAll("input:checked").length : 0;
+      const languagesCount = languagesSelect ? languagesSelect.querySelectorAll("input:checked").length : 0;
+      const backgroundCount = backgroundSelect ? backgroundSelect.querySelectorAll("input:checked").length : 0;
+
+      const errors = [];
+      if (!offerTitleInput?.value.trim()) {
+        errors.push("Ajoutez un titre de poste.");
+      }
+      if (!offerLocationInput?.value.trim()) {
+        errors.push("Ajoutez un lieu.");
+      }
+      if (skillsCount < 2) {
+        errors.push("Selectionnez au moins 2 competences.");
+      }
+      if (backgroundCount < 1) {
+        errors.push("Selectionnez au moins 1 background d'etude.");
+      }
+
+      if (errors.length > 0) {
+        alert(errors.join("\n"));
+        return;
+      }
+
+      const offerData = {
+        title: offerTitleInput?.value.trim() || "",
+        location: offerLocationInput?.value.trim() || "",
+        contract: offerContractSelect?.value || "CDI",
+        experience: offerExperienceSelect?.value || "0-2 ans",
+        workType: offerWorkTypeSelect?.value || "En ligne",
+        status: "En ligne",
+        statusClass: "status-live",
+      };
+
+      if (editingOfferId) {
+        const existing = offers.find((entry) => entry.id === editingOfferId);
+        if (existing) {
+          Object.assign(existing, offerData);
+        }
+        editingOfferId = null;
+      } else {
+        offers.unshift({
+          id: Date.now(),
+          ...offerData,
+        });
+      }
+
+      renderOffers();
+      offerForm?.reset();
+      alert(
+        `Offre prete a publier.\nCompetences: ${skillsCount}\nLangues: ${languagesCount}\nBackgrounds: ${backgroundCount}`
+      );
+    });
+
+    renderOffers();
+  </script>
+{% endblock %}

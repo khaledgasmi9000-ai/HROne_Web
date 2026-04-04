@@ -1,0 +1,282 @@
+{% extends 'navbarRH/base.html.twig' %}
+
+{% set page_title = 'HR One - Gestion des entretiens' %}
+{% set page_class = 'page-gestion-entretiens' %}
+{% set page_css = 'gestion-entretiens.css' %}
+
+{% block content_title %}{% endblock %}
+
+{% block content_body %}
+  <main class="main">
+    <header class="topbar">
+      <div class="user">
+        <div class="user-info">
+          <div class="user-name">Agent RH</div>
+          <div class="user-role">Recruter</div>
+        </div>
+        <div class="avatar">AR</div>
+      </div>
+    </header>
+
+    <section class="page-title">
+      <h1>Candidatures</h1>
+      <p>Consultez les candidatures par offre et acceptez ou rejetez en un clic.</p>
+    </section>
+
+    <section class="card filter-card">
+      <div class="card-header">
+        <div>
+          <h2>Filtrer les candidatures</h2>
+          <p class="muted">Selectionnez une offre ou cherchez un candidat.</p>
+        </div>
+        <span class="filter-pill" id="filterSummary">Filtres actifs: 0</span>
+      </div>
+
+      <form class="filter-form">
+        <div class="field">
+          <label for="offerFilter">Offre d'emploi</label>
+          <select id="offerFilter">
+            <option value="">Toutes les offres</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="statusFilter">Statut</label>
+          <select id="statusFilter">
+            <option value="">Tous les statuts</option>
+            <option value="En attente">En attente</option>
+            <option value="Acceptee">Acceptee</option>
+            <option value="Rejetee">Rejetee</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="candidateSearch">Recherche</label>
+          <div class="input-with-icon">
+            <span class="input-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0-2a8 8 0 1 0 4.9 14.3l4.4 4.4 1.4-1.4-4.4-4.4A8 8 0 0 0 10 2Z" />
+              </svg>
+            </span>
+            <input id="candidateSearch" type="search" placeholder="Nom, email, competences" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-ghost" type="button" id="resetFilters">Reinitialiser</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <h2>Liste des candidatures</h2>
+          <p class="muted">Cliquez pour accepter ou rejeter une candidature.</p>
+        </div>
+        <span class="table-count" id="candidateCount">0 candidature</span>
+      </div>
+      <div class="resource-list" id="candidateList"></div>
+      <p class="muted" id="candidateEmpty" hidden>Aucune candidature trouvee pour ces filtres.</p>
+    </section>
+  </main>
+
+  <script>
+    const offers = [
+      { id: 1, title: "Chef de projet digital" },
+      { id: 2, title: "Analyste RH" },
+      { id: 3, title: "Charge de communication" },
+      { id: 4, title: "Developpeur Frontend" },
+    ];
+
+    const candidates = [
+      {
+        id: 101,
+        offerId: 1,
+        name: "Leila Benali",
+        email: "leila.benali@mail.com",
+        experience: "4 ans",
+        status: "En attente",
+        skills: "Gestion de projet, KPI",
+      },
+      {
+        id: 102,
+        offerId: 1,
+        name: "Yassine Mahi",
+        email: "yassine.mahi@mail.com",
+        experience: "6 ans",
+        status: "Acceptee",
+        skills: "Strategie digitale",
+      },
+      {
+        id: 103,
+        offerId: 2,
+        name: "Imane Rami",
+        email: "imane.rami@mail.com",
+        experience: "2 ans",
+        status: "En attente",
+        skills: "Data RH, Excel",
+      },
+      {
+        id: 104,
+        offerId: 3,
+        name: "Hamza Idrissi",
+        email: "hamza.idrissi@mail.com",
+        experience: "5 ans",
+        status: "Rejetee",
+        skills: "Communication interne",
+      },
+      {
+        id: 105,
+        offerId: 4,
+        name: "Nour El Hariri",
+        email: "nour.elhariri@mail.com",
+        experience: "7 ans",
+        status: "En attente",
+        skills: "React, UI",
+      },
+    ];
+
+    const offerFilter = document.getElementById("offerFilter");
+    const statusFilter = document.getElementById("statusFilter");
+    const candidateSearch = document.getElementById("candidateSearch");
+    const candidateList = document.getElementById("candidateList");
+    const candidateCount = document.getElementById("candidateCount");
+    const candidateEmpty = document.getElementById("candidateEmpty");
+    const filterSummary = document.getElementById("filterSummary");
+    const resetFilters = document.getElementById("resetFilters");
+
+    const statusClassMap = {
+      "En attente": "status-review",
+      Acceptee: "status-live",
+      Rejetee: "status-draft",
+    };
+
+    const getOfferTitle = (offerId) => {
+      return offers.find((offer) => offer.id === offerId)?.title || "-";
+    };
+
+    const renderOfferOptions = () => {
+      offers.forEach((offer) => {
+        const option = document.createElement("option");
+        option.value = String(offer.id);
+        option.textContent = offer.title;
+        offerFilter.appendChild(option);
+      });
+    };
+
+    const updateFilterSummary = (filtersCount) => {
+      if (filterSummary) {
+        filterSummary.textContent = `Filtres actifs: ${filtersCount}`;
+      }
+    };
+
+    const renderCandidates = () => {
+      if (!candidateList || !candidateCount || !candidateEmpty) {
+        return;
+      }
+
+      const selectedOffer = offerFilter.value;
+      const selectedStatus = statusFilter.value;
+      const query = candidateSearch.value.trim().toLowerCase();
+
+      let activeFilters = 0;
+      if (selectedOffer) {
+        activeFilters += 1;
+      }
+      if (selectedStatus) {
+        activeFilters += 1;
+      }
+      if (query) {
+        activeFilters += 1;
+      }
+      updateFilterSummary(activeFilters);
+
+      const filtered = candidates.filter((candidate) => {
+        const matchesOffer = !selectedOffer || String(candidate.offerId) === selectedOffer;
+        const matchesStatus = !selectedStatus || candidate.status === selectedStatus;
+        const haystack = `${candidate.name} ${candidate.email} ${candidate.skills}`.toLowerCase();
+        const matchesQuery = !query || haystack.includes(query);
+        return matchesOffer && matchesStatus && matchesQuery;
+      });
+
+      candidateList.innerHTML = "";
+      candidateEmpty.hidden = filtered.length > 0;
+      candidateCount.textContent = `${filtered.length} candidature${filtered.length > 1 ? "s" : ""}`;
+
+      filtered.forEach((candidate) => {
+        const item = document.createElement("div");
+        item.className = "resource-item";
+
+        const info = document.createElement("div");
+        const title = document.createElement("div");
+        title.className = "resource-title";
+        title.textContent = candidate.name;
+        const meta = document.createElement("div");
+        meta.className = "resource-meta";
+        meta.textContent = `${getOfferTitle(candidate.offerId)} - ${candidate.email} - ${candidate.experience}`;
+        info.append(title, meta);
+
+        const actions = document.createElement("div");
+        actions.className = "list-item-actions";
+        const status = document.createElement("span");
+        status.className = `status ${statusClassMap[candidate.status] || "status-review"}`;
+        status.textContent = candidate.status;
+
+        const detailsBtn = document.createElement("button");
+        detailsBtn.type = "button";
+        detailsBtn.className = "btn btn-small";
+        detailsBtn.textContent = "Voir condidature";
+        detailsBtn.addEventListener("click", () => {
+          alert(
+            `Candidat: ${candidate.name}\nOffre: ${getOfferTitle(candidate.offerId)}\nEmail: ${candidate.email}\nExperience: ${candidate.experience}\nCompetences: ${candidate.skills}\nStatut: ${candidate.status}`
+          );
+        });
+
+        const acceptBtn = document.createElement("button");
+        acceptBtn.type = "button";
+        acceptBtn.className = "btn btn-small";
+        acceptBtn.textContent = "Accepter";
+        acceptBtn.addEventListener("click", () => {
+          candidate.status = "Acceptee";
+          renderCandidates();
+        });
+
+        const rejectBtn = document.createElement("button");
+        rejectBtn.type = "button";
+        rejectBtn.className = "btn btn-small btn-danger";
+        rejectBtn.textContent = "Rejeter";
+        rejectBtn.addEventListener("click", () => {
+          candidate.status = "Rejetee";
+          renderCandidates();
+        });
+
+        actions.append(status, detailsBtn, acceptBtn, rejectBtn);
+
+        if (candidate.status === "Acceptee") {
+          const scheduleBtn = document.createElement("button");
+          scheduleBtn.type = "button";
+          scheduleBtn.className = "btn btn-primary";
+          scheduleBtn.textContent = "Planifier un entretien";
+          scheduleBtn.addEventListener("click", () => {
+            alert(`Entretien planifie pour ${candidate.name}.`);
+          });
+          actions.appendChild(scheduleBtn);
+        }
+
+        item.append(info, actions);
+        candidateList.appendChild(item);
+      });
+    };
+
+    renderOfferOptions();
+    renderCandidates();
+
+    offerFilter.addEventListener("change", renderCandidates);
+    statusFilter.addEventListener("change", renderCandidates);
+    candidateSearch.addEventListener("input", renderCandidates);
+    resetFilters.addEventListener("click", () => {
+      offerFilter.value = "";
+      statusFilter.value = "";
+      candidateSearch.value = "";
+      renderCandidates();
+    });
+  </script>
+{% endblock %}
