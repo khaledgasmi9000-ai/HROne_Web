@@ -1,0 +1,17 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: 'HR One — API module Communauté'
+            description: |
+                API REST (session Symfony / cookie pour les actions authentifiées).
+                Pagination sur `GET /api/posts` via `page` et `limit`.
+            version: '2.0.0'
+        servers:
+            - url: 'http://127.0.0.1:8000'
+              description: Développement local
+    areas:
+        default:
+            path_patterns:
+                - ^/api(?!/doc)
+            name_patterns:
+                - ^api_

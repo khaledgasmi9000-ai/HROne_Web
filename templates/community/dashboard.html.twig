@@ -34,7 +34,9 @@
       validationTitle: 'js.validation.title_required'|trans,
       validationUrl: 'js.validation.url_invalid'|trans,
       validationTag: 'js.validation.tag_long'|trans,
+      validationTagChars: 'js.validation.tag_chars'|trans,
       validationComment: 'js.validation.comment_long'|trans,
+      commentRequired: 'js.validation.comment_required'|trans,
       validationSearch: 'js.validation.search_long'|trans,
     },
     labelYes: 'community.dashboard.yes'|trans,
@@ -83,7 +85,7 @@
         <div class="card session-card community-toolbar-grid">
           <label class="field-inline">
             <span>{{ 'community.session.user_id'|trans }}</span>
-            <input type="number" id="currentUserId" min="1" step="1" required value="{{ initial_user_id ?? 1 }}" />
+            <input type="number" id="currentUserId" min="1" step="1" required inputmode="numeric" title="{{ 'community.validation.user_id_hint'|trans }}" value="{{ initial_user_id ?? 1 }}" />
           </label>
           <button type="button" class="btn-secondary" id="btnSessionApply">{{ 'community.dashboard.session.connect'|trans }}</button>
           <button type="button" class="btn-ghost" id="btnDashboardRefresh">{{ 'community.dashboard.session.refresh'|trans }}</button>
@@ -94,15 +96,15 @@
         <div class="card dashboard-filters-grid">
           <label class="field-inline">
             <span>{{ 'community.filter.tag'|trans }}</span>
-            <input type="text" id="dashFilterTag" maxlength="80" placeholder="{{ 'community.filter.tag_ph'|trans }}" autocomplete="off" />
+            <input type="text" id="dashFilterTag" maxlength="80" pattern="^[a-zA-ZÀ-ÿ0-9_\s\-]*$" title="{{ 'community.validation.tag_pattern'|trans }}" placeholder="{{ 'community.filter.tag_ph'|trans }}" autocomplete="off" />
           </label>
           <label class="field-inline">
             <span>{{ 'community.filter.search_title'|trans }}</span>
-            <input type="search" id="dashSearchTitle" maxlength="120" placeholder="{{ 'community.filter.search_title_ph'|trans }}" autocomplete="off" />
+            <input type="search" id="dashSearchTitle" maxlength="120" title="{{ 'js.validation.search_long'|trans }}" placeholder="{{ 'community.filter.search_title_ph'|trans }}" autocomplete="off" />
           </label>
           <label class="field-inline">
             <span>{{ 'community.filter.search_comment'|trans }}</span>
-            <input type="search" id="dashSearchComment" maxlength="120" placeholder="{{ 'community.filter.search_comment_ph'|trans }}" autocomplete="off" />
+            <input type="search" id="dashSearchComment" maxlength="120" title="{{ 'js.validation.search_long'|trans }}" placeholder="{{ 'community.filter.search_comment_ph'|trans }}" autocomplete="off" />
           </label>
           <button type="button" class="btn-secondary" id="btnApplyDashFilters">{{ 'community.dashboard.filter.apply'|trans }}</button>
         </div>
@@ -166,10 +168,10 @@
     <h3 id="modalPostTitle">{{ 'community.modal.post_title'|trans }}</h3>
     <form id="formEditPost" class="stack-form" novalidate>
       <input type="hidden" name="entity_id" />
-      <label>{{ 'community.field.title'|trans }} <input type="text" name="title" required maxlength="255" /></label>
-      <label>{{ 'community.field.description'|trans }} <textarea name="description" rows="3" maxlength="10000"></textarea></label>
-      <label>{{ 'community.field.tag'|trans }} <input type="text" name="tag" maxlength="80" /></label>
-      <label>{{ 'community.field.image_url'|trans }} <input type="url" name="image_url" maxlength="2048" /></label>
+      <label>{{ 'community.field.title'|trans }} <input type="text" name="title" required minlength="1" maxlength="255" title="{{ 'community.validation.title_hint'|trans }}" /></label>
+      <label>{{ 'community.field.description'|trans }} <textarea name="description" rows="3" maxlength="10000" title="{{ 'community.validation.desc_hint'|trans }}"></textarea></label>
+      <label>{{ 'community.field.tag'|trans }} <input type="text" name="tag" maxlength="80" pattern="^[a-zA-ZÀ-ÿ0-9_\s\-]*$" title="{{ 'community.validation.tag_pattern'|trans }}" /></label>
+      <label>{{ 'community.field.image_url'|trans }} <input type="url" name="image_url" maxlength="2048" pattern="https://.*" title="{{ 'community.validation.url_hint'|trans }}" /></label>
       <label class="field-check"><input type="checkbox" name="is_active" value="1" /> <span>{{ 'community.modal.post_visible'|trans }}</span></label>
       <p class="field-error" id="formEditPostError" hidden></p>
       <div class="modal-actions">
@@ -182,7 +184,7 @@
     <h3 id="modalCommentTitle">{{ 'community.modal.comment_title'|trans }}</h3>
     <form id="formEditComment" class="stack-form" novalidate>
       <input type="hidden" name="entity_id" />
-      <label>{{ 'community.modal.content'|trans }} <textarea name="content" rows="4" required maxlength="8000"></textarea></label>
+      <label>{{ 'community.modal.content'|trans }} <textarea name="content" rows="4" required minlength="1" maxlength="8000" title="{{ 'community.validation.comment_hint'|trans }}"></textarea></label>
       <label class="field-check"><input type="checkbox" name="is_active" value="1" /> <span>{{ 'community.modal.comment_visible'|trans }}</span></label>
       <p class="field-error" id="formEditCommentError" hidden></p>
       <div class="modal-actions">

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Dto\Community\CreatePostInput;
 use App\Entity\Comment;
 use App\Entity\CommentVote;
 use App\Entity\Post;
@@ -11,17 +12,22 @@ use App\Repository\CommentVoteRepository;
 use App\Repository\PostRepository;
 use App\Repository\PostVoteRepository;
 use App\Repository\UtilisateurRepository;
+use App\Service\Community\CommunityPostFeedService;
 use App\Service\CommunityAssistant;
 use App\Service\CommunityMetrics;
 use App\Service\TunisWeatherService;
 use Doctrine\ORM\EntityManagerInterface;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api')]
+#[OA\Tag(name: 'Communauté')]
 class CommunityApiController extends AbstractController
 {
     private const SESSION_USER_KEY = 'community_uid';
@@ -43,6 +49,8 @@ class CommunityApiController extends AbstractController
         private readonly CommunityMetrics $communityMetrics,
         private readonly TunisWeatherService $tunisWeather,
         private readonly CommunityAssistant $communityAssistant,
+        private readonly ValidatorInterface $validator,
+        private readonly CommunityPostFeedService $communityPostFeed,
     ) {
     }
 
@@ -167,6 +175,19 @@ class CommunityApiController extends AbstractController
 
     // ——— Posts ———
 
+    #[OA\Get(
+        summary: 'Fil des posts actifs (pagination, filtres tag / auteur / titre)',
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', default: 15, maximum: 50)),
+            new OA\Parameter(name: 'tag', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'user_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'q', in: 'query', required: false, description: 'Mots dans le titre', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: '`posts` + `meta` (page, limit, total, pages)'),
+        ]
+    )]
     #[Route('/posts', name: 'api_posts_list', methods: ['GET'])]
     public function listPosts(Request $request): JsonResponse
     {
@@ -177,13 +198,41 @@ class CommunityApiController extends AbstractController
             $userFilter = null;
         }
         $titleQ = $this->sanitizeSearchQuery($request->query->get('q'));
+        $page = (int) $request->query->get('page', 1);
+        $limit = (int) $request->query->get('limit', CommunityPostFeedService::DEFAULT_LIMIT);
 
-        $list = $this->posts->findFeedOrdered($tag, $userFilter, $titleQ);
+        $feed = $this->communityPostFeed->getPublicFeedPage($page, $limit, $tag, $userFilter, $titleQ);
         $viewer = $this->getCommunityUserId($request);
 
-        return $this->json(['posts' => $this->serializePosts($list, $viewer)]);
+        return $this->json([
+            'posts' => $this->serializePosts($feed['items'], $viewer),
+            'meta' => [
+                'page' => $feed['page'],
+                'limit' => $feed['limit'],
+                'total' => $feed['total'],
+                'pages' => $feed['pages'],
+            ],
+        ]);
     }
 
+    #[OA\Post(
+        summary: 'Créer un post (session utilisateur requise)',
+        requestBody: new OA\RequestBody(
+            content: new OA\JsonContent(
+                required: ['title'],
+                properties: [
+                    new OA\Property(property: 'title', type: 'string'),
+                    new OA\Property(property: 'description', type: 'string', nullable: true),
+                    new OA\Property(property: 'tag', type: 'string', nullable: true),
+                    new OA\Property(property: 'image_url', type: 'string', format: 'uri', nullable: true),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Post créé'),
+            new OA\Response(response: 422, description: 'Erreurs de validation (Validator)'),
+        ]
+    )]
     #[Route('/posts', name: 'api_posts_create', methods: ['POST'])]
     public function createPost(Request $request): JsonResponse
     {
@@ -197,41 +246,21 @@ class CommunityApiController extends AbstractController
             return $this->json(['message' => 'Corps JSON invalide.'], Response::HTTP_BAD_REQUEST);
         }
 
-        $title = isset($data['title']) ? trim((string) $data['title']) : '';
-        if ($title === '') {
-            return $this->json(['message' => 'Champ requis: title.'], Response::HTTP_BAD_REQUEST);
-        }
-        if (mb_strlen($title) > self::MAX_TITLE_LEN) {
-            return $this->json(['message' => 'Titre trop long (max '.self::MAX_TITLE_LEN.').'], Response::HTTP_BAD_REQUEST);
-        }
-
-        $descRaw = $data['description'] ?? null;
-        $desc = $descRaw !== null ? (string) $descRaw : null;
-        if ($desc !== null && mb_strlen($desc) > self::MAX_DESC_LEN) {
-            return $this->json(['message' => 'Description trop longue.'], Response::HTTP_BAD_REQUEST);
-        }
-
-        $imgRaw = $data['image_url'] ?? null;
-        $img = $imgRaw !== null ? trim((string) $imgRaw) : null;
-        if ($img !== null) {
-            if ($img === '') {
-                $img = null;
-            } elseif (mb_strlen($img) > self::MAX_URL_LEN) {
-                return $this->json(['message' => 'URL image trop longue.'], Response::HTTP_BAD_REQUEST);
-            } elseif (!filter_var($img, \FILTER_VALIDATE_URL)) {
-                return $this->json(['message' => 'URL image invalide.'], Response::HTTP_BAD_REQUEST);
-            }
+        $dto = CreatePostInput::fromRequestArray($data);
+        $violations = $this->validator->validate($dto);
+        if (\count($violations) > 0) {
+            return $this->json([
+                'message' => 'Données invalides.',
+                'errors' => $this->formatValidationErrors($violations),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $post = new Post();
         $post->setUserId($actor);
-        $post->setTitle($title);
-        $post->setDescription($desc);
-        $post->setImageUrl($img);
-        $tag = isset($data['tag']) ? trim((string) $data['tag']) : '';
-        if (mb_strlen($tag) > self::MAX_TAG_LEN) {
-            return $this->json(['message' => 'Tag trop long.'], Response::HTTP_BAD_REQUEST);
-        }
+        $post->setTitle($dto->title);
+        $post->setDescription($dto->description);
+        $post->setImageUrl($dto->image_url);
+        $tag = $dto->tag !== null ? trim($dto->tag) : '';
         $post->setTag($tag !== '' ? $tag : 'General');
         $post->setIsActive(array_key_exists('is_active', $data) ? (bool) $data['is_active'] : true);
         $now = new \DateTime();
@@ -403,6 +432,27 @@ class CommunityApiController extends AbstractController
         $this->em->flush();
 
         return $this->json($this->serializeComment($comment, $actor), Response::HTTP_CREATED);
+    }
+
+    #[Route('/comments/{id}', name: 'api_comments_one', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function oneComment(int $id, Request $request): JsonResponse
+    {
+        $comment = $this->comments->find($id);
+        if (!$comment instanceof Comment) {
+            return $this->json(['message' => 'Commentaire introuvable.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $post = $this->posts->find((int) $comment->getPostId());
+        if (!$post instanceof Post) {
+            return $this->json(['message' => 'Post introuvable.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $viewer = $this->getCommunityUserId($request);
+        if (!$this->canViewPost($post, $viewer)) {
+            return $this->json(['message' => 'Commentaire indisponible.'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json(['comment' => $this->serializeComment($comment, $viewer)]);
     }
 
     #[Route('/comments/{id}', name: 'api_comments_update', methods: ['PUT', 'PATCH'], requirements: ['id' => '\d+'])]
@@ -684,11 +734,14 @@ class CommunityApiController extends AbstractController
     {
         $up = $voteBlock['up'];
         $down = $voteBlock['down'];
+        $authorId = $p->getUserId();
 
         return [
             'id' => $p->getId(),
-            'user_id' => $p->getUserId(),
+            'user_id' => $authorId,
             'author_name' => $authorName,
+            'author_initials' => $this->buildInitials($authorName),
+            'author_avatar_url' => $this->buildAvatarDataUri($authorName, $authorId),
             'title' => $p->getTitle(),
             'description' => $p->getDescription(),
             'image_url' => $p->getImageUrl(),
@@ -763,12 +816,15 @@ class CommunityApiController extends AbstractController
     {
         $up = $voteBlock['up'];
         $down = $voteBlock['down'];
+        $authorId = $c->getUserId();
 
         return [
             'id' => $c->getId(),
             'post_id' => $c->getPostId(),
-            'user_id' => $c->getUserId(),
+            'user_id' => $authorId,
             'author_name' => $authorName,
+            'author_initials' => $this->buildInitials($authorName),
+            'author_avatar_url' => $this->buildAvatarDataUri($authorName, $authorId),
             'parent_comment_id' => $c->getParentCommentId(),
             'content' => $c->getContent(),
             'is_active' => $c->isActive(),
@@ -795,7 +851,67 @@ class CommunityApiController extends AbstractController
         return [
             'user_id' => $userId,
             'name' => $n,
+            'initials' => $this->buildInitials($n),
+            'avatar_url' => $this->buildAvatarDataUri($n, $userId),
         ];
+    }
+
+    private function buildInitials(string $name): string
+    {
+        $name = trim($name);
+        if ($name === '') {
+            return '?';
+        }
+
+        $parts = preg_split('/\s+/u', $name) ?: [];
+        $letters = [];
+        foreach ($parts as $part) {
+            $part = trim((string) $part);
+            if ($part === '') {
+                continue;
+            }
+            $letters[] = mb_strtoupper(mb_substr($part, 0, 1));
+            if (\count($letters) >= 2) {
+                break;
+            }
+        }
+
+        if ($letters === []) {
+            return mb_strtoupper(mb_substr($name, 0, 1));
+        }
+
+        return implode('', $letters);
+    }
+
+    private function buildAvatarDataUri(string $name, ?int $seed = null): string
+    {
+        $palette = [
+            ['#1d4ed8', '#60a5fa'],
+            ['#0f766e', '#2dd4bf'],
+            ['#7c3aed', '#a78bfa'],
+            ['#be123c', '#fb7185'],
+            ['#b45309', '#f59e0b'],
+            ['#0f172a', '#475569'],
+        ];
+        $index = abs(($seed ?? crc32($name)) % \count($palette));
+        [$start, $end] = $palette[$index];
+        $initials = htmlspecialchars($this->buildInitials($name), \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8');
+
+        $svg = <<<SVG
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Avatar">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="$start"/>
+      <stop offset="100%" stop-color="$end"/>
+    </linearGradient>
+  </defs>
+  <rect width="160" height="160" rx="80" fill="url(#g)"/>
+  <circle cx="80" cy="80" r="74" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="4"/>
+  <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI, Arial, sans-serif" font-size="56" font-weight="700" fill="#ffffff">$initials</text>
+</svg>
+SVG;
+
+        return 'data:image/svg+xml;charset=UTF-8,'.rawurlencode($svg);
     }
 
     private function sanitizeSearchQuery(mixed $q): ?string
@@ -828,6 +944,20 @@ class CommunityApiController extends AbstractController
         }
 
         return $tag;
+    }
+
+    /**
+     * @return array<string, list<string>>
+     */
+    private function formatValidationErrors(ConstraintViolationListInterface $violations): array
+    {
+        $errors = [];
+        foreach ($violations as $v) {
+            $path = $v->getPropertyPath() !== '' ? $v->getPropertyPath() : '_global';
+            $errors[$path][] = $v->getMessage();
+        }
+
+        return $errors;
     }
 
     /**

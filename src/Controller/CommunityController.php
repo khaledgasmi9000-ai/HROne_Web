@@ -36,6 +36,7 @@ class CommunityController extends AbstractController
             'initial_user_id' => $uid,
             'profile_user_id' => $uid,
             'profile_display_name' => $this->resolveProfileDisplayName($uid, $utilisateurs),
+            'profile_avatar_url' => $this->buildAvatarDataUri($this->resolveProfileDisplayName($uid, $utilisateurs), $uid),
         ]);
     }
 
@@ -134,5 +135,59 @@ class CommunityController extends AbstractController
         }
 
         return (string) $this->getParameter('app.community_profile_fallback_name');
+    }
+
+    private function buildAvatarDataUri(string $name, ?int $seed = null): string
+    {
+        $palette = [
+            ['#1d4ed8', '#60a5fa'],
+            ['#0f766e', '#2dd4bf'],
+            ['#7c3aed', '#a78bfa'],
+            ['#be123c', '#fb7185'],
+            ['#b45309', '#f59e0b'],
+            ['#0f172a', '#475569'],
+        ];
+        $index = abs(($seed ?? crc32($name)) % \count($palette));
+        [$start, $end] = $palette[$index];
+        $initials = $this->buildInitials($name);
+        $safeInitials = htmlspecialchars($initials, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8');
+
+        $svg = <<<SVG
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="$start"/>
+      <stop offset="100%" stop-color="$end"/>
+    </linearGradient>
+  </defs>
+  <rect width="160" height="160" rx="80" fill="url(#g)"/>
+  <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI, Arial, sans-serif" font-size="56" font-weight="700" fill="#ffffff">$safeInitials</text>
+</svg>
+SVG;
+
+        return 'data:image/svg+xml;charset=UTF-8,'.rawurlencode($svg);
+    }
+
+    private function buildInitials(string $name): string
+    {
+        $name = trim($name);
+        if ($name === '') {
+            return '?';
+        }
+
+        $parts = preg_split('/\s+/u', $name) ?: [];
+        $letters = [];
+        foreach ($parts as $part) {
+            $part = trim((string) $part);
+            if ($part === '') {
+                continue;
+            }
+            $letters[] = mb_strtoupper(mb_substr($part, 0, 1));
+            if (\count($letters) >= 2) {
+                break;
+            }
+        }
+
+        return $letters !== [] ? implode('', $letters) : mb_strtoupper(mb_substr($name, 0, 1));
     }
 }

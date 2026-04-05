@@ -18,8 +18,19 @@ services:
         resource: '../src/'
         exclude:
             - '../src/DependencyInjection/'
+            - '../src/Dto/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    # Chaîne Strategy pour l’assistant communauté (ordre : spécifique → défaut)
+    App\Service\CommunityAssistant:
+        arguments:
+            $intentHandlers:
+                - '@App\Service\Assistant\WeatherIntentHandler'
+                - '@App\Service\Assistant\StatsIntentHandler'
+                - '@App\Service\Assistant\GuideIntentHandler'
+                - '@App\Service\Assistant\ProfileIntentHandler'
+                - '@App\Service\Assistant\DefaultIntentHandler'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

@@ -20,7 +20,9 @@
       validationTitle: 'js.validation.title_required'|trans,
       validationUrl: 'js.validation.url_invalid'|trans,
       validationTag: 'js.validation.tag_long'|trans,
+      validationTagChars: 'js.validation.tag_chars'|trans,
       validationComment: 'js.validation.comment_long'|trans,
+      commentRequired: 'js.validation.comment_required'|trans,
       validationSearch: 'js.validation.search_long'|trans,
     },
   }|json_encode(constant('JSON_UNESCAPED_UNICODE'))|raw }};
@@ -57,21 +59,23 @@
             <div class="card session-card community-toolbar-grid">
               <label class="field-inline">
                 <span>{{ 'community.session.user_id'|trans }}</span>
-                <input type="number" id="currentUserId" min="1" step="1" required value="{{ initial_user_id ?? 1 }}" />
+                <input type="number" id="currentUserId" min="1" step="1" required inputmode="numeric" title="{{ 'community.validation.user_id_hint'|trans }}" value="{{ initial_user_id ?? 1 }}" />
               </label>
               <button type="button" class="btn-secondary" id="btnSessionApply">{{ 'community.session.connect'|trans }}</button>
               <button type="button" class="btn-ghost" id="btnRefreshFeed">{{ 'community.session.refresh_feed'|trans }}</button>
               <span id="sessionStatus" class="session-status" aria-live="polite"></span>
             </div>
 
+            {% include 'community/_feature_toolbar.html.twig' %}
+
             <div class="card filters-bar filters-bar-extended">
               <label class="field-inline">
                 <span>{{ 'community.filter.tag'|trans }}</span>
-                <input type="text" id="filterTag" placeholder="{{ 'community.filter.tag_ph'|trans }}" maxlength="80" autocomplete="off" />
+                <input type="text" id="filterTag" placeholder="{{ 'community.filter.tag_ph'|trans }}" maxlength="80" pattern="^[a-zA-ZÀ-ÿ0-9_\s\-]*$" title="{{ 'community.validation.tag_pattern'|trans }}" autocomplete="off" />
               </label>
               <label class="field-inline">
                 <span>{{ 'community.filter.search_title'|trans }}</span>
-                <input type="search" id="searchTitle" placeholder="{{ 'community.filter.search_title_ph'|trans }}" maxlength="120" autocomplete="off" />
+                <input type="search" id="searchTitle" placeholder="{{ 'community.filter.search_title_ph'|trans }}" maxlength="120" title="{{ 'js.validation.search_long'|trans }}" autocomplete="off" />
               </label>
               <label class="field-check">
                 <input type="checkbox" id="filterMine" />
@@ -84,10 +88,14 @@
               <p class="form-hint">{{ 'community.form.hint'|trans }}</p>
               <form id="formNewPost" class="stack-form" novalidate>
                 <p class="field-error" id="formNewPostError" hidden></p>
-                <label>{{ 'community.field.title'|trans }} <input type="text" name="title" required minlength="1" maxlength="255" /></label>
-                <label>{{ 'community.field.description'|trans }} <textarea name="description" rows="3" maxlength="10000"></textarea></label>
-                <label>{{ 'community.field.tag'|trans }} <input type="text" name="tag" maxlength="80" placeholder="General" /></label>
-                <label>{{ 'community.field.image_url'|trans }} <input type="url" name="image_url" maxlength="2048" placeholder="https://…" /></label>
+                <label>{{ 'community.field.title'|trans }} <input type="text" name="title" required minlength="1" maxlength="255" title="{{ 'community.validation.title_hint'|trans }}" /></label>
+                <small class="form-hint">{{ 'community.validation.title_hint'|trans }}</small>
+                <label>{{ 'community.field.description'|trans }} <textarea name="description" rows="3" maxlength="10000" title="{{ 'community.validation.desc_hint'|trans }}"></textarea></label>
+                <small class="form-hint">{{ 'community.validation.desc_hint'|trans }}</small>
+                <label>{{ 'community.field.tag'|trans }} <input type="text" name="tag" maxlength="80" pattern="^[a-zA-ZÀ-ÿ0-9_\s\-]*$" title="{{ 'community.validation.tag_pattern'|trans }}" placeholder="General" /></label>
+                <small class="form-hint">{{ 'community.validation.tag_pattern'|trans }}</small>
+                <label>{{ 'community.field.image_url'|trans }} <input type="url" name="image_url" maxlength="2048" pattern="https://.*" title="{{ 'community.validation.url_hint'|trans }}" placeholder="https://…" /></label>
+                <small class="form-hint">{{ 'community.validation.url_hint'|trans }}</small>
                 <button type="submit" class="btn-primary">{{ 'community.field.publish'|trans }}</button>
               </form>
             </section>
@@ -108,7 +116,8 @@
               <div class="chat-log" id="chatLog" aria-live="polite"></div>
               <form id="chatForm" class="chat-form">
                 <label class="sr-only" for="chatInput">{{ 'community.chat.placeholder'|trans }}</label>
-                <textarea id="chatInput" rows="2" maxlength="2000" placeholder="{{ 'community.chat.placeholder'|trans }}" required></textarea>
+                <textarea id="chatInput" rows="2" maxlength="2000" minlength="1" title="{{ 'community.validation.chat_hint'|trans }}" placeholder="{{ 'community.chat.placeholder'|trans }}" required></textarea>
+                <small class="form-hint">{{ 'community.validation.chat_hint'|trans }}</small>
                 <button type="submit" class="btn-primary">{{ 'community.chat.send'|trans }}</button>
               </form>
             </div>
@@ -128,6 +137,7 @@
     </main>
   </div>
   <script src="/topNavbar/topNavbar.js"></script>
+  <script src="/topNavbar/community-prefs.js"></script>
   <script src="/topNavbar/communaute-app.js"></script>
 </body>
 </html>

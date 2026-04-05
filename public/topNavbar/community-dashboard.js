@@ -121,6 +121,24 @@
       .replace(/"/g, "&quot;");
   }
 
+  function syncDashboardProfilePhoto(url, initials, alt) {
+    var photo = document.getElementById("dashProfilePhoto");
+    var avatar = document.getElementById("dashProfileAvatar");
+    if (photo) {
+      if (url) {
+        photo.src = url;
+        photo.alt = alt || "";
+        photo.hidden = false;
+      } else {
+        photo.hidden = true;
+      }
+    }
+    if (avatar) {
+      avatar.textContent = initials || "?";
+      avatar.hidden = !!url;
+    }
+  }
+
   function ui() {
     return typeof window !== "undefined" && window.__COMMUNITY_UI__
       ? window.__COMMUNITY_UI__
@@ -130,6 +148,125 @@
   function str(name) {
     var s = ui().strings || {};
     return s[name] || name;
+  }
+
+  function isHttpsUrl(value) {
+    if (!value) return true;
+    try {
+      var parsed = new URL(value);
+      return parsed.protocol === "https:";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function ensureFieldInlineError(field) {
+    if (!field || !field.parentNode) return null;
+    var next = field.nextElementSibling;
+    if (next && next.classList && next.classList.contains("field-inline-error")) {
+      return next;
+    }
+    var el = document.createElement("small");
+    el.className = "field-inline-error";
+    el.hidden = true;
+    field.insertAdjacentElement("afterend", el);
+    return el;
+  }
+
+  function showFieldInlineError(field, msg) {
+    var box = ensureFieldInlineError(field);
+    if (!box) return;
+    box.textContent = msg || "";
+    box.hidden = !msg;
+    if (msg) field.classList.add("is-invalid");
+    else field.classList.remove("is-invalid");
+  }
+
+  function fieldValidationMessage(field) {
+    if (!field) return "Valeur invalide.";
+    var v = field.validity || {};
+    var name = (field.name || field.id || "").toLowerCase();
+    if (v.valueMissing) return "Ce champ est obligatoire.";
+    if (v.tooShort || v.tooLong) {
+      if (name.indexOf("title") >= 0) return str("validationTitle");
+      if (name.indexOf("tag") >= 0) return str("validationTag");
+      if (name.indexOf("content") >= 0 || name.indexOf("description") >= 0) {
+        return str("validationComment");
+      }
+      return "La longueur saisie n'est pas valide.";
+    }
+    if (name.indexOf("image_url") >= 0 && !isHttpsUrl(field.value.trim())) {
+      return str("validationUrl");
+    }
+    if (v.typeMismatch && name.indexOf("image_url") >= 0) return str("validationUrl");
+    if (v.patternMismatch) {
+      if (name.indexOf("tag") >= 0) return str("validationTagChars");
+      if (name.indexOf("image_url") >= 0) return str("validationUrl");
+      return "Le format saisi n'est pas correct.";
+    }
+    if (field.id === "currentUserId" && (!field.value || Number(field.value) < 1)) {
+      return "Saisissez un identifiant utilisateur valide.";
+    }
+    return "";
+  }
+
+  function validateFieldInline(field) {
+    if (!field || field.disabled) return true;
+    var msg = fieldValidationMessage(field);
+    if (msg) {
+      showFieldInlineError(field, msg);
+      return false;
+    }
+    showFieldInlineError(field, "");
+    return true;
+  }
+
+  function validateFormInline(form) {
+    if (!form) return true;
+    var fields = form.querySelectorAll("input, textarea, select");
+    var firstInvalid = null;
+    Array.prototype.forEach.call(fields, function (field) {
+      var ok = validateFieldInline(field);
+      if (!ok && !firstInvalid) firstInvalid = field;
+    });
+    if (firstInvalid) firstInvalid.focus();
+    return !firstInvalid;
+  }
+
+  function bindInlineValidation(root) {
+    if (!root) return;
+    var forms = root.matches && root.matches("form") ? [root] : root.querySelectorAll("form");
+    Array.prototype.forEach.call(forms, function (form) {
+      form.noValidate = true;
+      form.addEventListener(
+        "invalid",
+        function (ev) {
+          ev.preventDefault();
+          validateFieldInline(ev.target);
+        },
+        true
+      );
+      form.addEventListener(
+        "input",
+        function (ev) {
+          var target = ev.target;
+          if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) {
+            validateFieldInline(target);
+          }
+        },
+        true
+      );
+      form.addEventListener(
+        "blur",
+        function (ev) {
+          var target = ev.target;
+          if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) {
+            validateFieldInline(target);
+          }
+        },
+        true
+      );
+    });
   }
 
   function fmtDate(iso) {
@@ -384,8 +521,13 @@
           if (idEl) idEl.textContent = String(su.user_id);
           if (metaEl) metaEl.hidden = false;
           if (hintEl) hintEl.hidden = true;
+          syncDashboardProfilePhoto(
+            su.avatar_url || "",
+            su.initials || (su.name ? String(su.name).charAt(0).toUpperCase() : "?"),
+            su.name || "Utilisateur"
+          );
           if (avEl && su.name) {
-            avEl.textContent = String(su.name).charAt(0).toUpperCase();
+            avEl.textContent = su.initials || String(su.name).charAt(0).toUpperCase();
           }
         }
         return api("/api/community/dashboard/my-posts" + buildDashPostsQuery());
@@ -496,6 +638,7 @@
           });
       }
     }
+
   });
 
   function showFormError(id, msg) {
@@ -509,6 +652,9 @@
     ev.preventDefault();
     showFormError("formEditPostError", "");
     var f = ev.target;
+    if (!validateFormInline(f)) {
+      return;
+    }
     var id = parseInt(f.elements.entity_id.value, 10);
     var title = f.title.value.trim();
     if (!title || title.length > 255) {
@@ -520,15 +666,13 @@
       showFormError("formEditPostError", str("validationTag"));
       return;
     }
+    if (tag && !/^[a-zA-ZÀ-ÿ0-9_\s\-]+$/i.test(tag)) {
+      showFormError("formEditPostError", str("validationTagChars"));
+      return;
+    }
     var imageUrl = f.image_url.value.trim();
     if (imageUrl) {
-      try {
-        new URL(imageUrl);
-      } catch (e) {
-        showFormError("formEditPostError", str("validationUrl"));
-        return;
-      }
-      if (imageUrl.length > 2048) {
+      if (!isHttpsUrl(imageUrl) || imageUrl.length > 2048) {
         showFormError("formEditPostError", str("validationUrl"));
         return;
       }
@@ -562,6 +706,9 @@
     ev.preventDefault();
     showFormError("formEditCommentError", "");
     var f = ev.target;
+    if (!validateFormInline(f)) {
+      return;
+    }
     var id = parseInt(f.elements.entity_id.value, 10);
     var content = f.content.value.trim();
     if (!content || content.length > 8000) {
@@ -585,15 +732,12 @@
       });
   });
 
+  bindInlineValidation(document);
   loadUserId();
-  postSession(getUserIdInput())
-    .then(function () {
-      return loadDashboard();
-    })
-    .catch(function () {
-      setSessionStatus(
-        "Connectez-vous avec votre ID puis cliquez « Connecter la session ».",
-        false
-      );
-    });
+  applySession().catch(function () {
+    setSessionStatus(
+      "Connectez-vous avec votre ID puis cliquez « Connecter la session ».",
+      false
+    );
+  });
 })();

@@ -1,0 +1,44 @@
+{# Thème, texte, signets, tags favoris — aligné sur le module communauté #}
+<div class="community-feature-bar card" id="communityFeatureBar" role="toolbar" aria-label="{{ 'community.toolbar.label'|trans }}">
+  <div class="feature-bar-inner">
+    <button type="button" class="feat-btn" id="btnThemeToggle" title="{{ 'community.toolbar.theme'|trans }}" aria-pressed="false">
+      <span class="feat-ico feat-ico-theme" aria-hidden="true"></span>
+      <span class="feat-label">{{ 'community.toolbar.theme'|trans }}</span>
+    </button>
+    <button type="button" class="feat-btn" id="btnFontCycle" title="{{ 'community.toolbar.font'|trans }}">
+      <span class="feat-ico feat-ico-font" aria-hidden="true"></span>
+      <span class="feat-label">{{ 'community.toolbar.font'|trans }}</span>
+    </button>
+    <button type="button" class="feat-btn" id="btnBookmarksToggle" title="{{ 'community.toolbar.bookmarks'|trans }}">
+      <span class="feat-ico feat-ico-bookmark" aria-hidden="true"></span>
+      <span class="feat-label">{{ 'community.toolbar.bookmarks'|trans }}</span>
+    </button>
+    <button type="button" class="feat-btn" id="btnDesktopNotif" title="{{ 'community.toolbar.desktop_notif'|trans }}">
+      <span class="feat-ico feat-ico-bell" aria-hidden="true"></span>
+      <span class="feat-label">{{ 'community.toolbar.desktop_notif'|trans }}</span>
+    </button>
+    <button type="button" class="feat-btn" id="btnNotifHistoryToggle" title="{{ 'community.toolbar.notif_history'|trans }}">
+      <span class="feat-ico feat-ico-history" aria-hidden="true"></span>
+      <span class="feat-label">{{ 'community.toolbar.notif_history'|trans }}</span>
+    </button>
+  </div>
+  <div class="fav-tags-row">
+    <label class="fav-tags-label">
+      <span class="feat-ico feat-ico-tag-inline" aria-hidden="true"></span>
+      {{ 'community.toolbar.fav_tags'|trans }}
+      <input type="text" id="favTagsInput" class="fav-tags-input" maxlength="200" placeholder="{{ 'community.toolbar.fav_tags_ph'|trans }}" pattern="^[a-zA-ZÀ-ÿ0-9_,\s\-]+$" title="{{ 'community.validation.tag_pattern'|trans }}" autocomplete="off" />
+    </label>
+    <button type="button" class="btn-secondary btn-fav-apply" id="btnApplyFavTag">{{ 'community.toolbar.apply_tag'|trans }}</button>
+  </div>
+</div>
+
+<div class="card slide-panel" id="bookmarksPanel" hidden>
+  <h3 class="slide-panel-title">{{ 'community.toolbar.bookmarks'|trans }}</h3>
+  <p class="muted slide-panel-hint">{{ 'community.bookmarks.hint'|trans }}</p>
+  <ul class="bookmarks-list" id="bookmarksList"></ul>
+</div>
+
+<div class="card slide-panel" id="notifHistoryPanel" hidden>
+  <h3 class="slide-panel-title">{{ 'community.toolbar.notif_history'|trans }}</h3>
+  <ul class="notif-history-list" id="notifHistoryList"></ul>
+</div>

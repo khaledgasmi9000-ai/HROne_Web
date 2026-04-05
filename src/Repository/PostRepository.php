@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Post;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -34,9 +35,37 @@ class PostRepository extends ServiceEntityRepository
      */
     public function findFeedOrdered(?string $tag, ?int $userId, ?string $titleSearch = null): array
     {
+        return $this->createFeedQueryBuilder($tag, $userId, $titleSearch)
+            ->orderBy('p.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function countFeedOrdered(?string $tag, ?int $userId, ?string $titleSearch = null): int
+    {
+        $qb = $this->createFeedQueryBuilder($tag, $userId, $titleSearch);
+        $qb->select('COUNT(p.id)');
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * @return Post[]
+     */
+    public function findFeedOrderedPaged(?string $tag, ?int $userId, ?string $titleSearch, int $offset, int $limit): array
+    {
+        return $this->createFeedQueryBuilder($tag, $userId, $titleSearch)
+            ->orderBy('p.created_at', 'DESC')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    private function createFeedQueryBuilder(?string $tag, ?int $userId, ?string $titleSearch): QueryBuilder
+    {
         $qb = $this->createQueryBuilder('p')
-            ->andWhere('p.is_active = true OR p.is_active IS NULL')
-            ->orderBy('p.created_at', 'DESC');
+            ->andWhere('p.is_active = true OR p.is_active IS NULL');
 
         if ($tag !== null && $tag !== '') {
             $qb->andWhere('p.tag = :tag')->setParameter('tag', $tag);
@@ -49,7 +78,7 @@ class PostRepository extends ServiceEntityRepository
                 ->setParameter('tq', '%'.mb_strtolower($this->escapeLikePattern($titleSearch)).'%');
         }
 
-        return $qb->getQuery()->getResult();
+        return $qb;
     }
 
     private function escapeLikePattern(string $value): string
