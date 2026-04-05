@@ -9,10 +9,13 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Repository\EmployeeRepository;
 use App\Repository\OutilsDeTravailRepository;
+use App\Repository\DemandeCongeRepository;
+use App\Entity\Ordre;
 
 class GestionAdministrativeController extends AbstractController
 {
 
+#pragma region Employee Controller
     // ========== Employee Controller ==========  //
     private function CalculateSodeCongeRestant(
         EmployeeRepository $employeeRepository,
@@ -103,6 +106,10 @@ class GestionAdministrativeController extends AbstractController
         return $this->redirectToRoute('gestion_administrative');
     }
     // ========== End Employee Controller ==========  //
+
+#pragma endregion
+
+#pragma region Outil Controller
 
     // ========== Outil Controller ==========  //
 
@@ -196,40 +203,38 @@ class GestionAdministrativeController extends AbstractController
 
     // ========== End Outil Controller ==========  //
 
+#pragma endregion
+    
+#pragma region Conge Controller
     // ========== Conge Controller ==========  //
-    #[Route('/Gestion_Administrative/conges', name: 'employee_conges')]
-    public function conges(Request $request): Response
+
+    #[Route('/Gestion_Administrative/conges/reject/{id}', name: 'conge_reject')]
+    public function rejectConge(int $id, DemandeCongeRepository $repo): Response
     {
-        $allConges = [
-            ['id' => 1, 'name' => 'John Doe', 'start' => '2024-01-10', 'end' => '2024-01-15', 'days' => 5],
-            ['id' => 2, 'name' => 'Jane Smith', 'start' => '2024-02-01', 'end' => '2024-02-03', 'days' => 2],
-            ['id' => 3, 'name' => 'Alice Brown', 'start' => '2024-03-05', 'end' => '2024-03-10', 'days' => 5],
-            ['id' => 4, 'name' => 'Bob White', 'start' => '2024-04-12', 'end' => '2024-04-14', 'days' => 2],
-            ['id' => 5, 'name' => 'Emma Green', 'start' => '2024-05-01', 'end' => '2024-05-07', 'days' => 6],
-            ['id' => 6, 'name' => 'Tom Black', 'start' => '2024-06-10', 'end' => '2024-06-12', 'days' => 2],
-            ['id' => 7, 'name' => 'Sara Blue', 'start' => '2024-07-15', 'end' => '2024-07-20', 'days' => 5],
-            ['id' => 8, 'name' => 'John Doe', 'start' => '2024-01-10', 'end' => '2024-01-15', 'days' => 5],
-            ['id' => 9, 'name' => 'Jane Smith', 'start' => '2024-02-01', 'end' => '2024-02-03', 'days' => 2],
-            ['id' => 10, 'name' => 'Alice Brown', 'start' => '2024-03-05', 'end' => '2024-03-10', 'days' => 5],
-            ['id' => 11, 'name' => 'Bob White', 'start' => '2024-04-12', 'end' => '2024-04-14', 'days' => 2],
-            ['id' => 12, 'name' => 'Emma Green', 'start' => '2024-05-01', 'end' => '2024-05-07', 'days' => 6],
-            ['id' => 13, 'name' => 'Tom Black', 'start' => '2024-06-10', 'end' => '2024-06-12', 'days' => 2],
-            ['id' => 14, 'name' => 'Sara Blue', 'start' => '2024-07-15', 'end' => '2024-07-20', 'days' => 5],
-            ['id' => 1, 'name' => 'John Doe', 'start' => '2024-01-10', 'end' => '2024-01-15', 'days' => 5],
-            ['id' => 2, 'name' => 'Jane Smith', 'start' => '2024-02-01', 'end' => '2024-02-03', 'days' => 2],
-            ['id' => 3, 'name' => 'Alice Brown', 'start' => '2024-03-05', 'end' => '2024-03-10', 'days' => 5],
-            ['id' => 4, 'name' => 'Bob White', 'start' => '2024-04-12', 'end' => '2024-04-14', 'days' => 2],
-            ['id' => 5, 'name' => 'Emma Green', 'start' => '2024-05-01', 'end' => '2024-05-07', 'days' => 6],
-            ['id' => 6, 'name' => 'Tom Black', 'start' => '2024-06-10', 'end' => '2024-06-12', 'days' => 2],
-            ['id' => 7, 'name' => 'Sara Blue', 'start' => '2024-07-15', 'end' => '2024-07-20', 'days' => 5],
-            ['id' => 8, 'name' => 'John Doe', 'start' => '2024-01-10', 'end' => '2024-01-15', 'days' => 5],
-            ['id' => 9, 'name' => 'Jane Smith', 'start' => '2024-02-01', 'end' => '2024-02-03', 'days' => 2],
-            ['id' => 10, 'name' => 'Alice Brown', 'start' => '2024-03-05', 'end' => '2024-03-10', 'days' => 5],
-            ['id' => 11, 'name' => 'Bob White', 'start' => '2024-04-12', 'end' => '2024-04-14', 'days' => 2],
-            ['id' => 12, 'name' => 'Emma Green', 'start' => '2024-05-01', 'end' => '2024-05-07', 'days' => 6],
-            ['id' => 13, 'name' => 'Tom Black', 'start' => '2024-06-10', 'end' => '2024-06-12', 'days' => 2],
-            ['id' => 14, 'name' => 'Sara Blue', 'start' => '2024-07-15', 'end' => '2024-07-20', 'days' => 5],
-        ];
+        $repo->updateCongeStatus($id, -1); // rejected
+        return $this->redirectToRoute('employee_conges');
+    }
+
+    #[Route('/Gestion_Administrative/conges/accept/{id}', name: 'conge_accept')]
+    public function acceptConge(int $id, DemandeCongeRepository $repo): Response
+    {
+        $repo->updateCongeStatus($id, 1); // accepted 
+
+        return $this->redirectToRoute('employee_conges');
+    }
+
+    #[Route('/Gestion_Administrative/conges', name: 'employee_conges')]
+    public function conges(Request $request,DemandeCongeRepository $congeRepository): Response
+    {   
+        $allConges = array_map(fn($c) => [
+            'id' => $c['ID_Demende'],
+            'name' => $c['Nom_Utilisateur'],
+            'start' => Ordre::numOrdreToDate((int)$c['Num_Ordre_Debut_Conge'])->format('Y-m-d'),
+            'end' => Ordre::numOrdreToDate((int)$c['Num_Ordre_Fin_Conge'])->format('Y-m-d'),
+            'days' => (int)$c['Nbr_Jour_Demande'],
+        ], $congeRepository->findAllConges());
+        
+        
 
         $rowsPerPage = 7;
         $currentPage = max(1, (int)$request->query->get('page', 1));
@@ -250,48 +255,7 @@ class GestionAdministrativeController extends AbstractController
     }
 
     // ========== End Conge Controller ==========  //
+#pragma endregion
+   
 }
 
-// $allEmployees = [
-        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2500, 'heures' => 160],
-        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3200, 'heures' => 180],
-        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
-        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
-        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
-        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
-        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
-        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
-        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
-        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
-        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2500, 'heures' => 160],
-        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3200, 'heures' => 180],
-        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
-        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
-        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
-        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
-        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
-        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
-        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
-        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
-        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2500, 'heures' => 160],
-        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3200, 'heures' => 180],
-        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
-        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
-        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
-        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
-        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
-        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
-        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
-        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
-        // ];
-
-        // $allTools = [
-        //     ['id' => 1, 'name' => 'Tool A', 'avgTime' => 120, 'users' => 5],
-        //     ['id' => 2, 'name' => 'Tool B', 'avgTime' => 80,  'users' => 12],
-        //     ['id' => 3, 'name' => 'Tool C', 'avgTime' => 200, 'users' => 3],
-        //     ['id' => 4, 'name' => 'Tool D', 'avgTime' => 60,  'users' => 20],
-        //     ['id' => 5, 'name' => 'Tool E', 'avgTime' => 150, 'users' => 8],
-        //     ['id' => 6, 'name' => 'Tool F', 'avgTime' => 90,  'users' => 10],
-        //     ['id' => 7, 'name' => 'Tool G', 'avgTime' => 300, 'users' => 2],
-        //     ['id' => 8, 'name' => 'Tool H', 'avgTime' => 40,  'users' => 25],
-        // ];
