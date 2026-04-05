@@ -1,7 +1,8 @@
 {% set actions = actions|default([]) %}
 
 <div class="row-actions"
-     data-id="{{ employeeId|default(0) }}">
+    data-id="{{ employeeId|default(0) }}" 
+    data-context="{{ context|default('default') }}">
 
     <button class="action-btn" title="Actions">
         ⚙

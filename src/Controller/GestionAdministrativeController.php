@@ -2,50 +2,50 @@
 
 namespace App\Controller;
 
+use App\Entity\Employee;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Repository\EmployeeRepository;
+use App\Repository\OutilsDeTravailRepository;
 
 class GestionAdministrativeController extends AbstractController
 {
-    #[Route('/Gestion_Administrative', name: 'gestion_administrative')]
-    #[Route('/Gestion_Administrative/employee', name: 'employee_overview')]
-    public function overview(Request $request): Response
-    {
-        $allEmployees = [
-            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2500, 'heures' => 160],
-            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3200, 'heures' => 180],
-            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
-            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
-            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
-            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
-            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
-            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
-            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
-            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
-            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2500, 'heures' => 160],
-            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3200, 'heures' => 180],
-            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
-            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
-            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
-            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
-            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
-            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
-            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
-            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
-            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2500, 'heures' => 160],
-            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3200, 'heures' => 180],
-            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
-            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
-            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
-            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
-            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
-            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
-            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
-            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
-        ];
 
+    // ========== Employee Controller ==========  //
+    private function CalculateSodeCongeRestant(
+        EmployeeRepository $employeeRepository,
+        int $soldeConge,
+        int $employeeId
+    ): int {
+        $usedConge = 0; // This should be calculated based on actual conge data for the employee
+        $usedConge = $employeeRepository->getNumberofUsedConge($employeeId);
+        return $soldeConge - $usedConge; // temporary placeholder
+    }
+
+    #[Route('/Gestion_Administrative', name: 'gestion_administrative')]
+    public function index(): Response
+    {
+        return $this->redirectToRoute('employee_overview');
+    }
+
+    #[Route('/Gestion_Administrative/employee', name: 'employee_overview')]
+    public function overview(Request $request, EmployeeRepository $employeeRepository): Response
+    {
+        
+        $allEmployees = array_map(function($emp) use ($employeeRepository) {
+            return [
+                'id' => $emp['ID_Employe'],
+                'name' => $emp['Nom_Utilisateur'],
+                'salaire' => (int)$emp['SALAIRE'],
+                'heures' => (int)$emp['Nbr_Heure_De_Travail'],
+                'email' => $emp['Email'],
+                'soldeConge' => (int)$emp['Solde_Conge'],
+                'soldeRestant' => $this->CalculateSodeCongeRestant($employeeRepository ,$emp['Solde_Conge'], $emp['ID_Employe'])
+            ];
+        }, $employeeRepository->findAllEmployees());
+        
         // ✅ Get filters from request
         $search = $request->query->get('search') ?? '';
         $hours  = $request->query->get('hours') ?? 0;
@@ -94,20 +94,54 @@ class GestionAdministrativeController extends AbstractController
         ]);
     }
 
-    #[Route('/Gestion_Administrative/outils', name: 'employee_outils')]
-    public function outils(Request $request): Response
+    #[Route('/Gestion_Administrative/employee/delete/{id}', name: 'employee_delete')]
+    public function deleteEmployee(int $id, EmployeeRepository $employeeRepository): Response
     {
-        $allTools = [
-            ['id' => 1, 'name' => 'Tool A', 'avgTime' => 120, 'users' => 5],
-            ['id' => 2, 'name' => 'Tool B', 'avgTime' => 80,  'users' => 12],
-            ['id' => 3, 'name' => 'Tool C', 'avgTime' => 200, 'users' => 3],
-            ['id' => 4, 'name' => 'Tool D', 'avgTime' => 60,  'users' => 20],
-            ['id' => 5, 'name' => 'Tool E', 'avgTime' => 150, 'users' => 8],
-            ['id' => 6, 'name' => 'Tool F', 'avgTime' => 90,  'users' => 10],
-            ['id' => 7, 'name' => 'Tool G', 'avgTime' => 300, 'users' => 2],
-            ['id' => 8, 'name' => 'Tool H', 'avgTime' => 40,  'users' => 25],
-        ];
+        echo "Attempting to delete employee with ID: $id\n"; // Debug statement
+        $employeeRepository->deleteEmployee($id);
 
+        return $this->redirectToRoute('gestion_administrative');
+    }
+    // ========== End Employee Controller ==========  //
+
+    // ========== Outil Controller ==========  //
+
+    private function CalculateAvgUseTime(OutilsDeTravailRepository $outilsRepository, int $outilId): int
+    {
+        // This function should calculate the average time based on actual usage data for the given tool ID
+        // Placeholder implementation:
+        return rand(30, 300); // Random value between 30 and 300 minutes
+    }
+
+    private function CalculateNbrofUserPerTool(OutilsDeTravailRepository $outilsRepository,int $outilId): int
+    {
+        // This function should calculate the number of users based on actual usage data for the given tool ID
+        // Placeholder implementation:
+        return rand(1, 100); // Random value between 1 and 100
+    }
+
+    #[Route('/Gestion_Administrative/outils/delete/{id}', name: 'tool_delete')]
+    public function deleteTool(int $id, OutilsDeTravailRepository $outilsRepository): Response
+    {
+        echo "Attempting to delete tool with ID: $id\n"; // Debug statement
+        $outilsRepository->deleteTool($id);
+
+        return $this->redirectToRoute('employee_outils');
+    }
+
+    #[Route('/Gestion_Administrative/outils', name: 'employee_outils')]
+    public function outils(Request $request ,OutilsDeTravailRepository $outilsRepository): Response
+    {
+
+        $allTools = array_map(function($tool) use($outilsRepository) {
+            return [
+                'id' => $tool['ID_Outil'],
+                'name' => $tool['Nom_Outil'],
+                'avgTime' => $this->CalculateAvgUseTime($outilsRepository, $tool['ID_Outil']), // This function should calculate the average time based on actual usage data
+                'users' => $this->CalculateNbrofUserPerTool($outilsRepository, $tool['ID_Outil']), // This function should calculate the number of users based on actual usage data
+            ];
+        }, $outilsRepository->findAllTools());
+        
         // 🔍 Search
         $search = $request->query->get('search');
 
@@ -160,6 +194,9 @@ class GestionAdministrativeController extends AbstractController
         ]);
     }
 
+    // ========== End Outil Controller ==========  //
+
+    // ========== Conge Controller ==========  //
     #[Route('/Gestion_Administrative/conges', name: 'employee_conges')]
     public function conges(Request $request): Response
     {
@@ -211,4 +248,50 @@ class GestionAdministrativeController extends AbstractController
             'totalConges' => $total,
         ]);
     }
+
+    // ========== End Conge Controller ==========  //
 }
+
+// $allEmployees = [
+        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2500, 'heures' => 160],
+        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3200, 'heures' => 180],
+        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
+        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
+        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
+        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
+        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
+        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
+        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
+        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
+        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2500, 'heures' => 160],
+        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3200, 'heures' => 180],
+        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
+        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
+        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
+        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
+        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
+        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
+        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
+        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
+        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2500, 'heures' => 160],
+        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3200, 'heures' => 180],
+        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
+        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
+        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
+        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
+        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
+        //     ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
+        //     ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
+        //     ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
+        // ];
+
+        // $allTools = [
+        //     ['id' => 1, 'name' => 'Tool A', 'avgTime' => 120, 'users' => 5],
+        //     ['id' => 2, 'name' => 'Tool B', 'avgTime' => 80,  'users' => 12],
+        //     ['id' => 3, 'name' => 'Tool C', 'avgTime' => 200, 'users' => 3],
+        //     ['id' => 4, 'name' => 'Tool D', 'avgTime' => 60,  'users' => 20],
+        //     ['id' => 5, 'name' => 'Tool E', 'avgTime' => 150, 'users' => 8],
+        //     ['id' => 6, 'name' => 'Tool F', 'avgTime' => 90,  'users' => 10],
+        //     ['id' => 7, 'name' => 'Tool G', 'avgTime' => 300, 'users' => 2],
+        //     ['id' => 8, 'name' => 'Tool H', 'avgTime' => 40,  'users' => 25],
+        // ];

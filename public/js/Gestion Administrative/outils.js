@@ -52,22 +52,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-window.rowActionsHandlers = {
+window.rowActionsHandlers = window.rowActionsHandlers || {};
 
-            edit: function(id) {
-                console.log("Modifier:", id);
-                // open edit modal later
-            },
+window.rowActionsHandlers.outils = {
 
-            delete: function(id) {
-                if (confirm("Confirmer la suppression ?")) {
-                    console.log("Supprimer:", id);
-                }
-            },
+    edit: function(id) {
+        console.log("Modifier outil:", id);
+    },
 
-            view: function(id) {
-                console.log("Voir détails Outils:", id);
-                // window.location.href = '/employee/' + id;
-            },
+    delete: function(id) {
+        console.log("Supprimer outil:", id);
+        if (confirm("Supprimer cet outil ?")) {
+            const url = window.deleteToolUrlTemplate.replace('TOOL_ID', id);
+            window.location.href = url;
+        }
+    },
 
-        };
+    view: function(id) {
+        console.log("Voir détails outil:", id);
+    }
+
+};

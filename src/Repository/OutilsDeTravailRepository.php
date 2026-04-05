@@ -16,28 +16,32 @@ class OutilsDeTravailRepository extends ServiceEntityRepository
         parent::__construct($registry, OutilsDeTravail::class);
     }
 
-//    /**
-//     * @return OutilsDeTravail[] Returns an array of OutilsDeTravail objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('o')
-//            ->andWhere('o.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('o.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function findAllTools(): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
 
-//    public function findOneBySomeField($value): ?OutilsDeTravail
-//    {
-//        return $this->createQueryBuilder('o')
-//            ->andWhere('o.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        $sql = "
+            SELECT *
+            FROM outils_de_travail
+        ";
+
+        $array = $conn->executeQuery($sql)->fetchAllAssociative();
+        return $array; 
+    }
+    
+    public function deleteTool(int $id): void
+    {
+        $conn = $this->getEntityManager()->getConnection();
+
+        $conn->executeStatement(
+            "DELETE FROM outils_de_travail WHERE ID_OUTIL = :id",
+            ['id' => $id]
+        );
+
+        $conn->executeStatement(
+            "DELETE FROM outil_employee WHERE ID_OUTIL = :id",
+            ['id' => $id]
+        );
+
+    }
 }

@@ -64,12 +64,6 @@
                 <option value="3000" {{ app.request.get('salary') == '3000' ? 'selected' }}>3000</option>
                 <option value="2000" {{ app.request.get('salary') == '2000' ? 'selected' }}>2000</option>
             </select>
-
-            {# <select class="filter-select" name="salary">
-                <option value="">Salaire ≥</option>
-                <option value="2000">2000</option>
-                <option value="3000">3000</option>
-            </select> #}
             
             <!-- Search -->
             <div class="search-box">
@@ -136,7 +130,8 @@
 
                        <td class="actions-cell">
                             {% include 'Gestion Administrative/components/row_actions.html.twig' with {
-                                employeeId: loop.index,
+                                employeeId: employee.id,
+                                context: 'employee',
                                 actions: [
                                     {
                                         name: 'tools',
@@ -166,5 +161,9 @@
     } %}
 
 </div>
+
+<script>
+    window.deleteEmployeeUrlTemplate = "{{ path('employee_delete', {'id': 'EMP_ID'}) }}";
+</script>
 
 {% endblock %}

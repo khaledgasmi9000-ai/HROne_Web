@@ -96,7 +96,8 @@
 
                         <td class="actions-cell">
                             {% include 'Gestion Administrative/components/row_actions.html.twig' with {
-                                employeeId: tool.id
+                                employeeId: tool.id,
+                                context: 'outils',
                             } %}
                         </td>
                     </tr>
@@ -119,4 +120,9 @@
     } %}
 
 </div>
+
+<script>
+    window.deleteToolUrlTemplate = "{{ path('tool_delete', {'id': 'TOOL_ID'}) }}";
+</script>
+
 {% endblock %}

@@ -54,28 +54,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
     
+window.rowActionsHandlers = window.rowActionsHandlers || {};
 
-window.rowActionsHandlers = {
+window.rowActionsHandlers.employee = {
 
-            edit: function(id) {
-                console.log("Modifier:", id);
-                // open edit modal later
-            },
+    edit: function(id) {
+        console.log("Modifier employee:", id);
+    },
 
-            delete: function(id) {
-                if (confirm("Confirmer la suppression ?")) {
-                    console.log("Supprimer:", id);
-                }
-            },
+    delete: function(id) {
+        console.log("Supprimer employee:", id);
+        if (confirm("Confirmer la suppression ?")) {
+            const url = window.deleteEmployeeUrlTemplate.replace('EMP_ID', id);
+            window.location.href = url;
+        }
+    },
 
-            view: function(id) {
-                console.log("Voir détails:", id);
-                // window.location.href = '/employee/' + id;
-            },
+    view: function(id) {
+        console.log("Voir détails employee:", id);
+    },
 
-            tools: function(id) {
-                console.log("Gérer outils:", id);
-                // custom logic for your added button
-            }
+    tools: function(id) {
+        console.log("Gérer outils:", id);
+    }
 
-        };
+};

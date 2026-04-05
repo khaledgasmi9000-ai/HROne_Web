@@ -25,6 +25,8 @@ document.addEventListener("DOMContentLoaded", () => {
         container.querySelectorAll(".dropdown-item").forEach(item => {
             item.addEventListener("click", () => {
 
+                //e.stopPropagation(); // 🔥 prevents dropdown closing too early
+
                 const action = item.dataset.action;
                 const id = container.dataset.id;
                 const url = item.dataset.url;
@@ -32,8 +34,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Close dropdown
                 container.classList.remove("open");
 
-                if (window.rowActionsHandlers && typeof window.rowActionsHandlers[action] === "function") {
-                    window.rowActionsHandlers[action](id, item);
+                const context = container.dataset.context;
+
+                if (
+                    window.rowActionsHandlers &&
+                    window.rowActionsHandlers[context] &&
+                    typeof window.rowActionsHandlers[context][action] === "function"
+                ) {
+                    window.rowActionsHandlers[context][action](id, item);
                 }
                 else if (defaultHandlers[action]) {
                     defaultHandlers[action](id);
