@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="{{ app.request.locale }}">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #0f172a; }
+    h1 { font-size: 18px; margin: 0 0 8px; color: #1e3a8a; }
+    h2 { font-size: 13px; margin: 16px 0 6px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+    th, td { border: 1px solid #e2e8f0; padding: 4px 6px; text-align: left; vertical-align: top; }
+    th { background: #f1f5f9; }
+    .muted { color: #64748b; font-size: 10px; }
+    ul.stats { list-style: none; padding: 0; margin: 0; }
+    ul.stats li { padding: 2px 0; }
+  </style>
+</head>
+<body>
+  <h1>{{ 'pdf.title'|trans }}</h1>
+  <p class="muted">{{ 'pdf.generated'|trans }} : {{ generated_at }}</p>
+  <p><strong>{{ 'pdf.user'|trans }} :</strong> {{ user_label }}</p>
+
+  <h2>{{ 'pdf.stats'|trans }}</h2>
+  <ul class="stats">
+    <li>posts_total — {{ global.posts_total }}</li>
+    <li>posts_active_public — {{ global.posts_active_public }}</li>
+    <li>comments_total — {{ global.comments_total }}</li>
+    <li>comments_active_public — {{ global.comments_active_public }}</li>
+    <li>votes_posts_total — {{ global.votes_posts_total }}</li>
+    <li>votes_comments_total — {{ global.votes_comments_total }}</li>
+  </ul>
+
+  <h2>{{ 'pdf.my_posts'|trans }}</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>{{ 'community.dashboard.th.title'|trans }}</th>
+        <th>{{ 'community.dashboard.th.tag'|trans }}</th>
+        <th>{{ 'community.dashboard.th.active'|trans }}</th>
+        <th>{{ 'community.dashboard.th.created'|trans }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in my_posts %}
+        <tr>
+          <td>{{ p.id }}</td>
+          <td>{{ p.title }}</td>
+          <td>{{ p.tag }}</td>
+          <td>{{ p.active ? ('community.dashboard.yes'|trans) : ('community.dashboard.no'|trans) }}</td>
+          <td>{{ p.created }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5">—</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>{{ 'pdf.my_comments'|trans }}</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>{{ 'community.dashboard.th.post'|trans }}</th>
+        <th>{{ 'community.dashboard.th.excerpt'|trans }}</th>
+        <th>{{ 'community.dashboard.th.created'|trans }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in my_comments %}
+        <tr>
+          <td>{{ c.id }}</td>
+          <td>{{ c.post_id }}</td>
+          <td>{{ c.excerpt }}</td>
+          <td>{{ c.created }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="4">—</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

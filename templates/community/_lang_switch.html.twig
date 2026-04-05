@@ -1,0 +1,7 @@
+{# expects: route_name (string) #}
+<div class="lang-switch card-inline" role="navigation" aria-label="{{ 'lang.switch'|trans }}">
+  <span class="lang-switch-label">{{ 'lang.switch'|trans }}</span>
+  <a class="lang-pill{% if app.request.locale == 'fr' %} is-active{% endif %}" href="{{ path(route_name) }}?lang=fr" hreflang="fr">FR</a>
+  <a class="lang-pill{% if app.request.locale == 'en' %} is-active{% endif %}" href="{{ path(route_name) }}?lang=en" hreflang="en">EN</a>
+  <a class="lang-pill{% if app.request.locale == 'ar' %} is-active{% endif %}" href="{{ path(route_name) }}?lang=ar" hreflang="ar">AR</a>
+</div>

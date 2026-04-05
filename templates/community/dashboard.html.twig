@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="{{ app.request.locale }}" dir="{{ app.request.locale == 'ar' ? 'rtl' : 'ltr' }}">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ 'community.meta_title.dashboard'|trans }}</title>
+  <link rel="stylesheet" href="/topNavbar/topNavbar-shared.css" />
+  <link rel="stylesheet" href="/topNavbar/communaute.css" />
+  <link rel="stylesheet" href="/topNavbar/communaute-app.css" />
+  <link rel="stylesheet" href="/topNavbar/community-dashboard.css" />
+  <link rel="stylesheet" href="/topNavbar/community-enhancements.css" />
+</head>
+<body class="page-communaute page-community-dashboard" data-page="communaute-dashboard">
+  <script>
+  window.__COMMUNITY_UI__ = {{ {
+    locale: app.request.locale,
+    pdfUrl: path('app_communaute_dashboard_pdf'),
+    statLabels: {
+      posts_total: 'community.stat.posts_total'|trans,
+      posts_active_public: 'community.stat.posts_visible'|trans,
+      posts_inactive: 'community.stat.posts_hidden'|trans,
+      posts_distinct_authors: 'community.stat.authors'|trans,
+      comments_total: 'community.stat.comments_total'|trans,
+      comments_active_public: 'community.stat.comments_visible'|trans,
+      comments_inactive: 'community.stat.comments_hidden'|trans,
+      comments_roots: 'community.stat.comments_roots'|trans,
+      comments_replies: 'community.stat.comments_replies'|trans,
+      votes_posts_total: 'community.stat.votes_posts'|trans,
+      votes_comments_total: 'community.stat.votes_comments'|trans,
+    },
+    strings: {
+      confirmDeletePost: 'js.confirm_delete_post'|trans,
+      confirmDeleteComment: 'js.confirm_delete_comment'|trans,
+      validationTitle: 'js.validation.title_required'|trans,
+      validationUrl: 'js.validation.url_invalid'|trans,
+      validationTag: 'js.validation.tag_long'|trans,
+      validationComment: 'js.validation.comment_long'|trans,
+      validationSearch: 'js.validation.search_long'|trans,
+    },
+    labelYes: 'community.dashboard.yes'|trans,
+    labelNo: 'community.dashboard.no'|trans,
+  }|json_encode(constant('JSON_UNESCAPED_UNICODE'))|raw }};
+  </script>
+  <div class="app-shell">
+    <header class="top-navbar">
+      <nav class="top-nav">
+        <button id="btnOffres" class="nav-link" type="button" data-page="offres" data-href="/topNavbar/topNavbar.html">Offres d'emploi</button>
+        <button id="btnTraining" class="nav-link" type="button" data-page="formations" data-href="/topNavbar/formations.html">Formations</button>
+        <button id="btnEvents" class="nav-link" type="button" data-page="evenements" data-href="/topNavbar/evenements.html">Événements</button>
+        <button id="btnParticipation" class="nav-link" type="button" data-page="participations" data-href="/topNavbar/participations.html">Mes participations</button>
+        <button id="btnDemandeConge" class="nav-link" type="button" data-page="demande-conge" data-href="/topNavbar/demande-conge.html">Demande de congé</button>
+        <button id="btnCommunaute" class="nav-link is-active" type="button" data-page="communaute" data-href="{{ path('app_communaute') }}">Communauté</button>
+      </nav>
+    </header>
+
+    <main class="page-placeholder">
+      <section class="interface-shell community-app community-dashboard">
+        {% include 'community/_lang_switch.html.twig' with { route_name: 'app_communaute_dashboard' } only %}
+
+        <nav class="community-subnav card" aria-label="{{ 'community.nav.feed'|trans }}">
+          <a class="subnav-link" href="{{ path('app_communaute') }}">{{ 'community.nav.feed'|trans }}</a>
+          <span class="subnav-sep" aria-hidden="true">|</span>
+          <span class="subnav-link is-current" aria-current="page">{{ 'community.nav.dashboard'|trans }}</span>
+          <a class="subnav-cta btn-ghost" href="{{ path('app_communaute') }}#nouveau-post">{{ 'community.nav.new_post'|trans }}</a>
+        </nav>
+
+        <header class="community-hero dashboard-hero">
+          <h1>{{ 'community.dashboard.title'|trans }}</h1>
+          <p class="lead">{{ 'community.dashboard.lead'|trans|raw }}</p>
+        </header>
+
+        <div class="profile-spotlight card" id="profileSpotlight">
+          {% set pname = profile_display_name|default('')|trim %}
+          <div class="profile-avatar" id="dashProfileAvatar" aria-hidden="true">{% if pname|length > 0 %}{{ pname|slice(0, 1)|upper }}{% else %}?{% endif %}</div>
+          <div class="profile-spotlight-body">
+            <h2 class="profile-spotlight-title">{{ 'community.dashboard.profile.title'|trans }}</h2>
+            <p class="profile-spotlight-name" id="dashProfileName" {% if profile_user_id is null %}hidden{% endif %}>{{ profile_user_id is not null ? profile_display_name : '' }}</p>
+            <p class="profile-spotlight-meta" id="dashProfileMeta" {% if profile_user_id is null %}hidden{% endif %}>{{ 'community.dashboard.profile.id'|trans }} : <strong id="dashProfileId">{{ profile_user_id|default('') }}</strong></p>
+            <p class="muted" id="dashProfileHint" {% if profile_user_id is not null %}hidden{% endif %}>{{ 'community.dashboard.profile.hint'|trans({ '%fallback%': 'Ons Maarfi' }) }}</p>
+          </div>
+        </div>
+
+        <div class="card session-card community-toolbar-grid">
+          <label class="field-inline">
+            <span>{{ 'community.session.user_id'|trans }}</span>
+            <input type="number" id="currentUserId" min="1" step="1" required value="{{ initial_user_id ?? 1 }}" />
+          </label>
+          <button type="button" class="btn-secondary" id="btnSessionApply">{{ 'community.dashboard.session.connect'|trans }}</button>
+          <button type="button" class="btn-ghost" id="btnDashboardRefresh">{{ 'community.dashboard.session.refresh'|trans }}</button>
+          <a class="btn-primary pdf-export-btn" id="btnExportPdf" href="{{ path('app_communaute_dashboard_pdf') }}">{{ 'community.dashboard.export_pdf'|trans }}</a>
+          <span id="sessionStatus" class="session-status" aria-live="polite"></span>
+        </div>
+
+        <div class="card dashboard-filters-grid">
+          <label class="field-inline">
+            <span>{{ 'community.filter.tag'|trans }}</span>
+            <input type="text" id="dashFilterTag" maxlength="80" placeholder="{{ 'community.filter.tag_ph'|trans }}" autocomplete="off" />
+          </label>
+          <label class="field-inline">
+            <span>{{ 'community.filter.search_title'|trans }}</span>
+            <input type="search" id="dashSearchTitle" maxlength="120" placeholder="{{ 'community.filter.search_title_ph'|trans }}" autocomplete="off" />
+          </label>
+          <label class="field-inline">
+            <span>{{ 'community.filter.search_comment'|trans }}</span>
+            <input type="search" id="dashSearchComment" maxlength="120" placeholder="{{ 'community.filter.search_comment_ph'|trans }}" autocomplete="off" />
+          </label>
+          <button type="button" class="btn-secondary" id="btnApplyDashFilters">{{ 'community.dashboard.filter.apply'|trans }}</button>
+        </div>
+
+        <p id="dashboardGlobalError" class="feed-error" hidden></p>
+
+        <section class="dashboard-stats" aria-label="{{ 'community.dashboard.stats'|trans }}">
+          <h2 class="dashboard-section-title">{{ 'community.dashboard.stats'|trans }}</h2>
+          <div class="stat-grid stat-grid--colorful" id="statGrid"></div>
+          <div class="tags-panel card" id="tagsPanel" hidden>
+            <h3>{{ 'community.dashboard.tags_top'|trans }}</h3>
+            <ul class="tags-bar-list" id="tagsBarList"></ul>
+          </div>
+        </section>
+
+        <section class="dashboard-crud" aria-label="{{ 'community.dashboard.my_posts'|trans }}">
+          <h2 class="dashboard-section-title">{{ 'community.dashboard.my_posts'|trans }} <span class="badge-count" id="countPostsBadge">0</span></h2>
+          <div class="table-wrap card">
+            <table class="dash-table" id="tableMyPosts">
+              <thead>
+                <tr>
+                  <th>{{ 'community.dashboard.th.id'|trans }}</th>
+                  <th>{{ 'community.dashboard.th.title'|trans }}</th>
+                  <th>{{ 'community.dashboard.th.tag'|trans }}</th>
+                  <th>{{ 'community.dashboard.th.active'|trans }}</th>
+                  <th>{{ 'community.dashboard.th.score'|trans }}</th>
+                  <th>{{ 'community.dashboard.th.created'|trans }}</th>
+                  <th>{{ 'community.dashboard.actions'|trans }}</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <p class="table-empty" id="emptyPosts" hidden>{{ 'community.dashboard.empty_posts'|trans }}</p>
+          </div>
+
+          <h2 class="dashboard-section-title">{{ 'community.dashboard.my_comments'|trans }} <span class="badge-count" id="countCommentsBadge">0</span></h2>
+          <div class="table-wrap card">
+            <table class="dash-table" id="tableMyComments">
+              <thead>
+                <tr>
+                  <th>{{ 'community.dashboard.th.id'|trans }}</th>
+                  <th>{{ 'community.dashboard.th.post'|trans }}</th>
+                  <th>{{ 'community.dashboard.th.excerpt'|trans }}</th>
+                  <th>{{ 'community.dashboard.th.active'|trans }}</th>
+                  <th>{{ 'community.dashboard.th.score'|trans }}</th>
+                  <th>{{ 'community.dashboard.th.created'|trans }}</th>
+                  <th>{{ 'community.dashboard.actions'|trans }}</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <p class="table-empty" id="emptyComments" hidden>{{ 'community.dashboard.empty_comments'|trans }}</p>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" hidden aria-hidden="true"></div>
+  <div class="modal-panel" id="modalPost" hidden role="dialog" aria-labelledby="modalPostTitle">
+    <h3 id="modalPostTitle">{{ 'community.modal.post_title'|trans }}</h3>
+    <form id="formEditPost" class="stack-form" novalidate>
+      <input type="hidden" name="entity_id" />
+      <label>{{ 'community.field.title'|trans }} <input type="text" name="title" required maxlength="255" /></label>
+      <label>{{ 'community.field.description'|trans }} <textarea name="description" rows="3" maxlength="10000"></textarea></label>
+      <label>{{ 'community.field.tag'|trans }} <input type="text" name="tag" maxlength="80" /></label>
+      <label>{{ 'community.field.image_url'|trans }} <input type="url" name="image_url" maxlength="2048" /></label>
+      <label class="field-check"><input type="checkbox" name="is_active" value="1" /> <span>{{ 'community.modal.post_visible'|trans }}</span></label>
+      <p class="field-error" id="formEditPostError" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" data-close-modal>{{ 'community.modal.cancel'|trans }}</button>
+        <button type="submit" class="btn-primary">{{ 'community.modal.save'|trans }}</button>
+      </div>
+    </form>
+  </div>
+  <div class="modal-panel" id="modalComment" hidden role="dialog" aria-labelledby="modalCommentTitle">
+    <h3 id="modalCommentTitle">{{ 'community.modal.comment_title'|trans }}</h3>
+    <form id="formEditComment" class="stack-form" novalidate>
+      <input type="hidden" name="entity_id" />
+      <label>{{ 'community.modal.content'|trans }} <textarea name="content" rows="4" required maxlength="8000"></textarea></label>
+      <label class="field-check"><input type="checkbox" name="is_active" value="1" /> <span>{{ 'community.modal.comment_visible'|trans }}</span></label>
+      <p class="field-error" id="formEditCommentError" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" data-close-modal>{{ 'community.modal.cancel'|trans }}</button>
+        <button type="submit" class="btn-primary">{{ 'community.modal.save'|trans }}</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="/topNavbar/topNavbar.js"></script>
+  <script src="/topNavbar/community-dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+.community-app .community-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin-bottom: 18px;
+}
+
+.community-subnav .subnav-link {
+  color: var(--text, #1e293b);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.community-subnav .subnav-link:hover {
+  text-decoration: underline;
+}
+
+.community-subnav .subnav-link.is-current {
+  color: var(--accent, #2563eb);
+}
+
+.community-subnav .subnav-sep {
+  color: var(--text-soft, #64748b);
+  user-select: none;
+}
+
+.community-subnav .subnav-cta {
+  margin-left: auto;
+}
+
+.dashboard-hero {
+  margin-bottom: 20px;
+}
+
+.dashboard-section-title {
+  font-size: 1.15rem;
+  margin: 28px 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: var(--surface, #fff);
+  border: 1px solid var(--surface-border, #e2e8f0);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.stat-card .stat-value {
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text, #0f172a);
+}
+
+.stat-card .stat-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-soft, #64748b);
+  margin-top: 6px;
+  line-height: 1.35;
+}
+
+.tags-panel h3 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+}
+
+.tags-bar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tags-bar-list li {
+  display: grid;
+  grid-template-columns: 100px 1fr 40px;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.tags-bar-list .tag-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tags-bar-list .tag-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #2563eb, #0ea5e9);
+  min-width: 4px;
+}
+
+.tags-bar-list .tag-num {
+  text-align: right;
+  color: var(--text-soft, #64748b);
+  font-variant-numeric: tabular-nums;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  padding: 0;
+}
+
+.dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.dash-table th,
+.dash-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--surface-border, #e2e8f0);
+}
+
+.dash-table th {
+  background: rgba(15, 23, 42, 0.04);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-soft, #64748b);
+}
+
+.dash-table tbody tr:hover {
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.dash-table .cell-excerpt {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dash-table .actions {
+  white-space: nowrap;
+}
+
+.dash-table .btn-table {
+  padding: 4px 10px;
+  margin-right: 4px;
+  border-radius: 6px;
+  border: 1px solid var(--surface-border, #e2e8f0);
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.dash-table .btn-table:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.dash-table .btn-table.danger:hover {
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+.table-empty {
+  padding: 20px;
+  color: var(--text-soft, #64748b);
+  margin: 0;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 1000;
+}
+
+.modal-panel {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1001;
+  background: var(--surface, #fff);
+  border-radius: 14px;
+  padding: 22px 24px;
+  max-width: min(520px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
+  border: 1px solid var(--surface-border, #e2e8f0);
+}
+
+.modal-panel h3 {
+  margin: 0 0 16px;
+  font-size: 1.15rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
