@@ -1,0 +1,118 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}HR One - Catalogue des formations{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/formations.css">
+{% endblock %}
+
+{% block body %}
+    <section class="hero-card">
+        <div>
+            <p class="eyebrow">Module Formation</p>
+            <h1>Developpement du catalogue de formations en Symfony 6.4</h1>
+            <p class="hero-copy">
+                Ce front office reprend le module Java et le traduit en experience web avec filtres,
+                detail des sessions et consultation des places disponibles.
+            </p>
+        </div>
+        <div class="hero-stats">
+            <div class="stat-box">
+                <span>{{ stats.total }}</span>
+                <small>formations</small>
+            </div>
+            <div class="stat-box">
+                <span>{{ stats.available }}</span>
+                <small>ouvertes</small>
+            </div>
+            <div class="stat-box">
+                <span>{{ stats.online }}</span>
+                <small>en ligne</small>
+            </div>
+        </div>
+    </section>
+
+    {% if featured %}
+        <section class="featured-card">
+            <div class="featured-main">
+                <p class="eyebrow">Formation mise en avant</p>
+                <h2>{{ featured.title }}</h2>
+                <p>{{ featured.excerpt }}</p>
+                <div class="badge-row">
+                    <span class="badge">{{ featured.mode_label }}</span>
+                    <span class="badge">{{ featured.level }}</span>
+                    <span class="badge badge-strong">{{ featured.status_label }}</span>
+                </div>
+            </div>
+            <div class="featured-meta">
+                <div>
+                    <strong>Debut</strong>
+                    <span>{{ featured.date_start }}</span>
+                </div>
+                <div>
+                    <strong>Fin</strong>
+                    <span>{{ featured.date_end }}</span>
+                </div>
+                <div>
+                    <strong>Capacite</strong>
+                    <span>{{ featured.occupancy_label }}</span>
+                </div>
+                <a class="primary-link" href="{{ path('app_formation_show', {id: featured.id}) }}">Voir le detail</a>
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="catalog-shell">
+        <form method="get" class="filters-card">
+            <div class="field-group field-group-wide">
+                <label for="q">Recherche</label>
+                <input id="q" type="text" name="q" value="{{ filters.q }}" placeholder="Titre, description, niveau...">
+            </div>
+            <div class="field-group">
+                <label for="mode">Mode</label>
+                <select id="mode" name="mode">
+                    <option value="">Tous</option>
+                    <option value="presentiel" {% if filters.mode == 'presentiel' %}selected{% endif %}>Presentiel</option>
+                    <option value="en_ligne" {% if filters.mode == 'en_ligne' %}selected{% endif %}>En ligne</option>
+                </select>
+            </div>
+            <div class="field-actions">
+                <button type="submit">Filtrer</button>
+                <a href="{{ path('app_formation_index') }}">Reinitialiser</a>
+            </div>
+        </form>
+
+        <div class="formation-grid">
+            {% for formation in formations %}
+                <article class="formation-card">
+                    <div class="card-top">
+                        <span class="mode-pill">{{ formation.mode_label }}</span>
+                        <span class="status-pill {% if formation.is_available %}status-open{% else %}status-full{% endif %}">{{ formation.status_label }}</span>
+                    </div>
+                    <h3>{{ formation.title }}</h3>
+                    <p>{{ formation.excerpt }}</p>
+                    <dl class="meta-list">
+                        <div>
+                            <dt>Niveau</dt>
+                            <dd>{{ formation.level }}</dd>
+                        </div>
+                        <div>
+                            <dt>Debut</dt>
+                            <dd>{{ formation.date_start }}</dd>
+                        </div>
+                        <div>
+                            <dt>Places</dt>
+                            <dd>{{ formation.occupancy_label }}</dd>
+                        </div>
+                    </dl>
+                    <a class="card-link" href="{{ path('app_formation_show', {id: formation.id}) }}">Consulter la formation</a>
+                </article>
+            {% else %}
+                <div class="empty-state">
+                    <h3>Aucune formation trouvee</h3>
+                    <p>Essaie un autre filtre ou ajoute des donnees de test pour le sprint.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}

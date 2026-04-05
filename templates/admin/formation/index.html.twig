@@ -1,0 +1,108 @@
+{% extends 'base_back.html.twig' %}
+
+{% block title %}HR One - Gestion des formations{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/admin-formations.css">
+{% endblock %}
+
+{% block body %}
+    {% for message in app.flashes('success') %}
+        <div class="flash-success">{{ message }}</div>
+    {% endfor %}
+
+    <section class="dashboard-hero">
+        <div>
+            <p class="eyebrow">Back office</p>
+            <h1>Gestion des formations</h1>
+            <p>Version web Symfony du module formation avec suivi des disponibilites, consultation et filtrage des sessions.</p>
+            <div class="hero-actions">
+                <a class="primary-action primary-action-hero" href="{{ path('app_admin_formation_new') }}">
+                    <span class="action-icon" aria-hidden="true">+</span>
+                    <span>Nouvelle formation</span>
+                </a>
+            </div>
+        </div>
+        <div class="dashboard-stats">
+            <div class="stat-box">
+                <span>{{ stats.total }}</span>
+                <small>Total</small>
+            </div>
+            <div class="stat-box">
+                <span>{{ stats.available }}</span>
+                <small>Disponibles</small>
+            </div>
+            <div class="stat-box">
+                <span>{{ stats.full }}</span>
+                <small>Completes</small>
+            </div>
+            <div class="stat-box">
+                <span>{{ stats.online }}</span>
+                <small>En ligne</small>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <form method="get" class="toolbar">
+            <input type="text" name="q" value="{{ filters.q }}" placeholder="Rechercher une formation...">
+            <select name="mode">
+                <option value="">Tous les modes</option>
+                <option value="presentiel" {% if filters.mode == 'presentiel' %}selected{% endif %}>Presentiel</option>
+                <option value="en_ligne" {% if filters.mode == 'en_ligne' %}selected{% endif %}>En ligne</option>
+            </select>
+            <button type="submit">Filtrer</button>
+            <a href="{{ path('app_admin_formation_index') }}">Reinitialiser</a>
+        </form>
+
+        <div class="table-shell">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Titre</th>
+                    <th>Mode</th>
+                    <th>Niveau</th>
+                    <th>Debut</th>
+                    <th>Fin</th>
+                    <th>Places</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for formation in formations %}
+                    <tr>
+                        <td>#{{ formation.id }}</td>
+                        <td>
+                            <strong>{{ formation.title }}</strong>
+                            <p>{{ formation.excerpt }}</p>
+                        </td>
+                        <td>{{ formation.mode_label }}</td>
+                        <td>{{ formation.level }}</td>
+                        <td>{{ formation.date_start }}</td>
+                        <td>{{ formation.date_end }}</td>
+                        <td>{{ formation.occupancy_label }}</td>
+                        <td>
+                            <span class="status-pill {% if formation.is_available %}status-open{% else %}status-full{% endif %}">
+                                {{ formation.status_label }}
+                            </span>
+                        </td>
+                        <td class="actions-cell">
+                            <a class="text-action" href="{{ path('app_formation_show', {id: formation.id}) }}">Voir</a>
+                            <a class="text-action" href="{{ path('app_admin_formation_edit', {id: formation.id}) }}">Modifier</a>
+                            <form method="post" action="{{ path('app_admin_formation_delete', {id: formation.id}) }}" onsubmit="return confirm('Supprimer cette formation ?');">
+                                <button type="submit" class="danger-action">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="9" class="empty-row">Aucune formation ne correspond aux filtres.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endblock %}

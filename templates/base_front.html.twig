@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HR One - Formations{% endblock %}</title>
+    <link rel="stylesheet" href="/styles/front-shared.css">
+    {% block stylesheets %}{% endblock %}
+</head>
+<body class="{% block body_class %}page-formations{% endblock %}">
+<div class="app-shell">
+    <header class="top-navbar">
+        <nav class="top-nav">
+            <a class="nav-link" href="#">Offres d'emploi</a>
+            <a class="nav-link active" href="{{ path('app_formation_index') }}">Formations</a>
+            <a class="nav-link" href="#">Evenements</a>
+            <a class="nav-link" href="{{ path('app_my_participations') }}">Mes participations</a>
+            <a class="nav-link" href="#">Demande de conge</a>
+            <a class="nav-link" href="#">Communaute</a>
+        </nav>
+    </header>
+
+    <main class="page-content">
+        {% block body %}{% endblock %}
+    </main>
+</div>
+</body>
+</html>
