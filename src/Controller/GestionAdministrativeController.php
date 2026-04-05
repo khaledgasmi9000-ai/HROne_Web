@@ -110,8 +110,9 @@ class GestionAdministrativeController extends AbstractController
     public function getEmployee(int $id, EmployeeRepository $repo): Response
     {
         $employee = $repo->findEmployeeById($id);
+        $data = $this->json($employee);
 
-        return $this->json($employee);
+        return $data;
     }
 
     #[Route('/Gestion_Administrative/employee/update/{id}', name: 'employee_update', methods: ['POST'])]

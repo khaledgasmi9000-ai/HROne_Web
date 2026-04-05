@@ -22,10 +22,10 @@ document.addEventListener("DOMContentLoaded", () => {
         fetch(url)
             .then(res => res.json())
             .then(data => {
-
+                //console.log("Employee data fetched:", data);
                 document.getElementById("empName").value = data.Nom_Utilisateur || "";
                 document.getElementById("empEmail").value = data.Email || "";
-                document.getElementById("empPhone").value = data.Num_tel || "";
+                document.getElementById("empPhone").value = data.Num_Tel || "";
                 document.getElementById("empCIN").value = data.CIN || "";
                 document.getElementById("empBirth").value = data.Date_Naissance || "";
                 document.getElementById("empGender").value = data.Gender || "";
@@ -100,13 +100,33 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             body: JSON.stringify(data)
         })
-        .then(res => {
+        .then(async res => {
+
+            const text = await res.text(); // 🔥 get raw response
+
             console.log("Response status:", res.status);
-            if (!res.ok) throw new Error("Request failed");
-            return res.json();
+            console.log("Raw response:", text);
+
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status} → ${text}`);
+            }
+
+            try {
+                return JSON.parse(text); // try parse JSON
+            } catch {
+                return text; // fallback if not JSON
+            }
+
         })
-        .then(() => window.location.reload())
-        .catch(err => console.error("Submit error:", err));
+        .then(result => {
+            console.log("Success:", result);
+            window.location.reload();
+        })
+        .catch(err => {
+            console.error("Submit error FULL:", err);
+
+            alert("Erreur serveur:\n" + err.message); // optional UI feedback
+        });
     });
 });
 
