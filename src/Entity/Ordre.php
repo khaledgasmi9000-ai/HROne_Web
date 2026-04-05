@@ -14,7 +14,7 @@ class Ordre
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'Num_Ordre', type: 'integer')]
     private ?int $Num_Ordre = null;
 
     public function getNum_Ordre(): ?int

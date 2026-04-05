@@ -16,6 +16,46 @@ class UtilisateurRepository extends ServiceEntityRepository
         parent::__construct($registry, Utilisateur::class);
     }
 
+    public function existsId(int $id): bool
+    {
+        if ($id < 1) {
+            return false;
+        }
+
+        $n = $this->getEntityManager()->getConnection()->fetchOne(
+            'SELECT 1 FROM utilisateur WHERE ID_UTILISATEUR = ? LIMIT 1',
+            [$id]
+        );
+
+        return $n !== false && $n !== null;
+    }
+
+    /**
+     * @param int[] $ids
+     * @return array<int, string> id => Nom_Utilisateur
+     */
+    public function getDisplayNamesByIds(array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter($ids)));
+        if ($ids === []) {
+            return [];
+        }
+
+        $rows = $this->createQueryBuilder('u')
+            ->select('u.ID_UTILISATEUR', 'u.Nom_Utilisateur')
+            ->where('u.ID_UTILISATEUR IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->getQuery()
+            ->getArrayResult();
+
+        $out = [];
+        foreach ($rows as $row) {
+            $out[(int) $row['ID_UTILISATEUR']] = (string) $row['Nom_Utilisateur'];
+        }
+
+        return $out;
+    }
+
 //    /**
 //     * @return Utilisateur[] Returns an array of Utilisateur objects
 //     */

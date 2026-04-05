@@ -102,6 +102,9 @@ class Comment
     #[ORM\Column(type: 'datetime', nullable: false)]
     private ?\DateTimeInterface $created_at = null;
 
+    #[ORM\Column(type: 'datetime', nullable: false)]
+    private ?\DateTimeInterface $updated_at = null;
+
     public function getCreated_at(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -169,6 +172,18 @@ class Comment
     public function setCreatedAt(\DateTime $created_at): static
     {
         $this->created_at = $created_at;
+
+        return $this;
+    }
+
+    public function getUpdatedAt(): ?\DateTime
+    {
+        return $this->updated_at;
+    }
+
+    public function setUpdatedAt(\DateTime $updated_at): static
+    {
+        $this->updated_at = $updated_at;
 
         return $this;
     }

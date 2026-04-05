@@ -15,7 +15,7 @@ class Utilisateur
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'ID_UTILISATEUR', type: 'integer')]
     private ?int $ID_UTILISATEUR = null;
 
     public function getID_UTILISATEUR(): ?int
@@ -186,7 +186,8 @@ class Utilisateur
         return $this;
     }
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    /** Non mappé : la colonne n’existe pas sur toutes les bases « utilisateur » existantes. */
+    #[ORM\Transient]
     private ?int $firstLogin = null;
 
     public function getFirstLogin(): ?int
