@@ -28,6 +28,18 @@ class EmployeeRepository extends ServiceEntityRepository
         return $array;
     }
 
+    public function findEmployeeById(int $id): ?array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = "SELECT * FROM employee JOIN utilisateur on employee.ID_UTILISATEUR = utilisateur.ID_UTILISATEUR WHERE ID_EMPLOYE = :id";
+
+        $stmt = $conn->executeQuery($sql, ['id' => $id]);
+        $employee = $stmt->fetchAssociative();
+
+        return $employee ?: null;
+    }
+
     public function getNumberofUsedConge(int $employeeId){
         $conn = $this->getEntityManager()->getConnection();
 
@@ -66,5 +78,59 @@ class EmployeeRepository extends ServiceEntityRepository
             ['id' => $id]
         );
 
+    }
+
+    public function createEmployee(array $data): void
+    {
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = "INSERT INTO UTILISATEUR (Nom_Utilisateur,Mot_Passe, Email,Date_Naissance,Gender,CIN,Num_Tel,Num_Ordre_Sign_In) VALUES (:name, :password, :email, :birthDate, :gender, :cin, :phone, :numOrdreSignIn)";
+        $conn->executeStatement($sql, [
+            'name' => $data['name'],
+            'password' => "TempPassword",
+            'email' => $data['email'],
+            'birthDate' => $data['birth'],
+            'gender' => $data['gender'],
+            'cin' => $data['cin'],
+            'phone' => $data['phone'],
+            'numOrdreSignIn' => Ordre::GetNumOrdreNow()
+        ]);
+
+        $sql = "INSERT INTO employee (ID_UTILISATEUR, Solde_Conge, SALAIRE, Nbr_Heure_De_Travail) VALUES (:userId, :solde, :salaire, :heures)";
+        $conn->executeStatement($sql, [
+            'userId' => $conn->lastInsertId(),
+            'solde' => $data['solde'],
+            'salaire' => $data['salaire'],
+            'heures' => $data['heures']
+        ]);
+    }
+
+    public function updateEmployee(int $id, array $data): void
+    {
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = "
+            UPDATE employee SET  
+            Solde_Conge = :solde, 
+            SALAIRE = :salaire, 
+            Nbr_Heure_De_Travail = :heures
+            WHERE ID_EMPLOYE = :id";
+
+        $conn->executeStatement($sql, [
+            'id' => $id,
+            'solde' => $data['solde'],
+            'salaire' => $data['salaire'],
+            'heures' => $data['heures'],
+        ]);
+
+        $sql = "SELECT ID_UTILISATEUR FROM employee WHERE ID_EMPLOYE = :id";
+        $userId = $conn->executeQuery($sql, ['id' => $id])->fetchOne();
+
+        $sql = "UPDATE UTILISATEUR SET Nom_Utilisateur = :name, Email = :email WHERE ID_UTILISATEUR = :userId";
+        $conn->executeStatement($sql, [
+            'userId' => $userId,
+            'name' => $data['name'],
+            'email' => $data['email']
+        ]);
     }
 }

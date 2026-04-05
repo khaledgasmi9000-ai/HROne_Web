@@ -105,6 +105,36 @@ class GestionAdministrativeController extends AbstractController
 
         return $this->redirectToRoute('gestion_administrative');
     }
+    
+    #[Route('/Gestion_Administrative/employee/get/{id}', name: 'employee_get', methods: ['GET'])]
+    public function getEmployee(int $id, EmployeeRepository $repo): Response
+    {
+        $employee = $repo->findEmployeeById($id);
+
+        return $this->json($employee);
+    }
+
+    #[Route('/Gestion_Administrative/employee/update/{id}', name: 'employee_update', methods: ['POST'])]
+    public function updateEmployee(int $id, Request $request, EmployeeRepository $repo): Response
+    {
+        $data = json_decode($request->getContent(), true);
+        
+        $repo->updateEmployee($id, $data);
+
+        return $this->json(['success' => true]);
+    }
+
+    #[Route('/Gestion_Administrative/employee/create', name: 'employee_create', methods: ['POST'])]
+    public function createEmployee(Request $request, EmployeeRepository $repo): Response
+    {
+        echo "Attempting to create a new employee\n"; // Debug statement
+        $data = json_decode($request->getContent(), true);
+
+        $repo->createEmployee($data);
+
+        return $this->json(['success' => true]);
+    }
+    
     // ========== End Employee Controller ==========  //
 
 #pragma endregion

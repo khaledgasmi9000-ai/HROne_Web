@@ -1,0 +1,114 @@
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6); /* overlay */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: var(--bg-card); /* box */
+    padding: 24px;
+    border-radius: 12px;
+    width: 400px;
+}
+
+/* FORM STRUCTURE */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.form-group label {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* INPUT STYLE */
+.input-field {
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.15s ease;
+}
+
+/* FOCUS */
+.input-field:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+}
+
+
+/* BUTTONS ALIGNMENT */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.modal-actions .btn {
+    font-weight: 500;
+    min-width: 100px;
+}
+
+/* SMALL UX IMPROVEMENTS */
+.modal-content {
+    display: flex;
+    flex-direction: column;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+/* SUCCESS BUTTON (Valider) */
+.btn.success {
+    background: var(--success);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+/* Hover → lighter green */
+.btn.success:hover {
+    background: #22c55e; /* lighter green */
+    transform: translateY(-1px);
+}
+
+/* CANCEL BUTTON (Annuler) */
+.btn.cancel {
+    background: var(--bg-hover);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+/* Hover → red */
+.btn.cancel:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+select.input-field {
+    appearance: none;
+}

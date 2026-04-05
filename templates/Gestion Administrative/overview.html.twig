@@ -90,7 +90,7 @@
                 Export
             </button>
 
-            <button class="btn primary with-icon">
+            <button id="btnAddEmployee"class="btn primary with-icon">
                 <span class="icon">＋</span>
                 Ajouter nouvel employé
             </button>
@@ -160,10 +160,13 @@
         currentCount: employees|length
     } %}
 
-</div>
+    {% include 'Gestion Administrative/components/modal_employee.html.twig' %}   
 
 <script>
     window.deleteEmployeeUrlTemplate = "{{ path('employee_delete', {'id': 'EMP_ID'}) }}";
+    window.getEmployeeUrl = "{{ path('employee_get', {'id': 'EMP_ID'}) }}";
+    window.createEmployeeUrl = "{{ path('employee_create') }}";
+    window.updateEmployeeUrl = "{{ path('employee_update', {'id': 'EMP_ID'}) }}";
 </script>
 
 {% endblock %}

@@ -7,6 +7,8 @@
 <link rel="stylesheet" href="{{ asset('css/Gestion Administrative/conges.css') }}">
 <link rel="stylesheet" href="{{ asset('css/Gestion Administrative/components/pagination.css') }}">
 <link rel="stylesheet" href="{{ asset('css/Gestion Administrative/components/row_actions.css') }}">
+<link rel="stylesheet" href="{{ asset('css/Gestion Administrative/components/modal.css') }}">
+
 {% block page_styles %}{% endblock %}
 {% endblock %}
 
@@ -39,10 +41,12 @@
 {% endblock %}
 
 {% block javascripts %}
+<script src="{{ asset('js/Gestion Administrative/components/modal_employee.js') }}"></script>
+<script src="{{ asset('js/Gestion Administrative/components/modal_outils.js') }}"></script>
+<script src="{{ asset('js/Gestion Administrative/components/pagination.js') }}"></script>
+<script src="{{ asset('js/Gestion Administrative/components/row_actions.js') }}"></script>
 <script src="{{ asset('js/Gestion Administrative/employee.js') }}"></script>
 <script src="{{ asset('js/Gestion Administrative/outils.js') }}"></script>
 <script src="{{ asset('js/Gestion Administrative/conges.js') }}"></script>
-<script src="{{ asset('js/Gestion Administrative/components/pagination.js') }}"></script>
-<script src="{{ asset('js/Gestion Administrative/components/row_actions.js') }}"></script>
 {% block page_scripts %}{% endblock %}
 {% endblock %}

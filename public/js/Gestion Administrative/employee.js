@@ -1,5 +1,37 @@
+window.rowActionsHandlers = window.rowActionsHandlers || {};
+
+window.rowActionsHandlers.employee = {
+
+    edit: function(id) {
+        window.openEmployeeEditModal(id);
+    },
+
+    delete: function(id) {
+        console.log("Supprimer employee:", id);
+        if (confirm("Confirmer la suppression ?")) {
+            const url = window.deleteEmployeeUrlTemplate.replace('EMP_ID', id);
+            window.location.href = url;
+        }
+    },
+
+    view: function(id) {
+        console.log("Voir détails employee:", id);
+    },
+
+    tools: function(id) {
+        console.log("Gérer outils:", id);
+    }
+
+};
+
 document.addEventListener("DOMContentLoaded", () => {
 
+    const addButton = document.getElementById("btnAddEmployee");
+
+    if (addButton) {
+        addButton.addEventListener("click", window.openEmployeeAddModal);
+    }
+    
     const searchInput = document.getElementById("searchEmployee");
     const searchBtn   = document.getElementById("searchBtnEmployee");
     const filters     = document.querySelectorAll(".filter-select");
@@ -53,29 +85,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 });
-    
-window.rowActionsHandlers = window.rowActionsHandlers || {};
 
-window.rowActionsHandlers.employee = {
 
-    edit: function(id) {
-        console.log("Modifier employee:", id);
-    },
-
-    delete: function(id) {
-        console.log("Supprimer employee:", id);
-        if (confirm("Confirmer la suppression ?")) {
-            const url = window.deleteEmployeeUrlTemplate.replace('EMP_ID', id);
-            window.location.href = url;
-        }
-    },
-
-    view: function(id) {
-        console.log("Voir détails employee:", id);
-    },
-
-    tools: function(id) {
-        console.log("Gérer outils:", id);
-    }
-
-};

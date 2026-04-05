@@ -1,0 +1,65 @@
+<div id="employeeModal" class="modal hidden">
+    <div class="modal-content">
+
+        <h2 id="modalTitle">Ajouter un employé</h2>
+
+        <form id="employeeForm">
+
+            <div class="form-group">
+                <label>Nom</label>
+                <input type="text" id="empName" class="input-field">
+            </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="empEmail" class="input-field">
+            </div>
+
+            <div class="form-group">
+                <label>Numéro téléphone</label>
+                <input type="text" id="empPhone" class="input-field">
+            </div>
+
+            <div class="form-group">
+                <label>CIN</label>
+                <input type="text" id="empCIN" class="input-field">
+            </div>
+
+            <div class="form-group">
+                <label>Date de naissance</label>
+                <input type="date" id="empBirth" class="input-field">
+            </div>
+
+            <div class="form-group">
+                <label>Genre</label>
+                <select id="empGender" class="input-field">
+                    <option value="">-- Choisir --</option>
+                    <option value="M">Homme</option>
+                    <option value="F">Femme</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Solde congé</label>
+                <input type="number" id="empSolde" class="input-field">
+            </div>
+
+            <div class="form-group">
+                <label>Salaire</label>
+                <input type="number" id="empSalaire" class="input-field">
+            </div>
+
+            <div class="form-group">
+                <label>Heures / mois</label>
+                <input type="number" id="empHeures" class="input-field">
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" id="closeEmployeeModal" class="btn cancel">Annuler</button>
+                <button type="submit" class="btn success">Valider</button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
