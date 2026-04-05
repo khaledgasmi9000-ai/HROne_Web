@@ -14,45 +14,77 @@ class GestionAdministrativeController extends AbstractController
     public function overview(Request $request): Response
     {
         $allEmployees = [
-            ['name' => 'John Doe', 'position' => 'Developer'],
-            ['name' => 'Jane Smith', 'position' => 'Manager'],
-            ['name' => 'John Doe', 'position' => 'Developer'],
-            ['name' => 'Jane Smith', 'position' => 'Manager'],
-            ['name' => 'John Doe', 'position' => 'Developer'],
-            ['name' => 'Jane Smith', 'position' => 'Manager'],
-            ['name' => 'John Doe', 'position' => 'Developer'],
-            ['name' => 'Jane Smith', 'position' => 'Manager'],
-            ['name' => 'John Doe', 'position' => 'Developer'],
-            ['name' => 'Khaled', 'position' => 'Manager'],
-            ['name' => 'John Doe', 'position' => 'Developer'],
-            ['name' => 'Jane Smith', 'position' => 'Manager'],
-            ['name' => 'John Doe', 'position' => 'Developer'],
-            ['name' => 'Khaled', 'position' => 'Manager'],
-            ['name' => 'John Doe', 'position' => 'Developer'],
-            ['name' => 'Jane Smith', 'position' => 'Manager'],
-            ['name' => 'John Doe', 'position' => 'Developer'],
-            ['name' => 'Jane Smith', 'position' => 'Manager'],
-            ['name' => 'John Doe', 'position' => 'Developer'],
-            ['name' => 'Khaled', 'position' => 'Manager'],
-            ['name' => 'John Doe', 'position' => 'Developer'],
-            ['name' => 'Jane Smith', 'position' => 'Manager'],
-            ['name' => 'John Doe', 'position' => 'Developer'],
-            ['name' => 'Jane Smith', 'position' => 'Manager'],
-            ['name' => 'John Doe', 'position' => 'Developer'],
-            ['name' => 'Khaled', 'position' => 'Manager'],
-            ['name' => 'John Doe', 'position' => 'Developer'],
-            ['name' => 'Jane Smith', 'position' => 'Manager'],
+            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2500, 'heures' => 160],
+            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3200, 'heures' => 180],
+            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
+            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
+            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
+            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
+            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
+            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
+            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
+            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
+            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2500, 'heures' => 160],
+            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3200, 'heures' => 180],
+            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
+            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
+            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
+            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
+            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
+            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
+            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
+            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
+            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2500, 'heures' => 160],
+            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3200, 'heures' => 180],
+            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
+            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
+            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
+            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
+            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 3000, 'heures' => 170],
+            ['name' => 'John Doe', 'position' => 'Developer', 'salaire' => 2200, 'heures' => 150],
+            ['name' => 'Jane Smith', 'position' => 'Manager', 'salaire' => 3500, 'heures' => 190],
+            ['name' => 'Khaled', 'position' => 'Manager', 'salaire' => 2800, 'heures' => 160],
         ];
 
-        $rowsPerPage = 6;
+        // ✅ Get filters from request
+        $search = $request->query->get('search') ?? '';
+        $hours  = $request->query->get('hours') ?? 0;
+        $salary = $request->query->get('salary') ?? 0;
 
+        // ✅ FILTER FIRST
+        $filtered = array_filter($allEmployees, function ($employee) use ($search, $hours, $salary) {
+
+            // 🔍 Search (name)
+            if ($search && stripos($employee['name'], $search) === false) {
+                return false;
+            }
+
+            // ⏱ Hours filter
+            if ($hours && $employee['heures'] < (int)$hours) {
+                return false;
+            }
+
+            // 💰 Salary filter
+            if ($salary && $employee['salaire'] < (int)$salary) {
+                return false;
+            }
+
+            return true;
+        });
+
+        // Re-index array after filtering
+        $filtered = array_values($filtered);
+
+        // ✅ PAGINATION AFTER FILTERING
+        $rowsPerPage = 6;
         $currentPage = max(1, (int)$request->query->get('page', 1));
-        $totalEmployees = count($allEmployees);
+
+        $totalEmployees = count($filtered);
         $totalPages = (int) ceil($totalEmployees / $rowsPerPage);
 
         $offset = ($currentPage - 1) * $rowsPerPage;
-        $employees = array_slice($allEmployees, $offset, $rowsPerPage);
-
+        $employees = array_slice($filtered, $offset, $rowsPerPage);
+        
         return $this->render('Gestion Administrative/overview.html.twig', [
             'employees' => $employees,
             'currentPage' => $currentPage,
@@ -76,36 +108,53 @@ class GestionAdministrativeController extends AbstractController
             ['id' => 8, 'name' => 'Tool H', 'avgTime' => 40,  'users' => 25],
         ];
 
-        // Read ordering flags from query (?orderUsers=1&orderTime=1)
+        // 🔍 Search
+        $search = $request->query->get('search');
+
+        // 🎛 Ordering
         $orderUsers = (int)$request->query->get('orderUsers', 0);
         $orderTime  = (int)$request->query->get('orderTime', 0);
 
-        // Apply ordering (simple example; refine later)
+        // ✅ FILTER FIRST
+        $filtered = array_filter($allTools, function ($tool) use ($search) {
+
+            if ($search && stripos($tool['name'], $search) === false) {
+                return false;
+            }
+
+            return true;
+        });
+
+        // Reindex
+        $filtered = array_values($filtered);
+
+        // ✅ ORDER AFTER FILTER
         if ($orderUsers && $orderTime) {
-            usort($allTools, fn($a, $b) =>
+            usort($filtered, fn($a, $b) =>
                 ($b['users'] <=> $a['users']) ?: ($b['avgTime'] <=> $a['avgTime'])
             );
         } elseif ($orderUsers) {
-            usort($allTools, fn($a, $b) => $b['users'] <=> $a['users']);
+            usort($filtered, fn($a, $b) => $b['users'] <=> $a['users']);
         } elseif ($orderTime) {
-            usort($allTools, fn($a, $b) => $b['avgTime'] <=> $a['avgTime']);
+            usort($filtered, fn($a, $b) => $b['avgTime'] <=> $a['avgTime']);
         }
 
-        // Pagination
+        // ✅ PAGINATION LAST
         $rowsPerPage = 6;
         $currentPage = max(1, (int)$request->query->get('page', 1));
-        $total = count($allTools);
-        $totalPages = (int) ceil($total / $rowsPerPage);
+
+        $totalTools = count($filtered);
+        $totalPages = (int) ceil($totalTools / $rowsPerPage);
 
         $offset = ($currentPage - 1) * $rowsPerPage;
-        $tools = array_slice($allTools, $offset, $rowsPerPage);
+        $tools = array_slice($filtered, $offset, $rowsPerPage);
 
         return $this->render('Gestion Administrative/outils.html.twig', [
             'tools' => $tools,
             'currentPage' => $currentPage,
             'totalPages' => $totalPages,
             'rowsPerPage' => $rowsPerPage,
-            'totalTools' => $total,
+            'totalTools' => $totalTools,
             'orderUsers' => $orderUsers,
             'orderTime' => $orderTime,
         ]);

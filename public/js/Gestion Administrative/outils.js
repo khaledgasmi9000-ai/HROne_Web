@@ -1,11 +1,22 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+    const searchInput = document.getElementById("toolSearch");
+    const searchBtn   = document.getElementById("searchBtnTool");
+
     const usersCheckbox = document.getElementById("orderUsers");
     const timeCheckbox  = document.getElementById("orderTime");
 
     function updateQuery() {
         const url = new URL(window.location.href);
 
+        // 🔍 Search
+        if (searchInput && searchInput.value.trim() !== "") {
+            url.searchParams.set("search", searchInput.value.trim());
+        } else {
+            url.searchParams.delete("search");
+        }
+
+        // 🎛 Ordering
         if (usersCheckbox.checked) {
             url.searchParams.set("orderUsers", 1);
         } else {
@@ -18,45 +29,28 @@ document.addEventListener("DOMContentLoaded", () => {
             url.searchParams.delete("orderTime");
         }
 
-        // Reset to page 1 on ordering change
+        // Reset pagination
         url.searchParams.set("page", 1);
 
         window.location.href = url.toString();
     }
 
-    if (usersCheckbox) usersCheckbox.addEventListener("change", updateQuery);
-    if (timeCheckbox)  timeCheckbox.addEventListener("change", updateQuery);
-});
+    // 🔘 Button click
+    if (searchBtn) {
+        searchBtn.addEventListener("click", updateQuery);
+    }
 
-document.addEventListener("DOMContentLoaded", () => {
-
-    const searchInput = document.getElementById("toolSearch");
-
+    // ⌨️ Enter key
     if (searchInput) {
-        searchInput.addEventListener("input", () => {
-
-            const value = searchInput.value.toLowerCase();
-            const rows = document.querySelectorAll("tbody tr");
-
-            rows.forEach(row => {
-                const nameCell = row.querySelector(".tool-name");
-
-                if (!nameCell) return;
-
-                const name = nameCell.textContent.toLowerCase();
-
-                if (name.includes(value)) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
-                }
-            });
-
+        searchInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                updateQuery();
+            }
         });
     }
 
 });
-
 
 window.rowActionsHandlers = {
 

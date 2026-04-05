@@ -1,48 +1,59 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    // Tabs behavior
-    const tabs = document.querySelectorAll(".tab");
+    const searchInput = document.getElementById("searchEmployee");
+    const searchBtn   = document.getElementById("searchBtnEmployee");
+    const filters     = document.querySelectorAll(".filter-select");
 
-    tabs.forEach(tab => {
-        tab.addEventListener("click", () => {
-            tabs.forEach(t => t.classList.remove("active"));
-            tab.classList.add("active");
+    function updateQuery() {
+        const url = new URL(window.location.href);
 
-            // Future: load content dynamically
-            console.log("Switched to tab:", tab.dataset.tab);
+        // 🔍 Search
+        if (searchInput && searchInput.value.trim() !== "") {
+            url.searchParams.set("search", searchInput.value.trim());
+        } else {
+            url.searchParams.delete("search");
+        }
+
+        // 🎛 Filters
+        filters.forEach(select => {
+            const key = select.name;
+            const value = select.value;
+
+            if (value) {
+                url.searchParams.set(key, value);
+            } else {
+                url.searchParams.delete(key);
+            }
         });
-    });
 
-    // Search placeholder behavior
-    const searchInput = document.querySelector("input[type='text']");
+        // 🔁 Reset pagination
+        url.searchParams.set("page", 1);
 
+        // 🚀 Reload page
+        window.location.href = url.toString();
+    }
+
+    /* =========================
+       EVENTS
+    ========================= */
+
+    // 🔘 Click on search button
+    if (searchBtn) {
+        searchBtn.addEventListener("click", updateQuery);
+    }
+
+    // ⌨️ Enter key also triggers search
     if (searchInput) {
-        searchInput.addEventListener("input", (e) => {
-            console.log("Search:", e.target.value);
-            // Future: hook to backend filtering
+        searchInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                updateQuery();
+            }
         });
     }
 
 });
-
-
-// Filters
-document.querySelectorAll(".filter-select").forEach(select => {
-    select.addEventListener("change", (e) => {
-        console.log("Filter changed:", e.target.value);
-        // Future: send to backend
-    });
-});
-
-// Search
-const searchInput = document.querySelector(".search-box input");
-
-if (searchInput) {
-    searchInput.addEventListener("input", (e) => {
-        console.log("Search:", e.target.value);
-        // Future: debounce + backend call
-    });
-}
+    
 
 window.rowActionsHandlers = {
 

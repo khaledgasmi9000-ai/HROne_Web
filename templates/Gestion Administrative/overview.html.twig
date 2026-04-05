@@ -52,25 +52,39 @@
         <div class="table-controls-left">
 
             <!-- Work hours filter -->
-            <select class="filter-select">
+            <select name="hours" class="filter-select">
                 <option value="">Heures / mois ≥</option>
-                <option value="80">≥ 80h</option>
-                <option value="120">≥ 120h</option>
-                <option value="160">≥ 160h</option>
+                <option value="160" {{ app.request.get('hours') == '160' ? 'selected' }}>160</option>
+                <option value="180" {{ app.request.get('hours') == '180' ? 'selected' }}>180</option>
             </select>
 
             <!-- Salary filter -->
-            <select class="filter-select">
+            <select name="salary" class="filter-select">
                 <option value="">Salaire ≥</option>
-                <option value="1000">≥ 1000</option>
-                <option value="2000">≥ 2000</option>
-                <option value="3000">≥ 3000</option>
+                <option value="3000" {{ app.request.get('salary') == '3000' ? 'selected' }}>3000</option>
+                <option value="2000" {{ app.request.get('salary') == '2000' ? 'selected' }}>2000</option>
             </select>
 
+            {# <select class="filter-select" name="salary">
+                <option value="">Salaire ≥</option>
+                <option value="2000">2000</option>
+                <option value="3000">3000</option>
+            </select> #}
+            
             <!-- Search -->
             <div class="search-box">
-                <input type="text" placeholder="Rechercher un employé..." />
+                <input 
+                    type="text" 
+                    id="searchEmployee" 
+                    value="{{ app.request.get('search') }}"
+                    placeholder="Rechercher..." 
+                />
+
+                <button id="searchBtnEmployee" class="btn secondary with-icon">
+                    <span class="icon">🔍</span>
+                </button>
             </div>
+            
 
         </div>
 
@@ -113,7 +127,7 @@
                         <!-- Hidden ID -->
                         <td style="display:none;">{{ employee.id|default(0) }}</td>
 
-                        <td>{{ employee.name }}</td>
+                        <td class="employee-name">{{ employee.name }}</td>
                         <td>{{ employee.email|default('email@domain.com') }}</td>
                         <td>{{ employee.soldeConge|default('20') }}</td>
                         <td>{{ employee.soldeRestant|default('12') }}</td>
@@ -152,6 +166,5 @@
     } %}
 
 </div>
-
 
 {% endblock %}

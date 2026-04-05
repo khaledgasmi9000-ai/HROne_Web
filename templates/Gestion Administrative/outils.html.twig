@@ -39,7 +39,16 @@
             </label>
 
             <div class="search-box">
-                <input type="text" id="toolSearch" placeholder="Rechercher un outil..." />
+                <input 
+                    type="text" 
+                    id="toolSearch" 
+                    value="{{ app.request.get('search') }}"
+                    placeholder="Rechercher un outil..." 
+                />
+
+                <button id="searchBtnTool" class="btn secondary with-icon">
+                    <span class="icon">🔍</span>
+                </button>
             </div>
         </div>
 
@@ -110,5 +119,4 @@
     } %}
 
 </div>
-
 {% endblock %}
