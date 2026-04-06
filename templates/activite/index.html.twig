@@ -1,0 +1,61 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Activités{% endblock %}
+
+{% block body %}
+<div class="page-header">
+    <h1 class="page-title">🏃 Activités</h1>
+    <a href="{{ path('activite_new') }}" class="btn btn-primary">＋ Nouvelle activité</a>
+</div>
+
+{% if activites is empty %}
+    <div class="card empty-state">
+        <div class="icon">📭</div>
+        <p>Aucune activité trouvée.</p>
+        <a href="{{ path('activite_new') }}" class="btn btn-primary">Créer la première activité</a>
+    </div>
+{% else %}
+    <div class="card" style="padding:0; overflow:hidden;">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Titre</th>
+                    <th>Description</th>
+                    <th>Événements liés</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for activite in activites %}
+                <tr>
+                    <td><strong>#{{ activite.IDActivite }}</strong></td>
+                    <td><strong>{{ activite.Titre }}</strong></td>
+                    <td style="max-width:300px;color:var(--text-muted);font-size:.85rem;">
+                        {{ activite.Description|default('—')|slice(0, 80) }}{% if activite.Description|length > 80 %}…{% endif %}
+                    </td>
+                    <td>
+                        {% if activite.evenements|length > 0 %}
+                            <span class="badge badge-blue">{{ activite.evenements|length }} événement(s)</span>
+                        {% else %}
+                            <span style="color:var(--text-muted)">Aucun</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <a href="{{ path('activite_show', {id: activite.IDActivite}) }}" class="btn btn-secondary">👁</a>
+                            <a href="{{ path('activite_edit', {id: activite.IDActivite}) }}" class="btn btn-warning">✏️</a>
+                            <form method="post" action="{{ path('activite_delete', {id: activite.IDActivite}) }}"
+                                  onsubmit="return confirm('Supprimer cette activité ?')">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ activite.IDActivite) }}">
+                                <button type="submit" class="btn btn-danger">🗑</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+{% endblock %}
