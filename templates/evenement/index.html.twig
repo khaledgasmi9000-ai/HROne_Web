@@ -1,0 +1,72 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Événements{% endblock %}
+
+{% block body %}
+<div class="page-header">
+    <h1 class="page-title">🎉 Événements</h1>
+    <a href="{{ path('evenement_new') }}" class="btn btn-primary">＋ Nouvel événement</a>
+</div>
+
+{% if evenements is empty %}
+    <div class="card empty-state">
+        <div class="icon">📭</div>
+        <p>Aucun événement trouvé.</p>
+        <a href="{{ path('evenement_new') }}" class="btn btn-primary">Créer le premier événement</a>
+    </div>
+{% else %}
+    <div class="card" style="padding:0; overflow:hidden;">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Titre</th>
+                    <th>Localisation</th>
+                    <th>Payant</th>
+                    <th>Prix</th>
+                    <th>Nb Max</th>
+                    <th>Activités</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for ev in evenements %}
+                <tr>
+                    <td><strong>#{{ ev.IDEvenement }}</strong></td>
+                    <td><strong>{{ ev.Titre }}</strong></td>
+                    <td>{{ ev.Localisation ?? '—' }}</td>
+                    <td>
+                        {% if ev.estPayant %}
+                            <span class="badge badge-red">Oui</span>
+                        {% else %}
+                            <span class="badge badge-green">Non</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ ev.prix is not null ? ev.prix ~ ' DT' : '—' }}</td>
+                    <td>{{ ev.nbMax ?? '—' }}</td>
+                    <td>
+                        {% if ev.activites|length > 0 %}
+                            <span class="badge badge-blue">{{ ev.activites|length }}</span>
+                        {% else %}
+                            <span style="color:var(--text-muted)">0</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <a href="{{ path('evenement_show', {id: ev.IDEvenement}) }}" class="btn btn-secondary">👁</a>
+                            <a href="{{ path('evenement_edit', {id: ev.IDEvenement}) }}" class="btn btn-warning">✏️</a>
+                            <form method="post" action="{{ path('evenement_delete', {id: ev.IDEvenement}) }}"
+                                  onsubmit="return confirm('Supprimer cet événement ?')">
+                                <input type="hidden" name="_method" value="DELETE">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ ev.IDEvenement) }}">
+                                <button type="submit" class="btn btn-danger">🗑</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+{% endblock %}

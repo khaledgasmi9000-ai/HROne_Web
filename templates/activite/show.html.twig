@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détail — {{ activite.Titre }}{% endblock %}
+
+{% block body %}
+<div class="page-header">
+    <h1 class="page-title">🏃 {{ activite.Titre }}</h1>
+    <div style="display:flex;gap:.6rem;">
+        <a href="{{ path('activite_edit', {id: activite.IDActivite}) }}" class="btn btn-warning">✏️ Modifier</a>
+        <a href="{{ path('activite_index') }}" class="btn btn-secondary">← Retour</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="detail-grid">
+        <div class="detail-item">
+            <div class="detail-label">Titre</div>
+            <div class="detail-value">{{ activite.Titre }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">ID</div>
+            <div class="detail-value">#{{ activite.IDActivite }}</div>
+        </div>
+    </div>
+
+    {% if activite.Description %}
+    <div style="margin-bottom:1.5rem;">
+        <div class="detail-label" style="font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:.5rem;">Description</div>
+        <p style="line-height:1.6;color:var(--text);">{{ activite.Description }}</p>
+    </div>
+    {% endif %}
+
+    <div>
+        <div class="detail-label" style="font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:.8rem;">
+            Événements liés ({{ activite.evenements|length }})
+        </div>
+        {% if activite.evenements|length > 0 %}
+            <div style="display:flex;flex-wrap:wrap;gap:.5rem;">
+            {% for ev in activite.evenements %}
+                <a href="{{ path('evenement_show', {id: ev.IDEvenement}) }}" class="badge badge-blue" style="text-decoration:none;font-size:.85rem;padding:.3rem .8rem;">
+                    🎉 {{ ev.Titre }}
+                </a>
+            {% endfor %}
+            </div>
+        {% else %}
+            <p style="color:var(--text-muted);font-size:.9rem;">Pas encore liée à un événement.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

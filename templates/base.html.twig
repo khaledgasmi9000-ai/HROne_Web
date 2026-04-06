@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HR One - Gestion{% endblock %}</title>
+    
+    {# Styles originaux du projet #}
+    <link rel="stylesheet" href="{{ asset('css/navbarRH.css') }}">
+    
+    <style>
+        /* Ajustements pour intégrer le CRUD dans la structure originale */
+        .interface-shell {
+            background: #ffffff !important;
+            overflow-y: auto;
+            min-height: calc(100vh - 64px); /* Ajusté pour le plein écran sans top-nav */
+        }
+        
+        /* Styles minimalistes pour les boutons et tableaux du CRUD */
+        .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        
+        .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; border: none; transition: 0.2s; }
+        .btn-primary { background: #2563eb; color: #fff; }
+        .btn-secondary { background: #f1f5f9; color: #475569; }
+        .btn-warning { background: #fef3c7; color: #92400e; }
+        .btn-danger { background: #fee2e2; color: #991b1b; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
+        th { text-align: left; padding: 12px; font-size: 0.8rem; color: #64748b; border-bottom: 2px solid #f1f5f9; text-transform: uppercase; }
+        td { padding: 14px 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+        
+        .form-group { margin-bottom: 1.2rem; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 0.4rem; }
+        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; }
+        
+        .checkbox-group { display: flex; align-items: center; gap: 8px; }
+        .checkbox-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+        .checkbox-list label { display: flex; align-items: center; gap: 5px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 5px 12px; border-radius: 20px; font-weight: 400; }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        {# Sidebar originale #}
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo">
+                    <img src="{{ asset('images/logo.png') }}" alt="HR One">
+                </div>
+                <div>
+                    <div class="brand-name">HR One</div>
+                    <div class="brand-sub">Espace RH</div>
+                </div>
+            </div>
+
+            <nav class="nav">
+                <a id="btnDashboard" class="nav-link" href="{{ path('evenement_index') }}">Tableau de bord</a>
+                <a id="btnUsers" class="nav-link" href="#">Gestion des utilisateurs</a>
+                <a id="btnActivityWatch" class="nav-link {{ app.request.attributes.get('_route') starts with 'activite' ? 'active' : '' }}" href="{{ path('activite_index') }}">Activity Watch</a>
+                <a id="btnEvenements" class="nav-link {{ app.request.attributes.get('_route') starts with 'evenement' ? 'active' : '' }}" href="{{ path('evenement_index') }}">Gestion des evenements</a>
+                <a id="btnEmployee" class="nav-link" href="#">Gestion administrative</a>
+                <a id="btnGestionConge" class="nav-link" href="#">Gestion des congés</a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <section class="interface-shell">
+                {% for type, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="flash flash-{{ type }}" style="padding:15px; margin-bottom:20px; border-radius:10px; background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe;">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+
+                {% block body %}{% endblock %}
+            </section>
+        </main>
+    </div>
+
+    {# Scripts originaux #}
+    <script src="{{ asset('js/navbarRH.js') }}"></script>
+</body>
+</body>
+</html>

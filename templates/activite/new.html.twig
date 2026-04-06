@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle Activité{% endblock %}
+
+{% block body %}
+<div class="page-header">
+    <h1 class="page-title">➕ Nouvelle Activité</h1>
+    <a href="{{ path('activite_index') }}" class="btn btn-secondary">← Retour</a>
+</div>
+
+<div class="card form-card">
+    {# form_start() ouvre la balise <form> avec la méthode POST #}
+    {{ form_start(form) }}
+
+    {# Champ Titre #}
+    <div class="form-group">
+        {{ form_label(form.Titre) }}
+        {{ form_widget(form.Titre) }}
+        {# Affiche les erreurs de validation PHP pour ce champ #}
+        {% for error in form.Titre.vars.errors %}
+            <p class="error-msg">⚠ {{ error.message }}</p>
+        {% endfor %}
+    </div>
+
+    {# Champ Description #}
+    <div class="form-group">
+        {{ form_label(form.Description) }}
+        {{ form_widget(form.Description) }}
+        {% for error in form.Description.vars.errors %}
+            <p class="error-msg">⚠ {{ error.message }}</p>
+        {% endfor %}
+    </div>
+
+    {# Boutons action #}
+    <div style="display:flex; gap:.8rem; margin-top:1.5rem;">
+        {{ form_widget(form.submit) }}
+        <a href="{{ path('activite_index') }}" class="btn btn-secondary">Annuler</a>
+    </div>
+
+    {# form_end() ferme la balise </form> #}
+    {{ form_end(form) }}
+</div>
+{% endblock %}

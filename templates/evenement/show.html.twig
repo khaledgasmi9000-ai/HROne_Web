@@ -1,0 +1,81 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détail — {{ evenement.Titre }}{% endblock %}
+
+{% block body %}
+<div class="page-header">
+    <h1 class="page-title">🎉 {{ evenement.Titre }}</h1>
+    <div style="display:flex;gap:.6rem;">
+        <a href="{{ path('evenement_edit', {id: evenement.IDEvenement}) }}" class="btn btn-warning">✏️ Modifier</a>
+        <a href="{{ path('evenement_index') }}" class="btn btn-secondary">← Retour</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="detail-grid">
+        <div class="detail-item">
+            <div class="detail-label">Titre</div>
+            <div class="detail-value">{{ evenement.Titre }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Localisation</div>
+            <div class="detail-value">{{ evenement.Localisation ?? '—' }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Période</div>
+            <div class="detail-value">
+                {% if evenement.ordreDebut %}
+                    Du <strong>{{ evenement.ordreDebut.JJ }}/{{ evenement.ordreDebut.MM }}/{{ evenement.ordreDebut.AAAA }}</strong> 
+                    à {{ evenement.ordreDebut.HH }}h{{ evenement.ordreDebut.MN }}
+                {% endif %}
+                {% if evenement.ordreFin %}
+                    <br>Au <strong>{{ evenement.ordreFin.JJ }}/{{ evenement.ordreFin.MM }}/{{ evenement.ordreFin.AAAA }}</strong> 
+                    à {{ evenement.ordreFin.HH }}h{{ evenement.ordreFin.MN }}
+                {% endif %}
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Payant ?</div>
+            <div class="detail-value">
+                {% if evenement.estPayant %}
+                    <span class="badge badge-red">Oui — {{ evenement.prix }} DT</span>
+                {% else %}
+                    <span class="badge badge-green">Gratuit</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Participants max</div>
+            <div class="detail-value">{{ evenement.nbMax ?? 'Illimité' }}</div>
+        </div>
+        </div>
+    </div>
+    </div>
+
+    {% if evenement.Description %}
+    <div style="margin-bottom:1.5rem;">
+        <div class="detail-label" style="font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:.5rem;">Description</div>
+        <p style="line-height:1.6;color:var(--text);">{{ evenement.Description }}</p>
+    </div>
+    {% endif %}
+
+    <div>
+        <div class="detail-label" style="font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:.8rem;">
+            Activités associées ({{ evenement.activites|length }})
+        </div>
+        {% if evenement.activites|length > 0 %}
+            <div style="display:flex;flex-wrap:wrap;gap:.5rem;">
+            {% for activite in evenement.activites %}
+                <a href="{{ path('activite_show', {id: activite.IDActivite}) }}" class="badge badge-blue" style="text-decoration:none;font-size:.85rem;padding:.3rem .8rem;">
+                    🏃 {{ activite.Titre }}
+                </a>
+            {% endfor %}
+            </div>
+        {% else %}
+            <p style="color:var(--text-muted);font-size:.9rem;">Aucune activité associée.</p>
+        {% endif %}
+    </div>
+
+    </div>
+</div>
+{% endblock %}
