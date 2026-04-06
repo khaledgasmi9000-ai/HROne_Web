@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HR One - Inscription RH</title>
+  <link rel="stylesheet" href="{{ asset('styles.css') }}">
+</head>
+<body>
+  <div class="page">
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="{{ path('homepage') }}">
+          <div class="brand-logo">
+            <img src="{{ asset('navbarRH/logo.png') }}" alt="HR One">
+          </div>
+          <div>
+            <p class="brand-name">HR One</p>
+            <p class="brand-sub">HR administrator onboarding</p>
+          </div>
+        </a>
+        <div class="nav-actions">
+          <a class="nav-link" href="{{ path('login') }}">Retour connexion</a>
+          <a class="nav-cta" href="{{ path('signup_candidat') }}">Version candidat</a>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="hero">
+          <div class="hero-inner">
+            <span class="eyebrow">Workspace RH</span>
+            <h1>Launch HR operations with <span class="hero-highlight">control.</span></h1>
+            <p class="hero-copy">
+              Le parcours RH melange image enterprise et clarte d'execution:
+              informations personnelles, donnees entreprise et presentation serieuse.
+            </p>
+            <div class="metrics">
+              <div class="metric">
+                <strong>360 deg</strong>
+                <span>Vision complete du compte RH et de l'entreprise.</span>
+              </div>
+              <div class="metric">
+                <strong>2 blocs</strong>
+                <span>Organisation claire entre profil RH et societe.</span>
+              </div>
+              <div class="metric">
+                <strong>1 base</strong>
+                <span>Simple a enrichir avec validations et etapes.</span>
+              </div>
+            </div>
+            <div class="proof-card">
+              <div class="proof-top">
+                <span class="proof-badge">HR Admin</span>
+                <span class="proof-stat">Enterprise flow</span>
+              </div>
+              <p>"La page inspire davantage confiance parce qu'elle ressemble a un vrai produit B2B."</p>
+              <span class="proof-author">Adaptation inspiree des codes visuels SaaS haut de gamme</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-side">
+          <div class="form-shell">
+            <div class="form-topbar">
+              <span class="micro-pill">Compte RH et entreprise</span>
+              <span class="mini-meta">Setup admin</span>
+            </div>
+            <div class="panel-head">
+              <h2>Creer un compte RH.</h2>
+              <p>Commencez par les informations du responsable RH, puis ajoutez les donnees de l'entreprise.</p>
+            </div>
+
+            {% for message in app.flashes('error') %}
+              <div style="color:red; margin: 12px 0;">{{ message }}</div>
+            {% endfor %}
+            {% for message in app.flashes('success') %}
+              <div style="color:green; margin: 12px 0;">{{ message }}</div>
+            {% endfor %}
+
+            {{ form_start(form, {'attr': {'class': 'auth-form grid-2'}}) }}
+              <p class="section-title full">Informations RH</p>
+              <div class="field">
+                <label>Nom d'utilisateur</label>
+                {{ form_widget(form.username, {'attr': {'placeholder': "Nom d'utilisateur"}}) }}
+              </div>
+              <div class="field">
+                <label>Mot de passe</label>
+                {{ form_widget(form.password, {'attr': {'placeholder': 'Mot de passe'}}) }}
+              </div>
+              <div class="field">
+                <label>Email</label>
+                {{ form_widget(form.email, {'attr': {'placeholder': 'email@entreprise.com'}}) }}
+              </div>
+              <div class="field">
+                <label>Adresse</label>
+                {{ form_widget(form.address, {'attr': {'placeholder': 'Adresse'}}) }}
+              </div>
+              <div class="field">
+                <label>Telephone</label>
+                {{ form_widget(form.phone, {'attr': {'placeholder': '06 00 00 00 00'}}) }}
+              </div>
+              <p class="section-title full">Informations entreprise</p>
+              <div class="field">
+                <label>Nom de l'entreprise</label>
+                {{ form_widget(form.company_name, {'attr': {'placeholder': "Nom de l'entreprise"}}) }}
+              </div>
+              <div class="actions full">
+                {{ form_widget(form.submit, {'attr': {'class': 'btn btn-primary'}}) }}
+                <a class="btn btn-outline" href="{{ path('login') }}">Retour connexion</a>
+              </div>
+            {{ form_end(form) }}
+
+            <div class="trust-row">
+              <span class="trust-chip">B2B friendly</span>
+              <span class="trust-chip">Onboarding RH</span>
+              <span class="trust-chip">Future scalable</span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

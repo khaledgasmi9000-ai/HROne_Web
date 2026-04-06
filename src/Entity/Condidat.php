@@ -15,7 +15,7 @@ class Condidat
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'ID_Condidat', type: 'integer')]
     private ?int $ID_Condidat = null;
 
     public function getID_Condidat(): ?int
@@ -44,7 +44,7 @@ class Condidat
         return $this;
     }
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    #[ORM\Column(name: 'CV', type: 'text', nullable: true)]
     private ?string $CV = null;
 
     public function getCV(): ?string
