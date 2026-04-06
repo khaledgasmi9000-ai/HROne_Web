@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Formation;
 use App\Entity\ParticipationFormation;
+use App\Repository\CertificationRepository;
 use App\Repository\FormationRepository;
 use App\Repository\ParticipationFormationRepository;
 use App\Repository\UtilisateurRepository;
@@ -12,6 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class FormationController extends AbstractController
@@ -26,8 +28,9 @@ final class FormationController extends AbstractController
     public function index(Request $request, FormationRepository $formationRepository): Response
     {
         $mode = $request->query->get('mode');
+        $level = $request->query->get('level');
         $keyword = $request->query->get('q');
-        $formations = $formationRepository->searchForCatalog($mode, $keyword);
+        $formations = $formationRepository->searchForCatalog($mode, $keyword, $level);
         $featured = $formationRepository->findFeaturedFormation();
 
         return $this->render('formation/index.html.twig', [
@@ -35,12 +38,14 @@ final class FormationController extends AbstractController
             'featured' => $featured ? $this->mapFormation($featured) : null,
             'filters' => [
                 'mode' => $mode,
+                'level' => $level,
                 'q' => $keyword,
             ],
             'stats' => [
                 'total' => count($formations),
                 'available' => count(array_filter($formations, static fn (Formation $formation) => ($formation->getPlacesRestantes() ?? 0) > 0)),
                 'online' => count(array_filter($formations, static fn (Formation $formation) => $formation->getMode() === 'en_ligne')),
+                'presentiel' => count(array_filter($formations, static fn (Formation $formation) => $formation->getMode() === 'presentiel')), 
             ],
         ]);
     }
@@ -125,10 +130,38 @@ final class FormationController extends AbstractController
             return $this->redirectToRoute('app_formation_show', ['id' => $id, 'employee' => $participantId]);
         }
 
+        $matchedEmployee = $utilisateurRepository->findEmployeeByEmail($registrationIdentity['email']);
+
+        if ($matchedEmployee === null) {
+            $this->addFlash('error', 'L email saisi n existe pas dans la base utilisateur.');
+
+            return $this->redirectToRoute('app_formation_show', ['id' => $id, 'employee' => $participantId]);
+        }
+
+        $participantId = (int) $matchedEmployee['id'];
+
         if ($participationFormationRepository->hasActiveParticipation($id, $participantId)) {
             $this->addFlash('error', 'Cet employe est deja inscrit a cette formation.');
 
             return $this->redirectToRoute('app_formation_show', ['id' => $id, 'employee' => $participantId]);
+        }
+
+        $activeParticipations = $participationFormationRepository->findActiveByParticipant($participantId);
+
+        foreach ($activeParticipations as $existingParticipation) {
+            $existingFormationId = $existingParticipation->getIDFormation();
+
+            if ($existingFormationId === null || $existingFormationId === $id) {
+                continue;
+            }
+
+            $existingFormation = $formationRepository->find($existingFormationId);
+
+            if ($existingFormation instanceof Formation && $this->hasDateOverlap($formation, $existingFormation)) {
+                $this->addFlash('error', 'Inscription refusee : cette formation chevauche une autre formation deja reservee sur la meme periode.');
+
+                return $this->redirectToRoute('app_formation_show', ['id' => $id, 'employee' => $participantId]);
+            }
         }
 
         $participation = (new ParticipationFormation())
@@ -141,6 +174,8 @@ final class FormationController extends AbstractController
 
         $entityManager->persist($participation);
         $entityManager->flush();
+        $request->getSession()->set('participant_email', $registrationIdentity['email']);
+
 
         $this->addFlash('success', 'Inscription enregistree avec succes.');
 
@@ -190,7 +225,7 @@ final class FormationController extends AbstractController
         return $this->redirectToRoute('app_formation_show', ['id' => $id, 'employee' => $participantId]);
     }
 
-    #[Route('/mes-participations', name: 'app_my_participations', methods: ['GET'])]
+      #[Route('/mes-participations', name: 'app_my_participations', methods: ['GET'])]
     public function myParticipations(
         Request $request,
         ParticipationFormationRepository $participationFormationRepository,
@@ -198,43 +233,58 @@ final class FormationController extends AbstractController
         UtilisateurRepository $utilisateurRepository
     ): Response
     {
-        $demoEmployees = $this->buildDemoEmployees($utilisateurRepository);
-        $selectedParticipantId = $this->resolveParticipantId($request, $demoEmployees);
-        $participations = $selectedParticipantId !== null
-            ? $participationFormationRepository->findByParticipantOrdered($selectedParticipantId)
-            : [];
-
+        // Récupérer l'email depuis l'URL (?email=xxx)
+        $email = (string) $request->getSession()->get('participant_email', '');
+        $selectedParticipantId = null;
+        $selectedEmployee = null;
         $rows = [];
 
-        foreach ($participations as $participation) {
-            $formation = $formationRepository->find($participation->getIDFormation());
+        if ($email !== '') {
+            // Chercher l'employé par son email
+            $matchedEmployee = $utilisateurRepository->findEmployeeByEmail($email);
 
-            if ($formation instanceof Formation) {
-                $rows[] = [
-                    'participation' => $participation,
-                    'formation' => $this->mapFormation($formation),
-                ];
+            if ($matchedEmployee !== null) {
+                $selectedParticipantId = $matchedEmployee['id'];
+                $selectedEmployee = $matchedEmployee;
+
+                // Récupérer toutes ses participations
+                $participations = $participationFormationRepository->findByParticipantOrdered($selectedParticipantId);
+
+                foreach ($participations as $participation) {
+                    $formation = $formationRepository->find($participation->getIDFormation());
+
+                    if ($formation instanceof Formation) {
+                        $rows[] = [
+                            'participation' => $participation,
+                            'formation'     => $this->mapFormation($formation),
+                        ];
+                    }
+                }
             }
         }
 
         return $this->render('formation/participations.html.twig', [
-            'demo_employees' => $demoEmployees,
             'selected_participant_id' => $selectedParticipantId,
-            'participations' => $rows,
+            'selected_employee'       => $selectedEmployee,
+            'email'                   => $email,
+            'participations'          => $rows,
         ]);
     }
+
 
     #[Route('/rh/formations', name: 'app_admin_formation_index', methods: ['GET'])]
     public function adminIndex(Request $request, FormationRepository $formationRepository): Response
     {
         $mode = $request->query->get('mode');
+        $level = $request->query->get('level');
         $keyword = $request->query->get('q');
-        $formations = $formationRepository->searchForCatalog($mode, $keyword);
+        $formations = $formationRepository->searchForCatalog($mode, $keyword, $level);
 
         return $this->render('admin/formation/index.html.twig', [
             'formations' => array_map([$this, 'mapFormation'], $formations),
             'filters' => [
                 'mode' => $mode,
+                'level' => $level,
                 'q' => $keyword,
             ],
             'stats' => [
@@ -242,7 +292,49 @@ final class FormationController extends AbstractController
                 'available' => count(array_filter($formations, static fn (Formation $formation) => ($formation->getPlacesRestantes() ?? 0) > 0)),
                 'full' => count(array_filter($formations, static fn (Formation $formation) => ($formation->getPlacesRestantes() ?? 0) <= 0)),
                 'online' => count(array_filter($formations, static fn (Formation $formation) => $formation->getMode() === 'en_ligne')),
+                'presentiel' => count(array_filter($formations, static fn (Formation $formation) => $formation->getMode() === 'presentiel')), 
             ],
+        ]);
+    }
+    #[Route('/rh/formations/{id}/participants', name: 'app_admin_formation_participants', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function adminParticipants(
+        int $id,
+        FormationRepository $formationRepository,
+        ParticipationFormationRepository $participationFormationRepository,
+        UtilisateurRepository $utilisateurRepository
+    ): Response
+    {
+        $formation = $formationRepository->find($id);
+
+        if (!$formation instanceof Formation) {
+            throw $this->createNotFoundException('Formation introuvable.');
+        }
+
+        $participations = $participationFormationRepository->findByFormationOrdered($id);
+        $participantIds = array_values(array_unique(array_map(
+            static fn (ParticipationFormation $participation): int => $participation->getIDParticipant() ?? 0,
+            $participations
+        )));
+        $participantIds = array_values(array_filter($participantIds, static fn (int $value): bool => $value > 0));
+        $participantsById = $utilisateurRepository->findEmployeesByIds($participantIds);
+
+        $rows = array_map(function (ParticipationFormation $participation) use ($participantsById): array {
+            $participantId = $participation->getIDParticipant() ?? 0;
+            $participant = $participantsById[$participantId] ?? [
+                'id' => $participantId,
+                'label' => 'Utilisateur inconnu',
+                'email' => 'Email indisponible',
+            ];
+
+            return [
+                'participant' => $participant,
+                'participation' => $participation,
+            ];
+        }, $participations);
+
+        return $this->render('admin/formation/participants.html.twig', [
+            'formation' => $this->mapFormation($formation),
+            'participants' => $rows,
         ]);
     }
 
@@ -305,10 +397,21 @@ final class FormationController extends AbstractController
             'page_title' => 'Modifier la formation',
         ]);
     }
-
     #[Route('/rh/formations/{id}/delete', name: 'app_admin_formation_delete', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function adminDelete(Formation $formation, EntityManagerInterface $entityManager): RedirectResponse
+    public function adminDelete(
+        Formation $formation,
+        EntityManagerInterface $entityManager,
+        ParticipationFormationRepository $participationFormationRepository,
+        CertificationRepository $certificationRepository
+    ): RedirectResponse
     {
+        $formationId = $formation->getIDFormation() ?? $formation->getID_Formation();
+
+        if ($formationId !== null) {
+            $certificationRepository->removeByFormationId($formationId);
+            $participationFormationRepository->removeByFormationId($formationId);
+        }
+
         $entityManager->remove($formation);
         $entityManager->flush();
 
@@ -316,6 +419,7 @@ final class FormationController extends AbstractController
 
         return $this->redirectToRoute('app_admin_formation_index');
     }
+
 
     private function mapFormation(Formation $formation): array
     {
@@ -332,7 +436,7 @@ final class FormationController extends AbstractController
             'full_description' => $description,
             'modules' => $content['modules'],
             'excerpt' => mb_strimwidth(($content['overview'] ?: $description) ?: 'Aucune description disponible pour cette formation.', 0, 180, '...'),
-            'image' => $formation->getImage(),
+            'image' => $this->normalizeImageSource($formation->getImage()),
             'mode' => $mode,
             'mode_label' => $mode === 'en_ligne' ? 'En ligne' : 'Presentiel',
             'mode_icon' => $mode === 'en_ligne' ? 'En ligne' : 'Presentiel',
@@ -351,6 +455,64 @@ final class FormationController extends AbstractController
         ];
     }
 
+
+    private function hasDateOverlap(Formation $currentFormation, Formation $existingFormation): bool
+    {
+        $currentStart = $this->normalizeComparableDate($currentFormation->getDateDebut());
+        $currentEnd = $this->normalizeComparableDate($currentFormation->getDateFin());
+        $existingStart = $this->normalizeComparableDate($existingFormation->getDateDebut());
+        $existingEnd = $this->normalizeComparableDate($existingFormation->getDateFin());
+
+        if ($currentStart === null || $currentEnd === null || $existingStart === null || $existingEnd === null) {
+            return false;
+        }
+
+        return $currentStart <= $existingEnd && $existingStart <= $currentEnd;
+    }
+
+    private function normalizeComparableDate(?int $value): ?int
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $raw = preg_replace('/\D/', '', (string) $value) ?? '';
+
+        if ($raw === '') {
+            return null;
+        }
+
+        if (strlen($raw) >= 8) {
+            return (int) substr($raw, 0, 8);
+        }
+
+        if (strlen($raw) === 10 || strlen($raw) === 9) {
+            return (int) date('Ymd', (int) $raw);
+        }
+
+        return null;
+    }
+
+    private function resolveStoredImagePath(Request $request, string $currentValue): string
+    {
+        $uploadedFile = $request->files->get('image_file');
+
+        if (!$uploadedFile instanceof UploadedFile || !$uploadedFile->isValid()) {
+            return trim($currentValue);
+        }
+
+        $uploadDirectory = dirname(__DIR__, 2) . '/public/uploads/formations';
+
+        if (!is_dir($uploadDirectory)) {
+            mkdir($uploadDirectory, 0777, true);
+        }
+
+        $extension = $uploadedFile->guessExtension() ?: $uploadedFile->getClientOriginalExtension() ?: 'bin';
+        $filename = 'formation-' . uniqid('', true) . '.' . strtolower($extension);
+        $uploadedFile->move($uploadDirectory, $filename);
+
+        return '/uploads/formations/' . $filename;
+    }
     private function formatStoredDate(?int $value): string
     {
         if (!$value) {
@@ -383,7 +545,6 @@ final class FormationController extends AbstractController
 
         return $raw;
     }
-
     /**
      * @return array<string, string>
      */
@@ -400,17 +561,19 @@ final class FormationController extends AbstractController
             'id_entreprise' => (string) ($formation?->getIDEntreprise() ?? $formationRepository?->getDefaultEnterpriseId() ?? 1),
             'num_ordre_creation' => (string) ($formation?->getNumOrdreCreation() ?? $formationRepository?->getNextOrderNumber() ?? 1),
             'image' => trim((string) $request->request->get('image', '')),
+            'modules' => trim((string) $request->request->get('modules', '')),
         ];
     }
-
     /**
      * @return array<string, string>
      */
     private function buildFormData(Formation $formation, ?FormationRepository $formationRepository): array
     {
+        $content = $this->extractFormationContent((string) ($formation->getDescription() ?? ''));
+
         return [
             'titre' => (string) ($formation->getTitre() ?? ''),
-            'description' => (string) ($formation->getDescription() ?? ''),
+            'description' => $content['overview'],
             'mode' => (string) ($formation->getMode() ?? 'presentiel'),
             'niveau' => (string) ($formation->getNiveau() ?? 'Debutant'),
             'nombre_places' => $formation->getNombrePlaces() !== null ? (string) $formation->getNombrePlaces() : '',
@@ -419,6 +582,7 @@ final class FormationController extends AbstractController
             'id_entreprise' => $formation->getIDEntreprise() !== null ? (string) $formation->getIDEntreprise() : (string) ($formationRepository?->getDefaultEnterpriseId() ?? 1),
             'num_ordre_creation' => $formation->getNumOrdreCreation() !== null ? (string) $formation->getNumOrdreCreation() : (string) ($formationRepository?->getNextOrderNumber() ?? 1),
             'image' => (string) ($formation->getImage() ?? ''),
+            'modules' => implode(PHP_EOL, $content['modules']),
         ];
     }
 
@@ -485,7 +649,7 @@ final class FormationController extends AbstractController
 
         $formation
             ->setTitre($data['titre'])
-            ->setDescription($data['description'] !== '' ? $data['description'] : null)
+            ->setDescription($this->buildStoredDescription($data['description'], $data['modules']))
             ->setMode($data['mode'])
             ->setNiveau($data['niveau'])
             ->setNombrePlaces($totalPlaces)
@@ -496,7 +660,71 @@ final class FormationController extends AbstractController
             ->setDateFin((int) str_replace('-', '', $data['date_fin']))
             ->setImage($data['image'] !== '' ? $data['image'] : null);
     }
+    private function buildStoredDescription(string $overview, string $modules): ?string
+    {
+        $overview = trim($overview);
+        $moduleLines = array_values(array_filter(array_map(
+            static fn (string $line): string => trim($line),
+            preg_split('/\r\n|\r|\n/', $modules) ?: []
+        ), static fn (string $line): bool => $line !== ''));
 
+        if ($overview === '' && $moduleLines === []) {
+            return null;
+        }
+
+        if ($moduleLines === []) {
+            return $overview;
+        }
+
+        $payload = implode(PHP_EOL, $moduleLines);
+
+        return $overview !== ''
+            ? $overview . PHP_EOL . PHP_EOL . '[MODULES]' . PHP_EOL . $payload
+            : '[MODULES]' . PHP_EOL . $payload;
+    }
+
+    private function normalizeImageSource(?string $value): ?string
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match('#^(https?:)?//#i', $value) || str_starts_with($value, 'data:') || str_starts_with($value, 'blob:')) {
+            return $value;
+        }
+
+        if (str_starts_with($value, '/')) {
+            return $value;
+        }
+
+        $normalizedValue = str_replace('\\', '/', $value);
+
+        if (preg_match('#^(uploads|images|assets)/#i', ltrim($normalizedValue, '/')) === 1) {
+            return '/' . ltrim($normalizedValue, '/');
+        }
+
+        $filename = basename($normalizedValue);
+        $uploadCandidate = dirname(__DIR__, 2) . '/public/uploads/formations/' . $filename;
+
+        if ($filename !== '' && is_file($uploadCandidate)) {
+            return '/uploads/formations/' . rawurlencode($filename);
+        }
+
+        if (preg_match('#^[A-Za-z]:[\\/]#', $value) === 1) {
+            $publicMarker = '/public/';
+            $position = stripos($normalizedValue, $publicMarker);
+
+            if ($position !== false) {
+                return '/' . ltrim(substr($normalizedValue, $position + strlen($publicMarker)), '/');
+            }
+
+            return null;
+        }
+
+        return '/' . ltrim($normalizedValue, '/');
+    }
     private function formatDateForInput(?int $value): string
     {
         if (!$value) {
@@ -634,3 +862,26 @@ final class FormationController extends AbstractController
         ];
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

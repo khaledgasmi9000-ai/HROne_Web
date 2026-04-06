@@ -48,6 +48,34 @@ class ParticipationFormationRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * @return ParticipationFormation[]
+     */
+    public function findActiveByParticipant(int $participantId): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.ID_Participant = :participantId')
+            ->andWhere('p.Statut = :status')
+            ->setParameter('participantId', $participantId)
+            ->setParameter('status', 'inscrit')
+            ->orderBy('p.Num_Ordre_Participation', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return ParticipationFormation[]
+     */
+    public function findByFormationOrdered(int $formationId): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.ID_Formation = :formationId')
+            ->setParameter('formationId', $formationId)
+            ->orderBy('p.Num_Ordre_Participation', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function getNextOrderNumber(): int
     {
         $max = $this->createQueryBuilder('p')
@@ -68,6 +96,16 @@ class ParticipationFormationRepository extends ServiceEntityRepository
             ->setParameter('formationId', $formationId)
             ->setParameter('participantId', $participantId)
             ->setParameter('status', 'inscrit')
+            ->getQuery()
+            ->execute();
+    }
+
+    public function removeByFormationId(int $formationId): int
+    {
+        return $this->createQueryBuilder('p')
+            ->delete()
+            ->andWhere('p.ID_Formation = :formationId')
+            ->setParameter('formationId', $formationId)
             ->getQuery()
             ->execute();
     }

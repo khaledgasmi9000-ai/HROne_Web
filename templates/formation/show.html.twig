@@ -19,7 +19,10 @@
 
         <div class="detail-banner">
             {% if formation.image %}
-                <img src="{{ formation.image }}" alt="{{ formation.title }}">
+                <img src="{{ formation.image }}" alt="{{ formation.title }}" onerror="this.hidden=true; this.nextElementSibling.hidden=false;">
+                <div class="detail-image-fallback" hidden>
+                    <span>Formation</span>
+                </div>
             {% else %}
                 <div class="detail-image-fallback">
                     <span>Formation</span>

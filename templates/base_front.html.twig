@@ -8,13 +8,14 @@
     {% block stylesheets %}{% endblock %}
 </head>
 <body class="{% block body_class %}page-formations{% endblock %}">
+{% set current_route = app.request.attributes.get('_route') %}
 <div class="app-shell">
     <header class="top-navbar">
         <nav class="top-nav">
             <a class="nav-link" href="#">Offres d'emploi</a>
-            <a class="nav-link active" href="{{ path('app_formation_index') }}">Formations</a>
+            <a class="nav-link {% if current_route starts with 'app_formation_' and current_route != 'app_my_participations' %}active{% endif %}" href="{{ path('app_formation_index') }}">Formations</a>
             <a class="nav-link" href="#">Evenements</a>
-            <a class="nav-link" href="{{ path('app_my_participations') }}">Mes participations</a>
+            <a class="nav-link {% if current_route == 'app_my_participations' %}active{% endif %}" href="{{ path('app_my_participations') }}">Mes participations</a>
             <a class="nav-link" href="#">Demande de conge</a>
             <a class="nav-link" href="#">Communaute</a>
         </nav>

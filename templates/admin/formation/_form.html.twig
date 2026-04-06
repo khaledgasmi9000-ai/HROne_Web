@@ -26,14 +26,15 @@
             <div class="field-block field-block-wide">
                 <label for="image">Image ou visuel <span>*</span></label>
                 <div class="file-row">
-                    <input id="image" name="image" type="text" value="{{ form_data.image }}" placeholder="https://exemple.com/visuel.png ou fichier local" required>
+                    <input id="image" name="image" type="text" value="{{ form_data.image }}" placeholder="https://exemple.com/visuel.png ou C:\\images\\formation.jpg" required>
                     <label class="browse-button" for="image_file">Parcourir...</label>
-                    <input id="image_file" type="file" accept=".png,.jpg,.jpeg,.gif">
+                    <input id="image_file" name="image_file" type="file" accept=".png,.jpg,.jpeg,.gif,.webp">
                 </div>
-                <p class="field-help">Entrez une URL ou cliquez sur Parcourir pour selectionner un fichier local (png, jpg, jpeg, gif).</p>
+                <p class="field-help">Entrez une URL ou un chemin local, ou cliquez sur Parcourir pour selectionner un fichier local.</p>
                 <div id="image-preview" class="image-preview" hidden>
                     <p class="image-preview-label">Apercu de l'image selectionnee</p>
                     <img id="image-preview-tag" src="" alt="Apercu du visuel choisi">
+                    <p id="image-preview-note" class="image-preview-note" hidden>Impossible d'afficher ce chemin local dans le navigateur. Verifiez le chemin saisi.</p>
                 </div>
                 {% if errors.image is defined %}<p class="field-error">{{ errors.image }}</p>{% endif %}
                 <p class="field-error client-error" data-error-for="image"></p>
@@ -89,7 +90,8 @@
                     <input id="module_input" type="text" placeholder="Ex: Module 1 - Introduction aux outils RH">
                     <button type="button" id="add-module-btn" class="secondary-button">Ajouter le cours</button>
                 </div>
-                <p class="field-help">Ajoutez autant de modules que necessaire. Vous pouvez les supprimer a tout moment.</p>
+                <input id="modules" name="modules" type="hidden" value="{{ form_data.modules|default('') }}">
+                <p class="field-help">Ajoutez autant de modules que necessaire. Ils seront affiches en consultation et en modification.</p>
                 <div id="module-list" class="module-list"></div>
             </div>
 
@@ -107,6 +109,7 @@
         const imageInput = document.getElementById('image');
         const imagePreview = document.getElementById('image-preview');
         const imagePreviewTag = document.getElementById('image-preview-tag');
+        const imagePreviewNote = document.getElementById('image-preview-note');
         const form = document.getElementById('formation-form');
         const titleInput = document.getElementById('titre');
         const descriptionInput = document.getElementById('description');
@@ -116,9 +119,11 @@
         const endInput = document.getElementById('date_fin');
         const levelInput = document.getElementById('niveau');
         const moduleInput = document.getElementById('module_input');
+        const modulesHiddenInput = document.getElementById('modules');
         const addModuleButton = document.getElementById('add-module-btn');
         const moduleList = document.getElementById('module-list');
         const allowedImageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+        let moduleValues = [];
 
         function setFieldError(fieldName, message) {
             const node = document.querySelector('[data-error-for="' + fieldName + '"]');
@@ -130,6 +135,51 @@
 
         function clearFieldError(fieldName) {
             setFieldError(fieldName, '');
+        }
+
+        function normalizeImageSource(value) {
+            const trimmed = (value || '').trim();
+
+            if (!trimmed) {
+                return '';
+            }
+
+            if (/^(https?:)?\/\//i.test(trimmed) || trimmed.startsWith('data:') || trimmed.startsWith('blob:') || trimmed.startsWith('/')) {
+                return trimmed;
+            }
+
+            if (/^[A-Za-z]:[\\/]/.test(trimmed)) {
+                const normalized = trimmed.replace(/\\/g, '/');
+                return 'file:///' + normalized.replace(/ /g, '%20');
+            }
+
+            return trimmed;
+        }
+
+        function showImagePreview(src, showNote) {
+            if (!src) {
+                imagePreview.hidden = true;
+                imagePreviewTag.removeAttribute('src');
+                imagePreviewNote.hidden = true;
+                return;
+            }
+
+            imagePreview.hidden = false;
+            imagePreviewTag.src = src;
+            imagePreviewNote.hidden = !showNote;
+        }
+
+        function updateImagePreviewFromInput() {
+            const value = imageInput.value.trim();
+
+            if (!value) {
+                showImagePreview('', false);
+                return;
+            }
+
+            const normalized = normalizeImageSource(value);
+            const isLocalPath = /^[A-Za-z]:[\\/]/.test(value);
+            showImagePreview(normalized, isLocalPath);
         }
 
         function validateImageValue() {
@@ -152,6 +202,46 @@
 
             clearFieldError('image');
             return true;
+        }
+
+        function syncModulesField() {
+            modulesHiddenInput.value = moduleValues.join('\n');
+        }
+
+        function renderModules() {
+            moduleList.innerHTML = '';
+
+            moduleValues.forEach(function (value, index) {
+                const item = document.createElement('div');
+                item.className = 'module-item';
+
+                const text = document.createElement('span');
+                text.textContent = value;
+
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'module-remove';
+                remove.textContent = 'Supprimer';
+                remove.addEventListener('click', function () {
+                    moduleValues.splice(index, 1);
+                    syncModulesField();
+                    renderModules();
+                });
+
+                item.appendChild(text);
+                item.appendChild(remove);
+                moduleList.appendChild(item);
+            });
+        }
+
+        function initializeModules() {
+            moduleValues = (modulesHiddenInput.value || '')
+                .split(/\r\n|\r|\n/)
+                .map(function (value) { return value.trim(); })
+                .filter(Boolean);
+
+            syncModulesField();
+            renderModules();
         }
 
         function validateForm() {
@@ -219,6 +309,7 @@
                 isValid = false;
             }
 
+            syncModulesField();
             return isValid;
         }
 
@@ -227,10 +318,17 @@
                 if (fileInput.files && fileInput.files[0]) {
                     const file = fileInput.files[0];
                     imageInput.value = file.name;
-                    imagePreviewTag.src = URL.createObjectURL(file);
-                    imagePreview.hidden = false;
+                    showImagePreview(URL.createObjectURL(file), false);
+                    clearFieldError('image');
                 }
             });
+
+            imageInput.addEventListener('input', updateImagePreviewFromInput);
+            imageInput.addEventListener('change', updateImagePreviewFromInput);
+            imagePreviewTag.addEventListener('error', function () {
+                imagePreviewNote.hidden = false;
+            });
+            updateImagePreviewFromInput();
         }
 
         if (form) {
@@ -238,6 +336,15 @@
                 if (!validateForm()) {
                     event.preventDefault();
                 }
+            });
+
+            form.addEventListener('reset', function () {
+                window.setTimeout(function () {
+                    moduleValues = [];
+                    syncModulesField();
+                    renderModules();
+                    updateImagePreviewFromInput();
+                }, 0);
             });
         }
 
@@ -265,7 +372,7 @@
             }
         });
 
-        if (addModuleButton && moduleInput && moduleList) {
+        if (addModuleButton && moduleInput && moduleList && modulesHiddenInput) {
             addModuleButton.addEventListener('click', function () {
                 const value = moduleInput.value.trim();
 
@@ -273,25 +380,22 @@
                     return;
                 }
 
-                const item = document.createElement('div');
-                item.className = 'module-item';
-
-                const text = document.createElement('span');
-                text.textContent = value;
-
-                const remove = document.createElement('button');
-                remove.type = 'button';
-                remove.className = 'module-remove';
-                remove.textContent = 'Supprimer';
-                remove.addEventListener('click', function () {
-                    item.remove();
-                });
-
-                item.appendChild(text);
-                item.appendChild(remove);
-                moduleList.appendChild(item);
+                moduleValues.push(value);
+                syncModulesField();
+                renderModules();
                 moduleInput.value = '';
+                moduleInput.focus();
             });
+
+            moduleInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    addModuleButton.click();
+                }
+            });
+
+            initializeModules();
         }
     }());
 </script>
+

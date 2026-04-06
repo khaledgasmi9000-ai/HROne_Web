@@ -401,3 +401,23 @@ tbody td p {
     display: grid;
   }
 }
+
+.image-preview-note {
+  margin: 10px 0 0;
+  color: #92400e;
+  font-size: 0.9rem;
+}
+
+
+
+.toolbar button {
+  border: 1px solid #2563eb;
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.18);
+}
+
+.toolbar button:hover {
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+}
+

@@ -19,7 +19,7 @@ class FormationRepository extends ServiceEntityRepository
     /**
      * @return Formation[]
      */
-    public function searchForCatalog(?string $mode = null, ?string $keyword = null): array
+    public function searchForCatalog(?string $mode = null, ?string $keyword = null, ?string $level = null): array
     {
         $qb = $this->createQueryBuilder('f')
             ->orderBy('f.Num_Ordre_Creation', 'ASC')
@@ -30,9 +30,23 @@ class FormationRepository extends ServiceEntityRepository
                 ->setParameter('mode', $mode);
         }
 
+        if ($level && \in_array($level, ['Debutant', 'Intermediaire', 'Avance'], true)) {
+            $qb->andWhere('f.Niveau = :level')
+                ->setParameter('level', $level);
+        }
+
         if ($keyword) {
-            $qb->andWhere('LOWER(f.Titre) LIKE :keyword OR LOWER(f.Description) LIKE :keyword')
-                ->setParameter('keyword', '%' . mb_strtolower(trim($keyword)) . '%');
+            $terms = preg_split('/\s+/', mb_strtolower(trim($keyword))) ?: [];
+            $terms = array_values(array_filter($terms, static fn (string $term): bool => $term !== ''));
+
+            foreach ($terms as $index => $term) {
+                $parameter = 'keyword_' . $index;
+                $qb->andWhere(sprintf(
+                    '(LOWER(f.Titre) LIKE :%1$s OR LOWER(f.Description) LIKE :%1$s OR LOWER(f.Niveau) LIKE :%1$s)',
+                    $parameter
+                ))
+                ->setParameter($parameter, '%' . $term . '%');
+            }
         }
 
         return $qb->getQuery()->getResult();

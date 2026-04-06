@@ -13,9 +13,9 @@
 
     <section class="dashboard-hero">
         <div>
-            <p class="eyebrow">Back office</p>
+            <p class="eyebrow">MODULE FORMATION</p>
             <h1>Gestion des formations</h1>
-            <p>Version web Symfony du module formation avec suivi des disponibilites, consultation et filtrage des sessions.</p>
+            <p>Gérez vos formations : créez, modifiez ou supprimez, et consultez celles disponibles ou complètes.</p>
             <div class="hero-actions">
                 <a class="primary-action primary-action-hero" href="{{ path('app_admin_formation_new') }}">
                     <span class="action-icon" aria-hidden="true">+</span>
@@ -40,6 +40,10 @@
                 <span>{{ stats.online }}</span>
                 <small>En ligne</small>
             </div>
+            <div class="stat-box">
+                <span>{{ stats.presentiel }}</span>
+                <small>Presentiel</small>
+            </div>
         </div>
     </section>
 
@@ -50,6 +54,12 @@
                 <option value="">Tous les modes</option>
                 <option value="presentiel" {% if filters.mode == 'presentiel' %}selected{% endif %}>Presentiel</option>
                 <option value="en_ligne" {% if filters.mode == 'en_ligne' %}selected{% endif %}>En ligne</option>
+            </select>
+            <select name="level">
+                <option value="">Tous les niveaux</option>
+                <option value="Debutant" {% if filters.level == 'Debutant' %}selected{% endif %}>Debutant</option>
+                <option value="Intermediaire" {% if filters.level == 'Intermediaire' %}selected{% endif %}>Intermediaire</option>
+                <option value="Avance" {% if filters.level == 'Avance' %}selected{% endif %}>Avance</option>
             </select>
             <button type="submit">Filtrer</button>
             <a href="{{ path('app_admin_formation_index') }}">Reinitialiser</a>
@@ -89,7 +99,7 @@
                             </span>
                         </td>
                         <td class="actions-cell">
-                            <a class="text-action" href="{{ path('app_formation_show', {id: formation.id}) }}">Voir</a>
+                            <a class="text-action" href="{{ path('app_admin_formation_participants', {id: formation.id}) }}">Voir</a>
                             <a class="text-action" href="{{ path('app_admin_formation_edit', {id: formation.id}) }}">Modifier</a>
                             <form method="post" action="{{ path('app_admin_formation_delete', {id: formation.id}) }}" onsubmit="return confirm('Supprimer cette formation ?');">
                                 <button type="submit" class="danger-action">Supprimer</button>
@@ -106,3 +116,4 @@
         </div>
     </section>
 {% endblock %}
+
