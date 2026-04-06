@@ -57,6 +57,20 @@ class Offre
         return $this;
     }
 
+    #[ORM\Column(type: 'string', nullable: true)]
+    private ?string $Localisation = null;
+
+    public function getLocalisation(): ?string
+    {
+        return $this->Localisation;
+    }
+
+    public function setLocalisation(?string $Localisation): self
+    {
+        $this->Localisation = $Localisation;
+        return $this;
+    }
+
     #[ORM\ManyToOne(targetEntity: Entreprise::class, inversedBy: 'offres')]
     #[ORM\JoinColumn(name: 'ID_Entreprise', referencedColumnName: 'ID_Entreprise')]
     private ?Entreprise $entreprise = null;
@@ -384,6 +398,18 @@ class Offre
     public function setMaxSalaire(?int $Max_Salaire): static
     {
         $this->Max_Salaire = $Max_Salaire;
+
+        return $this;
+    }
+
+    public function getLocation(): ?string
+    {
+        return $this->Localisation;
+    }
+
+    public function setLocation(?string $Localisation): static
+    {
+        $this->Localisation = $Localisation;
 
         return $this;
     }

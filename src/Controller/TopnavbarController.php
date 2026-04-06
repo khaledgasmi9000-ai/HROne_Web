@@ -2,16 +2,22 @@
 
 namespace App\Controller;
 
+use App\Repository\CondidatRepository;
+use App\Repository\OffreRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 class TopnavbarController extends AbstractController
 {
     #[Route('/top/offres', name: 'topnav_offres')]
-    public function offres(): Response
+    public function offres(OffreRepository $offreRepository): Response
     {
-        return $this->render('OffresEmplois/OffresEmplois.html.twig');
+        return $this->render('OffresEmplois/OffresEmplois.html.twig', [
+            'offers' => $offreRepository->fetchOffersForCandidate(),
+        ]);
     }
 
     #[Route('/top/formations', name: 'topnav_formations')]
@@ -45,8 +51,115 @@ class TopnavbarController extends AbstractController
     }
 
     #[Route('/top/mes-candidatures', name: 'topnav_mes_candidatures')]
-    public function mesCandidatures(): Response
+    public function mesCandidatures(CondidatRepository $condidatRepository): Response
     {
-        return $this->render('Topnavbar/mes-candidatures.html.twig');
+        $dashboard = $condidatRepository->getCandidateDashboard();
+
+        return $this->render('Topnavbar/mes-candidatures.html.twig', [
+            'candidatures' => $dashboard['items'],
+            'candidaturesTotal' => $dashboard['total'],
+            'candidaturesInProgress' => $dashboard['inProgress'],
+        ]);
+    }
+
+    #[Route('/top/candidatures/api', name: 'topnav_candidatures_api_create', methods: ['POST'])]
+    public function createCandidatureApi(Request $request, CondidatRepository $condidatRepository): JsonResponse
+    {
+        try {
+            $payload = json_decode($request->getContent(), true);
+            if (!is_array($payload)) {
+                return $this->json(['message' => 'Payload invalide.'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $validated = $condidatRepository->validateCandidaturePayload($payload);
+            if ($validated['errors'] !== []) {
+                return $this->json([
+                    'message' => 'Validation des donnees echouee.',
+                    'errors' => $validated['errors'],
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $candidature = $condidatRepository->createCandidature($validated['data']);
+
+            return $this->json(['candidature' => $candidature], Response::HTTP_CREATED);
+        } catch (\Throwable $exception) {
+            $status = str_contains($exception->getMessage(), 'deja')
+                ? Response::HTTP_CONFLICT
+                : Response::HTTP_INTERNAL_SERVER_ERROR;
+
+            return $this->json([
+                'message' => "Erreur serveur lors de la creation de la candidature.",
+                'details' => $exception->getMessage(),
+            ], $status);
+        }
+    }
+
+    #[Route('/top/candidatures/api/{id}', name: 'topnav_candidatures_api_get', methods: ['GET'])]
+    public function getCandidatureApi(int $id, CondidatRepository $condidatRepository): JsonResponse
+    {
+        $candidature = $condidatRepository->fetchCandidatureById($id);
+        if ($candidature === null) {
+            return $this->json(['message' => 'Candidature introuvable.'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json(['candidature' => $candidature]);
+    }
+
+    #[Route('/top/candidatures/api/{id}', name: 'topnav_candidatures_api_update', methods: ['PUT'])]
+    public function updateCandidatureApi(int $id, Request $request, CondidatRepository $condidatRepository): JsonResponse
+    {
+        try {
+            $existing = $condidatRepository->fetchCandidatureById($id);
+            if ($existing === null) {
+                return $this->json(['message' => 'Candidature introuvable.'], Response::HTTP_NOT_FOUND);
+            }
+
+            $payload = json_decode($request->getContent(), true);
+            if (!is_array($payload)) {
+                return $this->json(['message' => 'Payload invalide.'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $validated = $condidatRepository->validateCandidaturePayload($payload);
+            if ($validated['errors'] !== []) {
+                return $this->json([
+                    'message' => 'Validation des donnees echouee.',
+                    'errors' => $validated['errors'],
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $candidature = $condidatRepository->updateCandidature($id, $validated['data']);
+            if ($candidature === null) {
+                return $this->json(['message' => 'Candidature introuvable.'], Response::HTTP_NOT_FOUND);
+            }
+
+            return $this->json(['candidature' => $candidature]);
+        } catch (\Throwable $exception) {
+            $status = str_contains($exception->getMessage(), 'deja')
+                ? Response::HTTP_CONFLICT
+                : Response::HTTP_INTERNAL_SERVER_ERROR;
+
+            return $this->json([
+                'message' => "Erreur serveur lors de la modification de la candidature.",
+                'details' => $exception->getMessage(),
+            ], $status);
+        }
+    }
+
+    #[Route('/top/candidatures/api/{id}', name: 'topnav_candidatures_api_delete', methods: ['DELETE'])]
+    public function deleteCandidatureApi(int $id, CondidatRepository $condidatRepository): JsonResponse
+    {
+        try {
+            $deleted = $condidatRepository->deleteCandidature($id);
+            if (!$deleted) {
+                return $this->json(['message' => 'Candidature introuvable.'], Response::HTTP_NOT_FOUND);
+            }
+
+            return $this->json(['deleted' => true]);
+        } catch (\Throwable $exception) {
+            return $this->json([
+                'message' => 'Erreur serveur lors de la suppression de la candidature.',
+                'details' => $exception->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

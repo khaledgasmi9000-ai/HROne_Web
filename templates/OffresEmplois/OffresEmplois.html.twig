@@ -27,60 +27,41 @@
     <section class="offers">
       <div class="offers-header">
         <h2>Offres disponibles</h2>
-        <span class="count" id="offerCount">4 offres</span>
+        {% set offerCountValue = offers|length %}
+        <span class="count" id="offerCount">{{ offerCountValue }} offre{{ offerCountValue > 1 ? 's' : '' }}</span>
       </div>
       <div class="offers-grid" id="offersGrid">
-        <article class="offer-card" data-location="Casablanca">
-          <div class="offer-card-header">
-            <h3>Chef de projet digital</h3>
-            <span class="tag">CDI</span>
-          </div>
-          <p class="offer-meta">Casablanca - 3-5 ans - Hybride</p>
-          <p class="offer-desc">Pilotez la strategie digitale, coordonnez les equipes et suivez les KPIs.</p>
-          <div class="offer-footer">
-            <button class="btn btn-ghost" type="button">Voir details</button>
-            <button class="btn btn-primary" type="button">Postuler</button>
-          </div>
-        </article>
-
-        <article class="offer-card" data-location="Rabat">
-          <div class="offer-card-header">
-            <h3>Analyste RH</h3>
-            <span class="tag">CDD</span>
-          </div>
-          <p class="offer-meta">Rabat - 0-2 ans - Sur site</p>
-          <p class="offer-desc">Analysez les donnees RH et proposez des actions d'amelioration.</p>
-          <div class="offer-footer">
-            <button class="btn btn-ghost" type="button">Voir details</button>
-            <button class="btn btn-primary" type="button">Postuler</button>
-          </div>
-        </article>
-
-        <article class="offer-card" data-location="Tanger">
-          <div class="offer-card-header">
-            <h3>Charge de communication</h3>
-            <span class="tag">CDI</span>
-          </div>
-          <p class="offer-meta">Tanger - 3-5 ans - Sur site</p>
-          <p class="offer-desc">Gerez les campagnes internes et developpez la marque employeur.</p>
-          <div class="offer-footer">
-            <button class="btn btn-ghost" type="button">Voir details</button>
-            <button class="btn btn-primary" type="button">Postuler</button>
-          </div>
-        </article>
-
-        <article class="offer-card" data-location="Remote">
-          <div class="offer-card-header">
-            <h3>Developpeur Frontend</h3>
-            <span class="tag">Freelance</span>
-          </div>
-          <p class="offer-meta">Remote - 6-10 ans - En ligne</p>
-          <p class="offer-desc">Concevez des interfaces modernes et maintenables pour nos clients.</p>
-          <div class="offer-footer">
-            <button class="btn btn-ghost" type="button">Voir details</button>
-            <button class="btn btn-primary" type="button">Postuler</button>
-          </div>
-        </article>
+        {% for offer in offers %}
+          <article
+            class="offer-card"
+            data-location="{{ offer.location|default('')|e('html_attr') }}"
+            data-offer-id="{{ offer.id }}"
+            data-offer-title="{{ offer.title|e('html_attr') }}"
+            data-offer-contract="{{ offer.contract|default('-')|e('html_attr') }}"
+            data-offer-work-type="{{ offer.workType|default('-')|e('html_attr') }}"
+            data-offer-experience="{{ offer.experience|default('-')|e('html_attr') }}"
+            data-offer-description="{{ (offer.description ?: 'Aucune description disponible pour cette offre.')|e('html_attr') }}"
+            data-offer-min-salary="{{ offer.minSalary is not null ? offer.minSalary : '' }}"
+            data-offer-max-salary="{{ offer.maxSalary is not null ? offer.maxSalary : '' }}"
+            data-offer-expiration-date="{{ offer.expirationDate|default('')|e('html_attr') }}"
+            data-offer-status="{{ offer.status|default('-')|e('html_attr') }}"
+          >
+            <div class="offer-card-header">
+              <h3>{{ offer.title }}</h3>
+              <span class="tag">{{ offer.contract }}</span>
+            </div>
+            <p class="offer-meta">{{ offer.location }} - {{ offer.experience }} - {{ offer.workType }}</p>
+            <p class="offer-desc">{{ offer.description ?: 'Aucune description disponible pour cette offre.' }}</p>
+            <div class="offer-footer">
+              <button class="btn btn-ghost btn-offer-details" type="button">Voir details</button>
+              <button class="btn btn-primary btn-apply-offer" type="button" data-offer-id="{{ offer.id }}" data-offer-title="{{ offer.title|e('html_attr') }}">Postuler</button>
+            </div>
+          </article>
+        {% else %}
+          <article class="offer-card">
+            <p class="offer-desc">Aucune offre active disponible pour le moment.</p>
+          </article>
+        {% endfor %}
       </div>
     </section>
 
@@ -92,10 +73,9 @@
           <label for="selectedOffer">Offre selectionnee</label>
           <select id="selectedOffer">
             <option value="">Choisir une offre</option>
-            <option>Chef de projet digital</option>
-            <option>Analyste RH</option>
-            <option>Charge de communication</option>
-            <option>Developpeur Frontend</option>
+            {% for offer in offers %}
+              <option value="{{ offer.id }}">{{ offer.title }}</option>
+            {% endfor %}
           </select>
         </div>
         <div class="field">
@@ -112,7 +92,7 @@
         </div>
         <div class="field">
           <label for="cvFile">CV</label>
-          <input id="cvFile" type="file" />
+          <input id="cvFile" type="file" accept=".pdf,.doc,.docx" />
         </div>
         <div class="field">
           <label for="motivationLetter">Lettre de motivation</label>
@@ -120,12 +100,68 @@
         </div>
         <div class="field">
           <label for="recommendationLetter">Lettre de recommandation</label>
-          <input id="recommendationLetter" type="file" />
+          <input id="recommendationLetter" type="file" accept=".pdf,.doc,.docx" />
         </div>
-        <button class="btn btn-primary" type="button">Envoyer ma candidature</button>
+        <small id="applyFeedback" class="muted" role="alert" aria-live="polite"></small>
+        <button id="submitCandidatureBtn" class="btn btn-primary" type="button">Envoyer ma candidature</button>
       </form>
     </aside>
   </main>
+
+  <div id="offerDetailsModal" class="offer-modal" hidden>
+    <div class="offer-modal-backdrop" data-close-offer-modal="true"></div>
+    <section class="offer-modal-panel" role="dialog" aria-modal="true" aria-labelledby="offerModalTitle">
+      <header class="offer-modal-header">
+        <div>
+          <h3 id="offerModalTitle">Details de l'offre</h3>
+          <p id="offerModalSubtitle" class="muted">Consultez les informations completes de cette offre.</p>
+        </div>
+        <button id="closeOfferDetailsModal" class="btn btn-ghost" type="button">Fermer</button>
+      </header>
+
+      <div class="offer-modal-content">
+        <div class="offer-modal-grid">
+          <div class="offer-modal-item">
+            <span class="offer-modal-label">Titre</span>
+            <strong id="modalOfferTitle">-</strong>
+          </div>
+          <div class="offer-modal-item">
+            <span class="offer-modal-label">Type de contrat</span>
+            <strong id="modalOfferContract">-</strong>
+          </div>
+          <div class="offer-modal-item">
+            <span class="offer-modal-label">Lieu</span>
+            <strong id="modalOfferLocation">-</strong>
+          </div>
+          <div class="offer-modal-item">
+            <span class="offer-modal-label">Type de travail</span>
+            <strong id="modalOfferWorkType">-</strong>
+          </div>
+          <div class="offer-modal-item">
+            <span class="offer-modal-label">Experience demandee</span>
+            <strong id="modalOfferExperience">-</strong>
+          </div>
+          <div class="offer-modal-item">
+            <span class="offer-modal-label">Salaire</span>
+            <strong id="modalOfferSalary">-</strong>
+          </div>
+          <div class="offer-modal-item">
+            <span class="offer-modal-label">Date d'expiration</span>
+            <strong id="modalOfferExpiration">-</strong>
+          </div>
+          <div class="offer-modal-item">
+            <span class="offer-modal-label">Statut</span>
+            <strong id="modalOfferStatus">-</strong>
+          </div>
+        </div>
+
+        <div class="offer-modal-description">
+          <span class="offer-modal-label">Description</span>
+          <p id="modalOfferDescription">-</p>
+        </div>
+      </div>
+    </section>
+  </div>
 
   <script>
     const offerSearch = document.getElementById("offerSearch");
@@ -133,17 +169,105 @@
     const offersGrid = document.getElementById("offersGrid");
     const offerCount = document.getElementById("offerCount");
     const btnMesCandidatures = document.getElementById("btnMesCandidatures");
+    const selectedOffer = document.getElementById("selectedOffer");
+    const submitCandidatureBtn = document.getElementById("submitCandidatureBtn");
+    const candidateName = document.getElementById("candidateName");
+    const candidateEmail = document.getElementById("candidateEmail");
+    const portfolioUrl = document.getElementById("portfolioUrl");
+    const cvFile = document.getElementById("cvFile");
+    const motivationLetter = document.getElementById("motivationLetter");
+    const recommendationLetter = document.getElementById("recommendationLetter");
+    const applyFeedback = document.getElementById("applyFeedback");
+    const createCandidatureApiUrl = "{{ path('topnav_candidatures_api_create') }}";
+    const offerDetailsModal = document.getElementById("offerDetailsModal");
+    const closeOfferDetailsModal = document.getElementById("closeOfferDetailsModal");
+    const modalOfferTitle = document.getElementById("modalOfferTitle");
+    const modalOfferContract = document.getElementById("modalOfferContract");
+    const modalOfferLocation = document.getElementById("modalOfferLocation");
+    const modalOfferWorkType = document.getElementById("modalOfferWorkType");
+    const modalOfferExperience = document.getElementById("modalOfferExperience");
+    const modalOfferSalary = document.getElementById("modalOfferSalary");
+    const modalOfferExpiration = document.getElementById("modalOfferExpiration");
+    const modalOfferStatus = document.getElementById("modalOfferStatus");
+    const modalOfferDescription = document.getElementById("modalOfferDescription");
+
+    const parseApiResponse = async (response) => {
+      const rawText = await response.text();
+      let data = null;
+
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch (error) {
+        data = null;
+      }
+
+      if (!response.ok) {
+        const validationErrors = data?.errors && typeof data.errors === "object" ? Object.values(data.errors) : [];
+        const message = data?.message || rawText.split("\n")[0] || "Erreur serveur.";
+        const details = data?.details ? [data.details] : [];
+        throw new Error([message, ...validationErrors, ...details].filter(Boolean).join("\n"));
+      }
+
+      if (!data || typeof data !== "object") {
+        throw new Error("Reponse serveur invalide.");
+      }
+
+      return data;
+    };
+
+    const showApplyFeedback = (messages, isSuccess = false) => {
+      if (!applyFeedback) {
+        return;
+      }
+
+      if (!messages || messages.length === 0) {
+        applyFeedback.textContent = "";
+        applyFeedback.style.color = "";
+        return;
+      }
+
+      applyFeedback.style.color = isSuccess ? "#0f7a45" : "#b42318";
+      applyFeedback.innerHTML = messages.map((message) => `- ${message}`).join("<br>");
+    };
+
+    const validateApplyPayload = (payload) => {
+      const errors = [];
+
+      if (!payload.offerId) {
+        errors.push("Selectionnez une offre.");
+      }
+      if (!payload.candidateName) {
+        errors.push("Le nom complet est obligatoire.");
+      }
+      if (!payload.candidateEmail) {
+        errors.push("L'email est obligatoire.");
+      }
+      if (!payload.portfolioUrl) {
+        errors.push("Le portfolio est obligatoire.");
+      }
+      if (!payload.cvFileName) {
+        errors.push("Le CV est obligatoire.");
+      }
+      if (!payload.motivationLetter) {
+        errors.push("La lettre de motivation est obligatoire.");
+      }
+      if (!payload.recommendationFileName) {
+        errors.push("La lettre de recommandation est obligatoire.");
+      }
+
+      return errors;
+    };
 
     const filterOffers = () => {
       const query = offerSearch.value.trim().toLowerCase();
       const location = offerLocation.value.trim().toLowerCase();
       let visible = 0;
 
-      offersGrid.querySelectorAll(".offer-card").forEach((card) => {
+      offersGrid.querySelectorAll(".offer-card[data-location]").forEach((card) => {
         const text = card.textContent.trim().toLowerCase();
-        const cardLocation = card.dataset.location.toLowerCase();
+        const cardLocation = (card.dataset.location || "").toLowerCase();
         const matchesQuery = text.includes(query);
-        const matchesLocation = !location || cardLocation === location;
+        const matchesLocation = !location || cardLocation.includes(location);
         const show = matchesQuery && matchesLocation;
         card.style.display = show ? "flex" : "none";
         if (show) {
@@ -154,10 +278,115 @@
       offerCount.textContent = `${visible} offre${visible > 1 ? "s" : ""}`;
     };
 
+    const formatSalaryRange = (minSalaryRaw, maxSalaryRaw) => {
+      const minSalary = Number(minSalaryRaw || 0);
+      const maxSalary = Number(maxSalaryRaw || 0);
+      if (Number.isFinite(minSalary) && Number.isFinite(maxSalary) && minSalary > 0 && maxSalary > 0) {
+        return `${minSalary} - ${maxSalary} MAD`;
+      }
+      return "Non precise";
+    };
+
+    const openOfferDetailsModal = (card) => {
+      if (!card || !offerDetailsModal) {
+        return;
+      }
+
+      modalOfferTitle.textContent = card.dataset.offerTitle || "-";
+      modalOfferContract.textContent = card.dataset.offerContract || "-";
+      modalOfferLocation.textContent = card.dataset.location || "-";
+      modalOfferWorkType.textContent = card.dataset.offerWorkType || "-";
+      modalOfferExperience.textContent = card.dataset.offerExperience || "-";
+      modalOfferSalary.textContent = formatSalaryRange(card.dataset.offerMinSalary, card.dataset.offerMaxSalary);
+      modalOfferExpiration.textContent = card.dataset.offerExpirationDate || "Non precisee";
+      modalOfferStatus.textContent = card.dataset.offerStatus || "-";
+      modalOfferDescription.textContent = card.dataset.offerDescription || "Aucune description disponible pour cette offre.";
+
+      offerDetailsModal.hidden = false;
+    };
+
+    const closeOfferModal = () => {
+      if (offerDetailsModal) {
+        offerDetailsModal.hidden = true;
+      }
+    };
+
     offerSearch.addEventListener("input", filterOffers);
     offerLocation.addEventListener("input", filterOffers);
     btnMesCandidatures.addEventListener("click", () => {
       window.location.href = btnMesCandidatures.dataset.href;
+    });
+
+    offersGrid.querySelectorAll(".btn-apply-offer").forEach((button) => {
+      button.addEventListener("click", () => {
+        const offerId = button.dataset.offerId || "";
+        const offerTitle = button.dataset.offerTitle || "";
+        if (selectedOffer && offerId !== "") {
+          selectedOffer.value = offerId;
+          selectedOffer.focus();
+        }
+        if (offerTitle !== "") {
+          offerSearch.value = offerTitle;
+          filterOffers();
+        }
+      });
+    });
+
+    offersGrid.querySelectorAll(".btn-offer-details").forEach((button) => {
+      button.addEventListener("click", () => {
+        const card = button.closest(".offer-card");
+        openOfferDetailsModal(card);
+      });
+    });
+
+    closeOfferDetailsModal?.addEventListener("click", closeOfferModal);
+    offerDetailsModal?.addEventListener("click", (event) => {
+      if (event.target instanceof HTMLElement && event.target.dataset.closeOfferModal === "true") {
+        closeOfferModal();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && offerDetailsModal && !offerDetailsModal.hidden) {
+        closeOfferModal();
+      }
+    });
+
+    submitCandidatureBtn?.addEventListener("click", async () => {
+      const payload = {
+        offerId: selectedOffer?.value ? Number(selectedOffer.value) : null,
+        candidateName: candidateName?.value.trim() || "",
+        candidateEmail: candidateEmail?.value.trim() || "",
+        portfolioUrl: portfolioUrl?.value.trim() || "",
+        cvFileName: cvFile?.files?.[0]?.name || "",
+        motivationLetter: motivationLetter?.value.trim() || "",
+        recommendationFileName: recommendationLetter?.files?.[0]?.name || "",
+      };
+
+      const localErrors = validateApplyPayload(payload);
+      if (localErrors.length > 0) {
+        showApplyFeedback(localErrors);
+        return;
+      }
+
+      showApplyFeedback([]);
+      submitCandidatureBtn.disabled = true;
+
+      try {
+        const response = await fetch(createCandidatureApiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        await parseApiResponse(response);
+        showApplyFeedback(["Candidature envoyee avec succes."], true);
+      } catch (error) {
+        showApplyFeedback((error?.message || "Impossible d'envoyer la candidature.").split("\n").filter(Boolean));
+      } finally {
+        submitCandidatureBtn.disabled = false;
+      }
     });
   </script>
 {% endblock %}

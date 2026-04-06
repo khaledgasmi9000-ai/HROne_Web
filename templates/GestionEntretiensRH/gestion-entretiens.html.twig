@@ -79,60 +79,11 @@
   </main>
 
   <script>
-    const offers = [
-      { id: 1, title: "Chef de projet digital" },
-      { id: 2, title: "Analyste RH" },
-      { id: 3, title: "Charge de communication" },
-      { id: 4, title: "Developpeur Frontend" },
-    ];
-
-    const candidates = [
-      {
-        id: 101,
-        offerId: 1,
-        name: "Leila Benali",
-        email: "leila.benali@mail.com",
-        experience: "4 ans",
-        status: "En attente",
-        skills: "Gestion de projet, KPI",
-      },
-      {
-        id: 102,
-        offerId: 1,
-        name: "Yassine Mahi",
-        email: "yassine.mahi@mail.com",
-        experience: "6 ans",
-        status: "Acceptee",
-        skills: "Strategie digitale",
-      },
-      {
-        id: 103,
-        offerId: 2,
-        name: "Imane Rami",
-        email: "imane.rami@mail.com",
-        experience: "2 ans",
-        status: "En attente",
-        skills: "Data RH, Excel",
-      },
-      {
-        id: 104,
-        offerId: 3,
-        name: "Hamza Idrissi",
-        email: "hamza.idrissi@mail.com",
-        experience: "5 ans",
-        status: "Rejetee",
-        skills: "Communication interne",
-      },
-      {
-        id: 105,
-        offerId: 4,
-        name: "Nour El Hariri",
-        email: "nour.elhariri@mail.com",
-        experience: "7 ans",
-        status: "En attente",
-        skills: "React, UI",
-      },
-    ];
+    const offers = {{ offers|default([])|json_encode(constant('JSON_UNESCAPED_UNICODE'))|raw }};
+    const candidates = {{ candidatures|default([])|json_encode(constant('JSON_UNESCAPED_UNICODE'))|raw }};
+    const detailsApiPattern = "{{ path('rh_entretiens_api_candidature_details', {id: '__ID__'}) }}";
+    const statusApiPattern = "{{ path('rh_entretiens_api_candidature_status', {id: '__ID__'}) }}";
+    const scheduleApiPattern = "{{ path('rh_entretiens_api_schedule_interview', {id: '__ID__'}) }}";
 
     const offerFilter = document.getElementById("offerFilter");
     const statusFilter = document.getElementById("statusFilter");
@@ -147,6 +98,25 @@
       "En attente": "status-review",
       Acceptee: "status-live",
       Rejetee: "status-draft",
+    };
+
+    const parseApiResponse = async (response) => {
+      const text = await response.text();
+      let data = null;
+
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (error) {
+        data = null;
+      }
+
+      if (!response.ok) {
+        const message = data?.message || text.split("\n")[0] || "Erreur serveur.";
+        const details = data?.details ? `\n${data.details}` : "";
+        throw new Error(`${message}${details}`.trim());
+      }
+
+      return data || {};
     };
 
     const getOfferTitle = (offerId) => {
@@ -223,29 +193,84 @@
         const detailsBtn = document.createElement("button");
         detailsBtn.type = "button";
         detailsBtn.className = "btn btn-small";
-        detailsBtn.textContent = "Voir condidature";
-        detailsBtn.addEventListener("click", () => {
-          alert(
-            `Candidat: ${candidate.name}\nOffre: ${getOfferTitle(candidate.offerId)}\nEmail: ${candidate.email}\nExperience: ${candidate.experience}\nCompetences: ${candidate.skills}\nStatut: ${candidate.status}`
-          );
+        detailsBtn.textContent = "Voir candidature";
+        detailsBtn.addEventListener("click", async () => {
+          try {
+            const response = await fetch(detailsApiPattern.replace("__ID__", String(candidate.id)), {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+            const data = await parseApiResponse(response);
+            const details = data?.candidate || candidate;
+            alert(
+              `Candidat: ${details.name || "-"}\n` +
+                `Offre: ${details.offerTitle || getOfferTitle(details.offerId)}\n` +
+                `Email: ${details.email || "-"}\n` +
+                `Experience: ${details.experience || "-"}\n` +
+                `Competences: ${details.skills || "-"}\n` +
+                `Portfolio: ${details.portfolio || "-"}\n` +
+                `CV: ${details.cvFileName || "-"}\n` +
+                `Lettre recommandation: ${details.recommendationFileName || "-"}\n` +
+                `Statut: ${details.status || "-"}`
+            );
+          } catch (error) {
+            alert(error?.message || "Impossible de charger les details.");
+          }
         });
 
         const acceptBtn = document.createElement("button");
         acceptBtn.type = "button";
         acceptBtn.className = "btn btn-small";
         acceptBtn.textContent = "Accepter";
-        acceptBtn.addEventListener("click", () => {
-          candidate.status = "Acceptee";
-          renderCandidates();
+        acceptBtn.addEventListener("click", async () => {
+          try {
+            const response = await fetch(statusApiPattern.replace("__ID__", String(candidate.id)), {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ status: "ACCEPTED" }),
+            });
+            const data = await parseApiResponse(response);
+            const updated = data?.candidate;
+            if (updated && updated.id === candidate.id) {
+              candidate.status = updated.status;
+              candidate.hasInterview = !!updated.hasInterview;
+            } else {
+              candidate.status = "Acceptee";
+            }
+            renderCandidates();
+          } catch (error) {
+            alert(error?.message || "Impossible daccepter la candidature.");
+          }
         });
 
         const rejectBtn = document.createElement("button");
         rejectBtn.type = "button";
         rejectBtn.className = "btn btn-small btn-danger";
         rejectBtn.textContent = "Rejeter";
-        rejectBtn.addEventListener("click", () => {
-          candidate.status = "Rejetee";
-          renderCandidates();
+        rejectBtn.addEventListener("click", async () => {
+          try {
+            const response = await fetch(statusApiPattern.replace("__ID__", String(candidate.id)), {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ status: "REJECTED" }),
+            });
+            const data = await parseApiResponse(response);
+            const updated = data?.candidate;
+            if (updated && updated.id === candidate.id) {
+              candidate.status = updated.status;
+            } else {
+              candidate.status = "Rejetee";
+            }
+            renderCandidates();
+          } catch (error) {
+            alert(error?.message || "Impossible de rejeter la candidature.");
+          }
         });
 
         actions.append(status, detailsBtn, acceptBtn, rejectBtn);
@@ -254,9 +279,33 @@
           const scheduleBtn = document.createElement("button");
           scheduleBtn.type = "button";
           scheduleBtn.className = "btn btn-primary";
-          scheduleBtn.textContent = "Planifier un entretien";
-          scheduleBtn.addEventListener("click", () => {
-            alert(`Entretien planifie pour ${candidate.name}.`);
+          scheduleBtn.textContent = candidate.hasInterview ? "Mettre a jour entretien" : "Planifier un entretien";
+          scheduleBtn.addEventListener("click", async () => {
+            const scheduledAt = window.prompt("Date et heure de lentretien (YYYY-MM-DD HH:MM)", "");
+            if (!scheduledAt) {
+              return;
+            }
+            const location = window.prompt("Localisation de lentretien", "En ligne") || "En ligne";
+
+            try {
+              const normalizedDateTime = `${scheduledAt.trim().replace(" ", "T")}:00`;
+              const response = await fetch(scheduleApiPattern.replace("__ID__", String(candidate.id)), {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  scheduledAt: normalizedDateTime,
+                  location,
+                }),
+              });
+              await parseApiResponse(response);
+              candidate.hasInterview = true;
+              alert(`Entretien planifie pour ${candidate.name}.`);
+              renderCandidates();
+            } catch (error) {
+              alert(error?.message || "Impossible de planifier lentretien.");
+            }
           });
           actions.appendChild(scheduleBtn);
         }

@@ -201,9 +201,106 @@
 	color: #20324a;
 }
 
+.page-offres .offer-modal {
+	position: fixed;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	z-index: 60;
+	padding: 20px;
+}
+
+.page-offres .offer-modal[hidden] {
+	display: none;
+}
+
+.page-offres .offer-modal-backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(15, 23, 42, 0.42);
+}
+
+.page-offres .offer-modal-panel {
+	position: relative;
+	width: min(760px, 96vw);
+	max-height: min(86vh, 900px);
+	overflow: auto;
+	background: #ffffff;
+	border: 1px solid #dce6f2;
+	border-radius: 16px;
+	padding: 18px;
+	box-shadow: 0 22px 58px -28px rgba(15, 23, 42, 0.85);
+	display: grid;
+	gap: 14px;
+}
+
+.page-offres .offer-modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 12px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #e5edf6;
+}
+
+.page-offres .offer-modal-header h3 {
+	margin: 0;
+	font-size: 1.15rem;
+	color: #0f172a;
+}
+
+.page-offres .offer-modal-header .muted {
+	margin: 6px 0 0;
+}
+
+.page-offres .offer-modal-content {
+	display: grid;
+	gap: 14px;
+}
+
+.page-offres .offer-modal-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+}
+
+.page-offres .offer-modal-item,
+.page-offres .offer-modal-description {
+	border: 1px solid #e1eaf4;
+	background: #f8fbff;
+	border-radius: 10px;
+	padding: 10px;
+	display: grid;
+	gap: 5px;
+}
+
+.page-offres .offer-modal-label {
+	font-size: 0.78rem;
+	font-weight: 700;
+	color: #4f6480;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+}
+
+.page-offres .offer-modal-item strong {
+	font-size: 0.94rem;
+	color: #0f172a;
+}
+
+.page-offres .offer-modal-description p {
+	margin: 0;
+	font-size: 0.93rem;
+	line-height: 1.45;
+	color: #24364d;
+}
+
 @media (max-width: 1020px) {
 	.page-offres .hero,
 	.page-offres .content {
+		grid-template-columns: 1fr;
+	}
+
+	.page-offres .offer-modal-grid {
 		grid-template-columns: 1fr;
 	}
 }
