@@ -61,11 +61,60 @@ document.addEventListener("DOMContentLoaded", () => {
     form.addEventListener("submit", function(e) {
         e.preventDefault();
 
-        const data = {
-            name: document.getElementById("toolName").value,
-            exe: document.getElementById("toolExe").value,
-            hash: document.getElementById("toolHash").value,
-        };
+        const name = document.getElementById("toolName").value.trim();
+        const exe  = document.getElementById("toolExe").value.trim();
+        const hash = document.getElementById("toolHash").value.trim();
+
+        // =========================
+        // VALIDATION
+        // =========================
+        function showError(msg) {
+            const errorDiv = document.getElementById("toolError");
+            errorDiv.textContent = msg;
+            errorDiv.classList.remove("hidden");
+        }
+
+        function clearError() {
+            const errorDiv = document.getElementById("toolError");
+            if (errorDiv) {
+                errorDiv.classList.add("hidden");
+            }
+        }
+        
+        clearError();
+        // Name validation
+        if (!name) {
+            return showError("Le nom est requis.");
+        }
+
+        if (name.length < 3) {
+            return showError("Le nom doit contenir au moins 3 caractères.");
+        }
+
+        // EXE validation
+        if (!exe) {
+            return showError("L'identifiant (exe) est requis.");
+        }
+
+        if (!exe.toLowerCase().endsWith(".exe")) {
+            return showError("L'identifiant doit être un fichier .exe.");
+        }
+
+        // Hash validation (basic hex check)
+        const hashRegex = /^[a-fA-F0-9]{16,}$/;
+
+        if (!hash) {
+            return showError("Le hash est requis.");
+        }
+
+        if (!hashRegex.test(hash)) {
+            return showError("Le hash doit contenir uniquement des caractères hexadécimaux.");
+        }
+
+        // =========================
+        // SUBMIT
+        // =========================
+        const data = { name, exe, hash };
 
         let url;
 
@@ -103,3 +152,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
 });
+
+
+function showError(msg) {
+    const errorDiv = document.getElementById("toolError");
+    errorDiv.textContent = msg;
+    errorDiv.classList.remove("hidden");
+}
