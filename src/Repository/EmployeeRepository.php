@@ -137,4 +137,14 @@ class EmployeeRepository extends ServiceEntityRepository
             'email' => $data['email']
         ]);
     }
+
+    public function getSoldeConge(int $employeeId): int
+    {
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = "SELECT Solde_Conge FROM employee WHERE ID_EMPLOYE = :employeeId";
+        $result = $conn->executeQuery($sql, ['employeeId' => $employeeId])->fetchOne();
+
+        return (int) $result;
+    }
 }

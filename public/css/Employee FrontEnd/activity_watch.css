@@ -1,0 +1,10 @@
+.aw-wrapper {
+    width: 100%;
+    height: calc(100vh - 40px); /* adjust if header exists */
+}
+
+.aw-wrapper iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}

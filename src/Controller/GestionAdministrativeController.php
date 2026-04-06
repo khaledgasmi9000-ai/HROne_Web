@@ -167,6 +167,12 @@ class GestionAdministrativeController extends AbstractController
         return $this->redirectToRoute('employee_outils');
     }
 
+    #[Route('/Gestion_Administrative/outils/ActivityWatch', name: 'activity_watch')]
+    public function activityWatch(): Response
+    {
+        return $this->render('Employee FrontEnd/activity_watch.html.twig');
+    }
+
     #[Route('/Gestion_Administrative/outils', name: 'employee_outils')]
     public function outils(Request $request ,OutilsDeTravailRepository $outilsRepository): Response
     {
@@ -311,6 +317,37 @@ class GestionAdministrativeController extends AbstractController
         $repo->updateCongeStatus($id, 1); // accepted 
 
         return $this->redirectToRoute('employee_conges');
+    }
+
+    #[Route('/Gestion_Administrative/conges/demande/{id}', name: 'demande_conge')]
+    public function demandeConge(int $id,EmployeeRepository $employeeRepository): Response
+    {
+        $soldeRestant = $this->CalculateSodeCongeRestant($employeeRepository,$employeeRepository->getSoldeConge($id), $id);
+
+        return $this->render('Employee FrontEnd/demande_conge.html.twig', [
+            'soldeRestant' => $soldeRestant
+        ]);
+    }
+
+    #[Route('/Gestion_Administrative/conges/create', name: 'conge_create', methods: ['POST'])]
+    public function createConge(Request $request, DemandeCongeRepository $repo): Response
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (!$data || !isset($data['start'], $data['end'])) {
+            return $this->json(['error' => 'Invalid data'], 400);
+        }
+
+        try {
+            $repo->createConge($data["id_Employee"], $data['start'], $data['end'], $data['nbrJours']);
+
+            return $this->json(['success' => true]);
+
+        } catch (\Exception $e) {
+            return $this->json([
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     #[Route('/Gestion_Administrative/conges', name: 'employee_conges')]
