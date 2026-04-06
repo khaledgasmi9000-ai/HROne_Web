@@ -1,0 +1,20 @@
+<h2>Liste des outils</h2>
+
+<table border="1" cellpadding="6" cellspacing="0" width="100%">
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Executable</th>
+            <th>Hash</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for tool in tools %}
+            <tr>
+                <td>{{ tool.Nom_Outil }}</td>
+                <td>{{ tool.Identifiant_Universelle }}</td>
+                <td>{{ tool.Hash_App }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

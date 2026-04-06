@@ -12,11 +12,134 @@ use App\Repository\OutilsDeTravailRepository;
 use App\Repository\DemandeCongeRepository;
 use App\Entity\Ordre;
 
+use Knp\Snappy\Pdf;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 class GestionAdministrativeController extends AbstractController
 {
 
 #pragma region Employee Controller
     // ========== Employee Controller ==========  //
+
+    // Export Functions 
+    private function exportEmployeeCsv(array $employees): Response
+    {
+        $handle = fopen('php://temp', 'r+');
+
+        // ✅ Header row
+        fputcsv($handle, [
+            'Nom',
+            'Email',
+            'Téléphone',
+            'CIN',
+            'Date Naissance',
+            'Genre',
+            'Solde Congé',
+            'Salaire',
+            'Heures'
+        ]);
+
+        // ✅ Data rows
+        foreach ($employees as $emp) {
+            $gender = match ($emp['Gender'] ?? '') {
+                    'H','M','h','m' => 'Homme',
+                    'F', 'f' => 'Femme',
+                    default => ''
+                };
+
+            fputcsv($handle, [
+                $emp['Nom_Utilisateur'] ?? '',
+                $emp['Email'] ?? '',
+                $emp['Num_Tel'] ?? '',
+                $emp['CIN'] ?? '',
+                $emp['Date_Naissance'] ?? '',
+                $gender,
+                $emp['Solde_Conge'] ?? '',
+                $emp['SALAIRE'] ?? '',
+                $emp['Nbr_Heure_De_Travail'] ?? ''
+            ]);
+        }
+
+        rewind($handle);
+        $csvContent = stream_get_contents($handle);
+        fclose($handle);
+
+        return new Response($csvContent, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="employees.csv"',
+        ]);
+    }
+
+    private function exportEmployeeExcel(array $employees): Response
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header
+        $headers = [
+            'Nom', 'Email', 'Téléphone', 'CIN',
+            'Date Naissance', 'Genre', 'Solde Congé',
+            'Salaire', 'Heures'
+        ];
+
+        $sheet->fromArray($headers, null, 'A1');
+
+        // Data
+        $row = 2;
+
+        foreach ($employees as $emp) {
+
+            $gender = match ($emp['Gender'] ?? '') {
+                    'H','M','h','m' => 'Homme',
+                    'F', 'f' => 'Femme',
+                    default => ''
+                };
+
+            $sheet->fromArray([
+                $emp['Nom_Utilisateur'] ?? '',
+                $emp['Email'] ?? '',
+                $emp['Num_Tel'] ?? '',
+                $emp['CIN'] ?? '',
+                $emp['Date_Naissance'] ?? '',
+                $gender,
+                $emp['Solde_Conge'] ?? '',
+                $emp['SALAIRE'] ?? '',
+                $emp['Nbr_Heure_De_Travail'] ?? ''
+            ], null, 'A' . $row);
+
+            $row++;
+        }
+
+        // Output
+        $writer = new Xlsx($spreadsheet);
+
+        ob_start();
+        $writer->save('php://output');
+        $excelContent = ob_get_clean();
+
+        return new Response($excelContent, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="employees.xlsx"',
+        ]);
+    }
+    
+    private function exportEmployeePdf(array $employees, Pdf $pdf): Response
+    {
+        // Render Twig view as HTML
+        $html = $this->renderView('Gestion Administrative/exports/employees_pdf.html.twig', [
+            'employees' => $employees
+        ]);
+
+        $output = $pdf->getOutputFromHtml($html);
+
+        return new Response($output, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="employees.pdf"',
+        ]);
+    }
+
+    //Helper function to calculate remaining conge
     private function CalculateSodeCongeRestant(
         EmployeeRepository $employeeRepository,
         int $soldeConge,
@@ -27,6 +150,7 @@ class GestionAdministrativeController extends AbstractController
         return $soldeConge - $usedConge; // temporary placeholder
     }
 
+    // Routes
     #[Route('/Gestion_Administrative', name: 'gestion_administrative')]
     public function index(): Response
     {
@@ -151,6 +275,21 @@ class GestionAdministrativeController extends AbstractController
         return $this->json(['success' => true]);
     }
     
+    #[Route('/Gestion_Administrative/employee/export', name: 'employee_export', methods: ['GET'])]
+    public function exportEmployees(Request $request, EmployeeRepository $repo, Pdf $pdf): Response
+    {
+        $format = $request->query->get('format', 'csv');
+
+        $employees = $repo->findAllEmployees();
+
+        return match ($format) {
+            'csv'   => $this->exportEmployeeCsv($employees),
+            'excel' => $this->exportEmployeeExcel($employees),
+            'pdf'   => $this->exportEmployeePdf($employees, $pdf),
+            default => $this->json(['message' => 'Format non supporté'], 400),
+        };
+    }
+    
     // ========== End Employee Controller ==========  //
 
 #pragma endregion
@@ -158,7 +297,82 @@ class GestionAdministrativeController extends AbstractController
 #pragma region Outil Controller
 
     // ========== Outil Controller ==========  //
+    // Export Functions
+    private function exportToolsCsv(array $tools): Response
+    {
+        $handle = fopen('php://temp', 'r+');
 
+        // Header
+        fputcsv($handle, [
+            'Nom',
+            'Executable',
+            'Hash'
+        ]);
+
+        foreach ($tools as $tool) {
+            fputcsv($handle, [
+                $tool['Nom_Outil'] ?? '',
+                $tool['Identifiant_Universelle'] ?? '',
+                $tool['Hash_App'] ?? ''
+            ]);
+        }
+
+        rewind($handle);
+        $csv = "\xEF\xBB\xBF" . stream_get_contents($handle);
+        fclose($handle);
+
+        return new Response($csv, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="tools.csv"',
+        ]);
+    }
+
+    private function exportToolsExcel(array $tools): Response
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $sheet->fromArray(['Nom', 'Executable', 'Hash'], null, 'A1');
+
+        $row = 2;
+
+        foreach ($tools as $tool) {
+            $sheet->fromArray([
+                $tool['Nom_Outil'] ?? '',
+                $tool['Identifiant_Universelle'] ?? '',
+                $tool['Hash_App'] ?? ''
+            ], null, 'A' . $row);
+
+            $row++;
+        }
+
+        $writer = new Xlsx($spreadsheet);
+
+        ob_start();
+        $writer->save('php://output');
+        $content = ob_get_clean();
+
+        return new Response($content, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="tools.xlsx"',
+        ]);
+    }
+
+    private function exportToolsPdf(array $tools, Pdf $pdf): Response
+    {
+        $html = $this->renderView('Gestion Administrative/exports/tools_pdf.html.twig', [
+            'tools' => $tools
+        ]);
+
+        $output = $pdf->getOutputFromHtml($html);
+
+        return new Response($output, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="tools.pdf"',
+        ]);
+    }
+
+    // Helper Function to calculate average usage time
     private function CalculateAvgUseTime(OutilsDeTravailRepository $outilsRepository, int $outilId): int
     {
         // This function should calculate the average time based on actual usage data for the given tool ID
@@ -166,6 +380,7 @@ class GestionAdministrativeController extends AbstractController
         return rand(30, 300); // Random value between 30 and 300 minutes
     }
 
+    //Helper Function to calculate number of users per tool
     private function CalculateNbrofUserPerTool(OutilsDeTravailRepository $outilsRepository,int $outilId): int
     {
         // This function should calculate the number of users based on actual usage data for the given tool ID
@@ -173,6 +388,7 @@ class GestionAdministrativeController extends AbstractController
         return rand(1, 100); // Random value between 1 and 100
     }
 
+    // Routes
     #[Route('/Gestion_Administrative/outils/delete/{id}', name: 'tool_delete')]
     public function deleteTool(int $id, OutilsDeTravailRepository $outilsRepository): Response
     {
@@ -312,6 +528,21 @@ class GestionAdministrativeController extends AbstractController
         ]);
     }
 
+    #[Route('/Gestion_Administrative/outils/export', name: 'tool_export', methods: ['GET'])]
+    public function exportTools(Request $request, OutilsDeTravailRepository $repo, Pdf $pdf): Response
+    {
+        $format = $request->query->get('format', 'csv');
+
+        $tools = $repo->findAllTools();
+
+        return match ($format) {
+            'csv'   => $this->exportToolsCsv($tools),
+            'excel' => $this->exportToolsExcel($tools),
+            'pdf'   => $this->exportToolsPdf($tools, $pdf),
+            default => $this->json(['message' => 'Format non supporté'], 400),
+        };
+    }
+
     // ========== End Outil Controller ==========  //
 
 #pragma endregion
@@ -319,6 +550,7 @@ class GestionAdministrativeController extends AbstractController
 #pragma region Conge Controller
     // ========== Conge Controller ==========  //
 
+    // Routes
     #[Route('/Gestion_Administrative/conges/reject/{id}', name: 'conge_reject')]
     public function rejectConge(int $id, DemandeCongeRepository $repo): Response
     {
