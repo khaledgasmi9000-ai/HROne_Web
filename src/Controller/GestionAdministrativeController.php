@@ -127,7 +127,7 @@ class GestionAdministrativeController extends AbstractController
     private function exportEmployeePdf(array $employees, Pdf $pdf): Response
     {
         // Render Twig view as HTML
-        $html = $this->renderView('Gestion Administrative/exports/employees_pdf.html.twig', [
+        $html = $this->renderView('Gestion Administrative/components/employees_pdf.html.twig', [
             'employees' => $employees
         ]);
 
@@ -360,7 +360,7 @@ class GestionAdministrativeController extends AbstractController
 
     private function exportToolsPdf(array $tools, Pdf $pdf): Response
     {
-        $html = $this->renderView('Gestion Administrative/exports/tools_pdf.html.twig', [
+        $html = $this->renderView('Gestion Administrative/components/tools_pdf.html.twig', [
             'tools' => $tools
         ]);
 
@@ -543,6 +543,63 @@ class GestionAdministrativeController extends AbstractController
         };
     }
 
+    #[Route('/Gestion_Administrative/outils/import', name: 'tool_import', methods: ['POST'])]
+    public function importTools(Request $request, OutilsDeTravailRepository $repo): Response
+    {
+        $file = $request->files->get('file');
+
+        if (!$file) {
+            return $this->json(['message' => 'Fichier manquant'], 400);
+        }
+
+        $handle = fopen($file->getPathname(), 'r');
+
+        if (!$handle) {
+            return $this->json(['message' => 'Erreur lecture fichier'], 400);
+        }
+
+        $rowIndex = 0;
+        $success = 0;
+        $total = 0;
+
+        while (($row = fgetcsv($handle)) !== false) {
+
+            $rowIndex++;
+
+            // Skip header
+            if ($rowIndex === 1) continue;
+
+            $total++;
+
+            [$name, $exe, $hash] = $row;
+
+            // 🔴 SAME VALIDATION AS MODAL
+            if (!$name || strlen($name) < 3) continue;
+            if (!$exe || !str_ends_with(strtolower($exe), '.exe')) continue;
+            if (!$hash || !preg_match('/^[a-fA-F0-9]{16,}$/', $hash)) continue;
+
+            try {
+                $repo->createTool([
+                    'name' => $name,
+                    'exe'  => $exe,
+                    'hash' => $hash,
+                ]);
+
+                $success++;
+
+            } catch (\Exception $e) {
+                // skip duplicates or DB errors
+                continue;
+            }
+        }
+
+        fclose($handle);
+
+        return $this->json([
+            'successCount' => $success,
+            'total' => $total
+        ]);
+    }
     // ========== End Outil Controller ==========  //
 
 #pragma endregion

@@ -1,0 +1,42 @@
+<div id="importModal" class="modal hidden">
+    <div class="modal-content">
+
+        <h2>Importer des outils</h2>
+
+        <!-- ERROR -->
+        <div id="importError" class="error-message hidden"></div>
+
+        <!-- STEP 1 -->
+        <div id="importStepForm">
+            <div class="form-group">
+                <label>Fichier CSV</label>
+                <div class="file-upload">
+                    <input type="file" id="importFile" accept=".csv" hidden>
+
+                    <button type="button" id="filePickerBtn" class="input-field">
+                        Choisir un fichier CSV
+                    </button>
+
+                    <span id="fileName" class="file-name">Aucun fichier sélectionné</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div id="importStepLoading" class="hidden center">
+            <div class="spinner"></div>
+            <p>Import en cours...</p>
+        </div>
+
+        <!-- STEP 3 -->
+        <div id="importStepResult" class="hidden center">
+            <p id="importResultMessage"></p>
+        </div>
+
+        <div class="modal-actions">
+            <button id="closeImportModal" class="btn cancel">Fermer</button>
+            <button id="confirmImport" class="btn success">Importer</button>
+        </div>
+
+    </div>
+</div>

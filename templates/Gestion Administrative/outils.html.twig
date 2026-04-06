@@ -63,7 +63,7 @@
                 Export
             </button>
 
-            <button class="btn secondary with-icon">
+            <button onclick="openImportModal()" class="btn secondary with-icon">
                 <span class="icon">⬆</span>
                 Import
             </button>
@@ -125,7 +125,8 @@
 
     <!-- MODAL -->
     {% include 'Gestion Administrative/components/modal_outils.html.twig' %}
-    {% include 'Gestion Administrative/exports/modal_export.html.twig' %}
+    {% include 'Gestion Administrative/components/modal_export.html.twig' %}
+    {% include 'Gestion Administrative/components/modal_import_outils.html.twig' %}
 </div>
 
 <script>
@@ -134,6 +135,7 @@
     window.createToolUrl = "{{ path('tool_create') }}";
     window.updateToolUrl = "{{ path('tool_update', {'id': 'TOOL_ID'}) }}";
     window.exportOutilsUrl = "{{ path('tool_export') }}";
+    window.importToolsUrl = "{{ path('tool_import') }}";
 </script>
 
 {% endblock %}

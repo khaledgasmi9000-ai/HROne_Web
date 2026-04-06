@@ -165,7 +165,7 @@
     } %}
 
     {% include 'Gestion Administrative/components/modal_employee.html.twig' %}   
-    {% include 'Gestion Administrative/exports/modal_export.html.twig' %}
+    {% include 'Gestion Administrative/components/modal_export.html.twig' %}
 <script>
     window.deleteEmployeeUrlTemplate = "{{ path('employee_delete', {'id': 'EMP_ID'}) }}";
     window.getEmployeeUrl = "{{ path('employee_get', {'id': 'EMP_ID'}) }}";
