@@ -64,7 +64,7 @@
                 Import
             </button>
 
-            <button class="btn primary with-icon">
+            <button id="btnAddTool" class="btn primary with-icon">
                 <span class="icon">＋</span>
                 Ajouter
             </button>
@@ -119,10 +119,15 @@
         currentCount: tools|length
     } %}
 
+    <!-- MODAL -->
+    {% include 'Gestion Administrative/components/modal_outils.html.twig' %}
 </div>
 
 <script>
     window.deleteToolUrlTemplate = "{{ path('tool_delete', {'id': 'TOOL_ID'}) }}";
+    window.getToolUrl = "{{ path('tool_get', {'id': 'TOOL_ID'}) }}";
+    window.createToolUrl = "{{ path('tool_create') }}";
+    window.updateToolUrl = "{{ path('tool_update', {'id': 'TOOL_ID'}) }}";
 </script>
 
 {% endblock %}

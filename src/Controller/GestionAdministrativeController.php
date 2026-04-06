@@ -119,7 +119,7 @@ class GestionAdministrativeController extends AbstractController
     public function updateEmployee(int $id, Request $request, EmployeeRepository $repo): Response
     {
         $data = json_decode($request->getContent(), true);
-        
+
         $repo->updateEmployee($id, $data);
 
         return $this->json(['success' => true]);
@@ -229,6 +229,65 @@ class GestionAdministrativeController extends AbstractController
             'totalTools' => $totalTools,
             'orderUsers' => $orderUsers,
             'orderTime' => $orderTime,
+        ]);
+    }
+
+    #[Route('/Gestion_Administrative/outils/get/{id}', name: 'tool_get', methods: ['GET'])]
+    public function getTool(int $id, OutilsDeTravailRepository $toolRepository): Response
+    {
+        $tool = $toolRepository->findToolById($id);
+
+        if (!$tool) {
+            return $this->json([
+                'error' => 'Tool not found'
+            ], 404);
+        }
+
+        return $this->json([
+            'id'   => $tool['ID_Outil'],
+            'name' => $tool['Nom_Outil'],
+            'exe'  => $tool['Identifiant_Universelle'],
+            'hash' => $tool['Hash_App'],
+        ]);
+    }
+
+    #[Route('/Gestion_Administrative/outils/create', name: 'tool_create', methods: ['POST'])]
+    public function createTool(Request $request, OutilsDeTravailRepository $toolRepository): Response
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (!$data) {
+            return $this->json(['error' => 'Invalid data'], 400);
+        }
+
+        $toolRepository->createTool([
+            'name' => $data['name'] ?? '',
+            'exe'  => $data['exe'] ?? '',
+            'hash' => $data['hash'] ?? '',
+        ]);
+
+        return $this->json([
+            'success' => true
+        ]);
+    }
+
+    #[Route('/Gestion_Administrative/outils/update/{id}', name: 'tool_update', methods: ['POST'])]
+    public function updateTool(int $id, Request $request, OutilsDeTravailRepository $toolRepository): Response
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (!$data) {
+            return $this->json(['error' => 'Invalid data'], 400);
+        }
+
+        $toolRepository->updateTool($id, [
+            'name' => $data['name'] ?? '',
+            'exe'  => $data['exe'] ?? '',
+            'hash' => $data['hash'] ?? '',
+        ]);
+
+        return $this->json([
+            'success' => true
         ]);
     }
 

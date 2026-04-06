@@ -1,11 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    const searchInput = document.getElementById("toolSearch");
-    const searchBtn   = document.getElementById("searchBtnTool");
-
-    const usersCheckbox = document.getElementById("orderUsers");
-    const timeCheckbox  = document.getElementById("orderTime");
-
     function updateQuery() {
         const url = new URL(window.location.href);
 
@@ -35,6 +29,12 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = url.toString();
     }
 
+    const searchInput = document.getElementById("toolSearch");
+    const searchBtn   = document.getElementById("searchBtnTool");
+
+    const usersCheckbox = document.getElementById("orderUsers");
+    const timeCheckbox  = document.getElementById("orderTime");
+
     // 🔘 Button click
     if (searchBtn) {
         searchBtn.addEventListener("click", updateQuery);
@@ -50,6 +50,17 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    const addBtn = document.getElementById("btnAddTool");
+
+    if (addBtn) {
+        addBtn.addEventListener("click", () => {
+            if (window.openToolAddModal) {
+                window.openToolAddModal();
+            } else {
+                console.warn("openToolAddModal not defined");
+            }
+        });
+    }
 });
 
 window.rowActionsHandlers = window.rowActionsHandlers || {};
@@ -58,6 +69,12 @@ window.rowActionsHandlers.outils = {
 
     edit: function(id) {
         console.log("Modifier outil:", id);
+
+        if (window.openToolEditModal) {
+            window.openToolEditModal(id);
+        } else {
+            console.warn("openToolEditModal not defined");
+        }
     },
 
     delete: function(id) {
