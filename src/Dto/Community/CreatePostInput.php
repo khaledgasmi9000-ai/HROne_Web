@@ -21,7 +21,7 @@ class CreatePostInput
 
     /** @var string|null URL absolue http(s), ou null si aucune image */
     #[Assert\Length(max: 2048)]
-    #[Assert\Url(requireTld: false, protocols: ['http', 'https'])]
+    #[Assert\Url(protocols: ['http', 'https'])]
     public ?string $image_url = null;
 
     /**
