@@ -2,9 +2,7 @@
 
 namespace App\Controller;
 
-use App\Repository\CommentRepository;
-use App\Repository\PostRepository;
-use App\Repository\UtilisateurRepository;
+use App\Service\Community\CommunityStore;
 use App\Service\CommunityMetrics;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -28,66 +26,61 @@ class CommunityController extends AbstractController
     }
 
     #[Route('/communaute/tableau-de-bord', name: 'app_communaute_dashboard', methods: ['GET'])]
-    public function dashboard(Request $request, UtilisateurRepository $utilisateurs): Response
+    public function dashboard(Request $request, CommunityStore $store): Response
     {
         $uid = $this->readSessionCommunityUserId($request);
+        $displayName = $this->resolveProfileDisplayName($uid, $store);
 
         return $this->render('community/dashboard.html.twig', [
             'initial_user_id' => $uid,
             'profile_user_id' => $uid,
-            'profile_display_name' => $this->resolveProfileDisplayName($uid, $utilisateurs),
-            'profile_avatar_url' => $this->buildAvatarDataUri($this->resolveProfileDisplayName($uid, $utilisateurs), $uid),
+            'profile_display_name' => $displayName,
+            'profile_avatar_url' => $this->buildAvatarDataUri($displayName, $uid),
         ]);
     }
 
-    /**
-     * Sans suffixe .pdf : sinon Apache/nginx tente un fichier statique et renvoie 404 avant index.php.
-     */
     #[Route('/communaute/tableau-de-bord/rapport', name: 'app_communaute_dashboard_pdf', methods: ['GET'])]
     public function exportDashboardPdf(
         Request $request,
         CommunityMetrics $metrics,
-        PostRepository $posts,
-        CommentRepository $comments,
+        CommunityStore $store,
         Environment $twig,
-        UtilisateurRepository $utilisateurs,
     ): Response {
         $uid = $this->readSessionCommunityUserId($request);
         if ($uid === null) {
             return $this->redirectToRoute('app_communaute_dashboard');
         }
 
-        $global = $metrics->buildGlobalStats();
-        $postEntities = $posts->findByUserIdOrdered($uid);
         $myPosts = [];
-        foreach ($postEntities as $p) {
+        foreach ($store->findUserPostsFiltered($uid, null, null) as $post) {
             $myPosts[] = [
-                'id' => $p->getId(),
-                'title' => $p->getTitle(),
-                'tag' => $p->getTag(),
-                'active' => $p->isActive(),
-                'created' => $p->getCreatedAt()?->format('Y-m-d H:i'),
+                'id' => $post['id'],
+                'title' => $post['title'],
+                'tag' => $post['tag'],
+                'active' => $post['is_active'],
+                'created' => $this->formatSqlDate($post['created_at']),
             ];
         }
-        $commentEntities = $comments->findByUserIdOrdered($uid);
+
         $myComments = [];
-        foreach ($commentEntities as $c) {
-            $txt = (string) $c->getContent();
-            if (mb_strlen($txt) > 120) {
-                $txt = mb_substr($txt, 0, 117).'…';
+        foreach ($store->findUserCommentsFiltered($uid, null) as $comment) {
+            $excerpt = (string) $comment['content'];
+            if (mb_strlen($excerpt) > 120) {
+                $excerpt = mb_substr($excerpt, 0, 117).'...';
             }
+
             $myComments[] = [
-                'id' => $c->getId(),
-                'post_id' => $c->getPostId(),
-                'excerpt' => $txt,
-                'created' => $c->getCreatedAt()?->format('Y-m-d H:i'),
+                'id' => $comment['id'],
+                'post_id' => $comment['post_id'],
+                'excerpt' => $excerpt,
+                'created' => $this->formatSqlDate($comment['created_at']),
             ];
         }
 
         $html = $twig->render('community/dashboard_pdf.html.twig', [
             'generated_at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
-            'user_label' => $this->resolveProfileDisplayName($uid, $utilisateurs).' (#'.$uid.')',
-            'global' => $global,
+            'user_label' => $this->resolveProfileDisplayName($uid, $store).' (#'.$uid.')',
+            'global' => $metrics->buildGlobalStats(),
             'my_posts' => $myPosts,
             'my_comments' => $myComments,
         ]);
@@ -110,28 +103,30 @@ class CommunityController extends AbstractController
         if (!$request->hasSession()) {
             return null;
         }
-        $v = $request->getSession()->get(self::SESSION_USER_KEY);
-        if (\is_int($v) && $v > 0) {
-            return $v;
-        }
-        if (\is_string($v) && ctype_digit($v)) {
-            $n = (int) $v;
 
-            return $n > 0 ? $n : null;
+        $value = $request->getSession()->get(self::SESSION_USER_KEY);
+        if (\is_int($value) && $value > 0) {
+            return $value;
+        }
+        if (\is_string($value) && ctype_digit($value)) {
+            $id = (int) $value;
+
+            return $id > 0 ? $id : null;
         }
 
         return null;
     }
 
-    private function resolveProfileDisplayName(?int $uid, UtilisateurRepository $utilisateurs): string
+    private function resolveProfileDisplayName(?int $uid, CommunityStore $store): string
     {
         if ($uid === null || $uid < 1) {
             return '';
         }
-        $names = $utilisateurs->getDisplayNamesByIds([$uid]);
-        $n = trim((string) ($names[$uid] ?? ''));
-        if ($n !== '') {
-            return $n;
+
+        $names = $store->getDisplayNamesByIds([$uid]);
+        $name = trim((string) ($names[$uid] ?? ''));
+        if ($name !== '') {
+            return $name;
         }
 
         return (string) $this->getParameter('app.community_profile_fallback_name');
@@ -149,8 +144,7 @@ class CommunityController extends AbstractController
         ];
         $index = abs(($seed ?? crc32($name)) % \count($palette));
         [$start, $end] = $palette[$index];
-        $initials = $this->buildInitials($name);
-        $safeInitials = htmlspecialchars($initials, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8');
+        $safeInitials = htmlspecialchars($this->buildInitials($name), \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8');
 
         $svg = <<<SVG
 <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
@@ -189,5 +183,18 @@ SVG;
         }
 
         return $letters !== [] ? implode('', $letters) : mb_strtoupper(mb_substr($name, 0, 1));
+    }
+
+    private function formatSqlDate(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        try {
+            return (new \DateTimeImmutable($value))->format('Y-m-d H:i');
+        } catch (\Exception) {
+            return $value;
+        }
     }
 }

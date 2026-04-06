@@ -2,10 +2,7 @@
 
 namespace App\Service;
 
-use App\Repository\CommentRepository;
-use App\Repository\CommentVoteRepository;
-use App\Repository\PostRepository;
-use App\Repository\PostVoteRepository;
+use App\Service\Community\CommunityStore;
 
 /**
  * Agrégats métier pour le tableau de bord communauté (réutilisé API + PDF).
@@ -13,10 +10,7 @@ use App\Repository\PostVoteRepository;
 class CommunityMetrics
 {
     public function __construct(
-        private readonly PostRepository $posts,
-        private readonly CommentRepository $comments,
-        private readonly PostVoteRepository $postVotes,
-        private readonly CommentVoteRepository $commentVotes,
+        private readonly CommunityStore $store,
     ) {
     }
 
@@ -26,18 +20,18 @@ class CommunityMetrics
     public function buildGlobalStats(): array
     {
         return [
-            'posts_total' => $this->posts->countAll(),
-            'posts_active_public' => $this->posts->countActivePublic(),
-            'posts_inactive' => $this->posts->countInactive(),
-            'posts_distinct_authors' => $this->posts->countDistinctAuthors(),
-            'comments_total' => $this->comments->countAll(),
-            'comments_active_public' => $this->comments->countActivePublic(),
-            'comments_inactive' => $this->comments->countInactive(),
-            'comments_roots' => $this->comments->countRootComments(),
-            'comments_replies' => $this->comments->countReplyComments(),
-            'votes_posts_total' => $this->postVotes->countAll(),
-            'votes_comments_total' => $this->commentVotes->countAll(),
-            'tags_top' => $this->posts->countGroupedByTag(15),
+            'posts_total' => $this->store->countPostsAll(),
+            'posts_active_public' => $this->store->countPostsActivePublic(),
+            'posts_inactive' => $this->store->countPostsInactive(),
+            'posts_distinct_authors' => $this->store->countDistinctPostAuthors(),
+            'comments_total' => $this->store->countCommentsAll(),
+            'comments_active_public' => $this->store->countCommentsActivePublic(),
+            'comments_inactive' => $this->store->countCommentsInactive(),
+            'comments_roots' => $this->store->countRootComments(),
+            'comments_replies' => $this->store->countReplyComments(),
+            'votes_posts_total' => $this->store->countPostVotesAll(),
+            'votes_comments_total' => $this->store->countCommentVotesAll(),
+            'tags_top' => $this->store->countGroupedByTag(15),
         ];
     }
 }

@@ -1136,6 +1136,80 @@
     renderModerationQueue();
   }
 
+  function setIllustrationBackground(id, kind, title, colors, seed) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.style.backgroundImage =
+      "url('" +
+      artworkDataUri(kind, title, colors[0], colors[1], seed || getUserIdInput()) +
+      "')";
+    el.style.backgroundSize = "cover";
+    el.style.backgroundPosition = "center";
+  }
+
+  function renderHeroOverview(posts, me) {
+    var list = posts || [];
+    var totalComments = list.reduce(function (sum, post) {
+      return sum + Number(post.comments_count || 0);
+    }, 0);
+    var counts = {};
+    list.forEach(function (post) {
+      var key = post.tag || "General";
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    var topTag = "General";
+    Object.keys(counts).forEach(function (tag) {
+      if ((counts[tag] || 0) > (counts[topTag] || 0)) topTag = tag;
+    });
+
+    var postsCount = document.getElementById("heroPostsCount");
+    var commentsCount = document.getElementById("heroCommentsCount");
+    var topTagEl = document.getElementById("heroTopTag");
+    if (postsCount) postsCount.textContent = String(list.length);
+    if (commentsCount) commentsCount.textContent = String(totalComments);
+    if (topTagEl) topTagEl.textContent = topTag;
+
+    var primary = list[0] || null;
+    var primaryTitle = document.getElementById("heroPrimaryTitle");
+    var primaryMeta = document.getElementById("heroPrimaryMeta");
+    var primaryVisual = document.getElementById("heroVisualPrimary");
+    if (primaryTitle) primaryTitle.textContent = primary ? primary.title || "Actualites RH" : "Actualites RH";
+    if (primaryMeta) {
+      primaryMeta.textContent = primary
+        ? (primary.author_name || "Equipe") + " • " + (primary.tag || "General")
+        : "Feed collaboratif moderne";
+    }
+    if (primaryVisual) {
+      primaryVisual.style.backgroundImage =
+        "url('" +
+        (primary && primary.image_url
+          ? primary.image_url
+          : artworkDataUri("post", (primary && primary.title) || "Community", "#2563eb", "#38bdf8", (primary && primary.id) || 1)) +
+        "')";
+      primaryVisual.style.backgroundSize = "cover";
+      primaryVisual.style.backgroundPosition = "center";
+    }
+
+    var showcase = document.getElementById("heroShowcase");
+    if (showcase) {
+      showcase.innerHTML = list.slice(0, 3).map(function (post, index) {
+        return (
+          '<article class="hero-showcase-card"><div class="hero-showcase-media" style="background-image:url(\'' +
+          esc(post.image_url || artworkDataUri("post", post.title || "Post", "#2563eb", "#22c55e", post.id || index + 1)) +
+          '\');background-size:cover;background-position:center;"></div><strong>' +
+          esc(post.title || "Publication") +
+          '</strong><span>' +
+          esc((post.tag || "General") + " • " + (post.author_name || "Equipe")) +
+          "</span></article>"
+        );
+      }).join("");
+    }
+
+    setIllustrationBackground("overviewIllusFeed", "post", "Feed", ["#2563eb", "#22c55e"], 11);
+    setIllustrationBackground("overviewIllusCollab", "colleague", "Collab", ["#0f766e", "#14b8a6"], 15);
+    setIllustrationBackground("overviewIllusInsights", "chatbot", "Insights", ["#7c3aed", "#2563eb"], 19);
+  }
+
   function voteThumbButtons(idAttr, counts, userVote) {
     var up = counts.up != null ? counts.up : 0;
     var down = counts.down != null ? counts.down : 0;
@@ -1403,6 +1477,7 @@
     container.innerHTML = "";
     __communityState.me = me || null;
     __communityState.posts = posts || [];
+    renderHeroOverview(posts || [], me);
     var uid = currentMeUserId(me);
     if (!posts || !posts.length) {
       container.innerHTML =

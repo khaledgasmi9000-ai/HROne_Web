@@ -29,6 +29,18 @@
   </script>
   <div class="app-shell">
     <header class="top-navbar">
+      <div class="community-topbar">
+        <div class="community-brand">
+          <span class="community-brand-mark">HR</span>
+          <div class="community-brand-copy">
+            <strong>HR One Community</strong>
+            <span>Reseau collaboratif des collegues</span>
+          </div>
+        </div>
+        <div class="community-topbar-meta">
+          <span class="community-topbar-pill">{{ 'community.feed.title'|trans }}</span>
+        </div>
+      </div>
       <nav class="top-nav">
         <button id="btnOffres" class="nav-link" type="button" data-page="offres" data-href="/topNavbar/topNavbar.html">Offres d'emploi</button>
         <button id="btnTraining" class="nav-link" type="button" data-page="formations" data-href="/topNavbar/formations.html">Formations</button>
@@ -50,9 +62,86 @@
         </nav>
 
         <header class="community-hero">
-          <h1>{{ 'community.feed.title'|trans }}</h1>
-          <p class="lead">{{ 'community.feed.lead'|trans|raw }}</p>
+          <div class="community-hero-grid">
+            <div class="community-hero-copy">
+              <span class="community-kicker">Communauté interne</span>
+              <h1>{{ 'community.feed.title'|trans }}</h1>
+              <p class="lead">{{ 'community.feed.lead'|trans|raw }}</p>
+              <div class="hero-actions">
+                <a class="btn-primary hero-cta" href="#nouveau-post">Publier maintenant</a>
+                <a class="btn-ghost hero-cta" href="{{ path('app_communaute_dashboard') }}">Voir le tableau de bord</a>
+              </div>
+              <div class="hero-stats-grid" aria-label="Aperçu communauté">
+                <article class="hero-stat-card">
+                  <strong id="heroPostsCount">0</strong>
+                  <span>Posts publies</span>
+                </article>
+                <article class="hero-stat-card">
+                  <strong id="heroCommentsCount">0</strong>
+                  <span>Commentaires actifs</span>
+                </article>
+                <article class="hero-stat-card">
+                  <strong id="heroTopTag">General</strong>
+                  <span>Tag du moment</span>
+                </article>
+              </div>
+            </div>
+            <div class="community-hero-visual">
+              <div class="hero-visual-card hero-visual-primary">
+                <div class="hero-visual-badge">En vedette</div>
+                <div class="hero-visual-image" id="heroVisualPrimary"></div>
+                <div class="hero-visual-copy">
+                  <strong id="heroPrimaryTitle">Actualites RH</strong>
+                  <span id="heroPrimaryMeta">Feed collaboratif moderne</span>
+                </div>
+              </div>
+              <div class="hero-showcase-grid" id="heroShowcase">
+                <article class="hero-showcase-card">
+                  <div class="hero-showcase-media"></div>
+                  <strong>Inspiration</strong>
+                  <span>Posts illustres et clairs</span>
+                </article>
+                <article class="hero-showcase-card">
+                  <div class="hero-showcase-media"></div>
+                  <strong>Echanges</strong>
+                  <span>Discussions visibles au centre</span>
+                </article>
+                <article class="hero-showcase-card">
+                  <div class="hero-showcase-media"></div>
+                  <strong>Widgets</strong>
+                  <span>Meteo, chatbot, top contenus</span>
+                </article>
+              </div>
+            </div>
+          </div>
         </header>
+
+        <section class="community-overview-panel card">
+          <div class="section-heading">
+            <div>
+              <span class="section-kicker">Vue organisee</span>
+              <h2>Un espace pense pour partager, decouvrir et collaborer</h2>
+            </div>
+            <p>Le fil est recentre, les actions principales sont visibles et les contenus importants remontent automatiquement.</p>
+          </div>
+          <div class="overview-grid">
+            <article class="overview-card overview-card-accent">
+              <div class="overview-illustration" id="overviewIllusFeed"></div>
+              <h3>Feed central</h3>
+              <p>Posts avec grandes images, cartes propres, commentaires imbriques et interactions rapides.</p>
+            </article>
+            <article class="overview-card">
+              <div class="overview-illustration" id="overviewIllusCollab"></div>
+              <h3>Collaboration</h3>
+              <p>Messagerie collegues, mentions, tags favoris, notifications et outils personnels.</p>
+            </article>
+            <article class="overview-card">
+              <div class="overview-illustration" id="overviewIllusInsights"></div>
+              <h3>Insights rapides</h3>
+              <p>Meteo, chatbot, top posts et historique des echanges a portee de main.</p>
+            </article>
+          </div>
+        </section>
 
         <div class="community-layout">
           <div class="community-main">
@@ -84,7 +173,13 @@
             </div>
 
             <section class="card community-form-card" id="nouveau-post">
-              <h2>{{ 'community.form.new_post'|trans }}</h2>
+              <div class="section-heading section-heading-compact">
+                <div>
+                  <span class="section-kicker">Creation</span>
+                  <h2>{{ 'community.form.new_post'|trans }}</h2>
+                </div>
+                <p>Ajoute un post visuel avec image, tag et description pour dynamiser le fil.</p>
+              </div>
               <p class="form-hint">{{ 'community.form.hint'|trans }}</p>
               <form id="formNewPost" class="stack-form" novalidate>
                 <p class="field-error" id="formNewPostError" hidden></p>
@@ -98,6 +193,14 @@
                 <small class="form-hint">{{ 'community.validation.url_hint'|trans }}</small>
                 <button type="submit" class="btn-primary">{{ 'community.field.publish'|trans }}</button>
               </form>
+            </section>
+
+            <section class="feed-section-head">
+              <div>
+                <span class="section-kicker">Fil principal</span>
+                <h2>Publications des collegues</h2>
+              </div>
+              <p>Les posts sont mis au centre avec plus d’images, une lecture claire et des interactions fluides.</p>
             </section>
 
             <div id="postsFeed" class="posts-feed" aria-live="polite"></div>
@@ -133,6 +236,28 @@
             </div>
           </aside>
         </div>
+
+        <footer class="community-footer">
+          <div class="community-footer-grid">
+            <div>
+              <strong>HR One Community</strong>
+              <p>Un espace collaboratif plus fluide, plus visuel et mieux organise pour les equipes.</p>
+            </div>
+            <div>
+              <strong>Acces rapides</strong>
+              <ul class="footer-links">
+                <li><a href="#nouveau-post">Creer un post</a></li>
+                <li><a href="{{ path('app_communaute_dashboard') }}">Dashboard</a></li>
+                <li><a href="#postsFeed">Voir le fil</a></li>
+              </ul>
+            </div>
+            <div>
+              <strong>Experience</strong>
+              <p>Topbar capsule, cartes illustrees, footer propre et widgets mieux organises.</p>
+            </div>
+          </div>
+          <p class="community-footer-copy">© {{ "now"|date("Y") }} HR One · Community workspace</p>
+        </footer>
       </section>
     </main>
   </div>
