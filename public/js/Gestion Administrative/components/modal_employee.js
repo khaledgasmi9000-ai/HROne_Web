@@ -1,8 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
 
     const modal = document.getElementById("employeeModal");
+    const BtnCloseModal = document.getElementById("closeEmployeeModal");
 
     function openModal() {
+        clearError();
         document.body.classList.add("modal-open");
         modal.classList.remove("hidden");
     }
@@ -12,7 +14,9 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.classList.add("hidden");
     }
 
-    document.getElementById("closeEmployeeModal").addEventListener("click", closeModal);
+    if(BtnCloseModal){
+        BtnCloseModal.addEventListener("click", closeModal);
+    }
 
     // Expose globally (so row_actions can call it)
     window.openEmployeeEditModal = function(id) {
@@ -67,14 +71,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const form = document.getElementById("employeeForm");
 
-    form.addEventListener("submit", function(e) {
+    form.addEventListener("submit", async function(e) {
         e.preventDefault();
 
         const data = {
-            name: document.getElementById("empName").value,
-            email: document.getElementById("empEmail").value,
-            phone: document.getElementById("empPhone").value,
-            cin: document.getElementById("empCIN").value,
+            name: document.getElementById("empName").value.trim(),
+            email: document.getElementById("empEmail").value.trim(),
+            phone: document.getElementById("empPhone").value.trim(),
+            cin: document.getElementById("empCIN").value.trim(),
             birth: document.getElementById("empBirth").value,
             gender: document.getElementById("empGender").value,
             solde: document.getElementById("empSolde").value,
@@ -82,52 +86,135 @@ document.addEventListener("DOMContentLoaded", () => {
             heures: document.getElementById("empHeures").value,
         };
 
-        let url;
+        const isEditMode = !!window.currentEmployeeId;
 
-        // 🔥 MODE SWITCH
-        if (window.currentEmployeeId) {
-            url = window.updateEmployeeUrl.replace('EMP_ID', window.currentEmployeeId);
-        } else {
-            url = window.createEmployeeUrl;
+        // =============================
+        // Controle Saisie (Frontend)
+        // =============================
+
+        clearError();
+
+        // Name
+        if (!data.name) return showError("Le nom est requis.");
+
+        // Email
+        if (!data.email || !validateEmail(data.email)) {
+            return showError("Email invalide.");
         }
 
-        console.log("Submitting data:", data);
-        
-        fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
-        })
-        .then(async res => {
+        // CIN + Phone (only add mode)
+        if (!isEditMode && !data.cin) return showError("CIN requis.");
+        if (!isEditMode && !data.phone) return showError("Téléphone requis.");
 
-            const text = await res.text(); // 🔥 get raw response
+        // ===== NUMERIC =====
+        if (data.salaire === "" || isNaN(data.salaire) || Number(data.salaire) < 0) {
+            return showError("Salaire invalide (>= 0).");
+        }
 
-            console.log("Response status:", res.status);
-            console.log("Raw response:", text);
+        if (data.solde === "" || isNaN(data.solde) || Number(data.solde) < 0) {
+            return showError("Solde congé invalide (>= 0).");
+        }
 
+        if (data.heures === "" || isNaN(data.heures) || Number(data.heures) < 0) {
+            return showError("Nombre d'heures invalide (>= 0).");
+        }
+
+        // ===== DATE =====
+        if (!data.birth) return showError("Date de naissance requise.");
+
+        const birthDate = new Date(data.birth);
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        if (isNaN(birthDate.getTime())) {
+            return showError("Date invalide.");
+        }
+
+        if (birthDate >= today) {
+            return showError("La date doit être dans le passé.");
+        }
+
+        // =============================
+        // 2. BACKEND VALIDATION (EMAIL + CIN)
+        // =============================
+        try {
+            const checkResponse = await fetch(window.checkEmployeeUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: data.email,
+                    cin: data.cin,
+                    id: window.currentEmployeeId // 👈 important
+                })
+            });
+
+            const checkResult = await checkResponse.json();
+
+            // ❗ Only block if ADD mode OR field is editable
+            if (!isEditMode || !document.getElementById("empEmail").readOnly) {
+                if (checkResult.emailExists) {
+                    return showError("Email déjà utilisé");
+                }
+            }
+
+            if (!isEditMode || !document.getElementById("empCIN").readOnly) {
+                if (checkResult.cinExists) {
+                    return showError("CIN déjà utilisé");
+                }
+            }
+
+        } catch (err) {
+            console.error("Validation error:", err);
+            return showError("Erreur validation serveur");
+        }
+
+        // =============================
+        // 3. Submit
+        // =============================
+        let url = isEditMode
+            ? window.updateEmployeeUrl.replace('EMP_ID', window.currentEmployeeId)
+            : window.createEmployeeUrl;
+
+        try {
+            const res = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+
+            const result = await res.json();
+            console.log("Submit response:", result);
             if (!res.ok) {
-                throw new Error(`HTTP ${res.status} → ${text}`);
+                throw new Error(result.message || "Erreur serveur");
             }
 
-            try {
-                return JSON.parse(text); // try parse JSON
-            } catch {
-                return text; // fallback if not JSON
-            }
-
-        })
-        .then(result => {
-            console.log("Success:", result);
             window.location.reload();
-        })
-        .catch(err => {
-            console.error("Submit error FULL:", err);
 
-            alert("Erreur serveur:\n" + err.message); // optional UI feedback
-        });
+        } catch (err) {
+            console.error("Submit error:", err);
+            showError(err.message);
+        }
     });
+
+    function validateEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function showError(msg) {
+        const errorDiv = document.getElementById("employeeError");
+        errorDiv.textContent = msg;
+        errorDiv.classList.remove("hidden");
+
+        errorDiv.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    function clearError() {
+        const errorDiv = document.getElementById("employeeError");
+        if (errorDiv) {
+            errorDiv.textContent = "";   // ✅ clear content
+            errorDiv.classList.add("hidden");
+        }
+    }
 });
 
 function setReadOnly(isReadOnly) {
@@ -136,7 +223,8 @@ function setReadOnly(isReadOnly) {
         "empPhone",
         "empCIN",
         "empBirth",
-        "empGender"
+        "empGender",
+        "empEmail"
     ];
 
     fields.forEach(id => {
@@ -151,3 +239,4 @@ function setReadOnly(isReadOnly) {
         }
     });
 }
+

@@ -97,6 +97,22 @@ class GestionAdministrativeController extends AbstractController
         ]);
     }
 
+    #[Route('/Gestion_Administrative/employee/check', name: 'employee_check', methods: ['POST'])]
+    public function checkEmployee(Request $request, EmployeeRepository $repo): Response
+    {
+        $data = json_decode($request->getContent(), true);
+
+        $id = $data['id'] ?? null;
+
+        $emailExists = $repo->emailExistsForOther($data['email'], $id);
+        $cinExists   = $repo->cinExistsForOther($data['cin'], $id);
+
+        return $this->json([
+            'emailExists' => $emailExists,
+            'cinExists' => $cinExists
+        ]);
+    }
+
     #[Route('/Gestion_Administrative/employee/delete/{id}', name: 'employee_delete')]
     public function deleteEmployee(int $id, EmployeeRepository $employeeRepository): Response
     {
@@ -128,7 +144,6 @@ class GestionAdministrativeController extends AbstractController
     #[Route('/Gestion_Administrative/employee/create', name: 'employee_create', methods: ['POST'])]
     public function createEmployee(Request $request, EmployeeRepository $repo): Response
     {
-        echo "Attempting to create a new employee\n"; // Debug statement
         $data = json_decode($request->getContent(), true);
 
         $repo->createEmployee($data);

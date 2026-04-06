@@ -85,7 +85,7 @@ class EmployeeRepository extends ServiceEntityRepository
         $conn = $this->getEntityManager()->getConnection();
 
         $sql = "INSERT INTO UTILISATEUR (ID_Entreprise,ID_Profil,Nom_Utilisateur,Mot_Passe, Email,Date_Naissance,Gender,CIN,Num_Tel,Num_Ordre_Sign_In) VALUES (:companyId, :profileId, :name, :password, :email, :birthDate, :gender, :cin, :phone, :numOrdreSignIn)";
-        echo "Executing SQL: $sql with data: " . print_r($data, true) . "\n"; // Debug statement
+        
         $conn->executeStatement($sql, [
             'companyId' => 1,
             'profileId' => 3,
@@ -100,7 +100,7 @@ class EmployeeRepository extends ServiceEntityRepository
         ]);
         
         $sql = "INSERT INTO employee (ID_UTILISATEUR, Solde_Conge, SALAIRE, Nbr_Heure_De_Travail) VALUES (:userId, :solde, :salaire, :heures)";
-        echo $conn->lastInsertId() . "\n"; // Debug statement to check the last inserted user ID
+        
         $conn->executeStatement($sql, [
             'userId' => $conn->lastInsertId(),
             'solde' => $data['solde'],
@@ -146,5 +146,41 @@ class EmployeeRepository extends ServiceEntityRepository
         $result = $conn->executeQuery($sql, ['employeeId' => $employeeId])->fetchOne();
 
         return (int) $result;
+    }
+
+    public function emailExistsForOther(string $email, ?int $id): bool
+    {
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = "SELECT COUNT(*) FROM utilisateur WHERE Email = :email";
+
+        if ($id) {
+            $sql .= " AND ID_UTILISATEUR != (
+                SELECT ID_UTILISATEUR FROM employee WHERE ID_EMPLOYE = :id
+            )";
+        }
+
+        return (int)$conn->fetchOne($sql, [
+            'email' => $email,
+            'id' => $id
+        ]) > 0;
+    }
+
+    public function cinExistsForOther(string $cin, ?int $id): bool
+    {
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = "SELECT COUNT(*) FROM utilisateur WHERE CIN = :cin";
+
+        if ($id) {
+            $sql .= " AND ID_UTILISATEUR != (
+                SELECT ID_UTILISATEUR FROM employee WHERE ID_EMPLOYE = :id
+            )";
+        }
+
+        return (int)$conn->fetchOne($sql, [
+            'cin' => $cin,
+            'id' => $id
+        ]) > 0;
     }
 }
