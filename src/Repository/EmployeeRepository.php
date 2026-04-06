@@ -183,4 +183,38 @@ class EmployeeRepository extends ServiceEntityRepository
             'id' => $id
         ]) > 0;
     }
+
+    public function updateEmployeeTools(int $employeeId, array $toolIds): void
+    {
+        $conn = $this->getEntityManager()->getConnection();
+
+        // Supprimer les associations existantes
+        $conn->executeStatement(
+            "DELETE FROM outil_employee WHERE ID_EMPLOYEE = :employeeId",
+            ['employeeId' => $employeeId]
+        );
+
+        // Insérer les nouvelles associations
+        foreach ($toolIds as $toolId) {
+            $conn->executeStatement(
+                "INSERT INTO outil_employee (ID_EMPLOYEE, ID_OUTIL) VALUES (:employeeId, :toolId)",
+                ['employeeId' => $employeeId, 'toolId' => $toolId]
+            );
+        }
+    }
+
+    public function getEmployeeTools(int $employeeId): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = "
+            SELECT o.ID_OUTIL, o.Nom_Outil
+            FROM outil_employee oe
+            JOIN outils_de_travail o ON oe.ID_OUTIL = o.ID_OUTIL
+            WHERE oe.ID_EMPLOYEE = :employeeId
+        ";
+
+        return $conn->fetchAllAssociative($sql, ['employeeId' => $employeeId]);
+    }
+
 }

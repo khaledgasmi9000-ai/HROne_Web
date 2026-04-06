@@ -190,3 +190,63 @@ select.input-field {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+.tool-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 10px 12px;
+    border-radius: 10px;
+
+    border: 1px solid var(--border);
+    background: var(--bg-main);
+
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+
+/* Hover */
+.tool-item:hover {
+    background: var(--bg-hover);
+    border-color: var(--primary);
+}
+
+/* Checked state (important visual feedback) */
+.tool-item.checked {
+    border-color: var(--primary);
+    background: rgba(124, 58, 237, 0.08);
+}
+
+/* Checkbox alignment */
+.tool-item input[type="checkbox"] {
+    accent-color: var(--primary);
+}
+
+.modal-content.large {
+    width: 700px;
+}
+
+#toolsList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#toolsList::-webkit-scrollbar {
+    width: 8px;
+}
+
+#toolsList::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#toolsList::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}
+
+/* Hover effect */
+#toolsList::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+}

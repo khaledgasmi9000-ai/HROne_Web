@@ -19,7 +19,7 @@ window.rowActionsHandlers.employee = {
     },
 
     tools: function(id) {
-        console.log("Gérer outils:", id);
+        window.openOutilAssociationModal(id);
     }
 
 };

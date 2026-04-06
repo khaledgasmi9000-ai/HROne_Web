@@ -10,34 +10,23 @@
 <div class="kpi-grid compact">
 
     <div class="kpi-card">
-        <span class="kpi-title">Total Employees</span>
+        <span class="kpi-title">Salaire moyen</span>
         <div class="kpi-row">
-            <h3 class="kpi-value">{{ kpi.totalEmployees|default('1,250') }}</h3>
-            <span class="kpi-change positive">+12%</span>
+            <h3 class="kpi-value">{{ kpi.avgSalary|number_format(2, '.', ' ') }}</h3>
         </div>
     </div>
 
     <div class="kpi-card">
-        <span class="kpi-title">New Hires</span>
+        <span class="kpi-title">Heures moyennes / mois</span>
         <div class="kpi-row">
-            <h3 class="kpi-value">{{ kpi.newHires|default('45') }}</h3>
-            <span class="kpi-change positive">+8%</span>
+            <h3 class="kpi-value">{{ kpi.avgHours|number_format(2, '.', ' ') }}</h3>
         </div>
     </div>
 
     <div class="kpi-card">
-        <span class="kpi-title">Departures</span>
+        <span class="kpi-title">Congé moyen pris</span>
         <div class="kpi-row">
-            <h3 class="kpi-value">{{ kpi.departures|default('12') }}</h3>
-            <span class="kpi-change negative">-3%</span>
-        </div>
-    </div>
-
-    <div class="kpi-card">
-        <span class="kpi-title">Contracts</span>
-        <div class="kpi-row">
-            <h3 class="kpi-value">{{ kpi.contracts|default('980') }}</h3>
-            <span class="kpi-change positive">+5%</span>
+            <h3 class="kpi-value">{{ kpi.avgCongeTaken|default('0') }}</h3>
         </div>
     </div>
 
@@ -166,6 +155,7 @@
 
     {% include 'Gestion Administrative/components/modal_employee.html.twig' %}   
     {% include 'Gestion Administrative/components/modal_export.html.twig' %}
+    {% include 'Gestion Administrative/components/modal_outil_association.html.twig' %}
 <script>
     window.deleteEmployeeUrlTemplate = "{{ path('employee_delete', {'id': 'EMP_ID'}) }}";
     window.getEmployeeUrl = "{{ path('employee_get', {'id': 'EMP_ID'}) }}";
@@ -173,6 +163,8 @@
     window.updateEmployeeUrl = "{{ path('employee_update', {'id': 'EMP_ID'}) }}";
     window.checkEmployeeUrl = "{{ path('employee_check') }}";
     window.exportEmployeeUrl = "{{ path('employee_export') }}";
+    window.getEmployeeToolsUrl = "{{ path('employee_tools_get', {'id': 'EMP_ID'}) }}";
+    window.saveEmployeeToolsUrl = "{{ path('employee_tools_save', {'id': 'EMP_ID'}) }}";
 </script>
 
 {% endblock %}

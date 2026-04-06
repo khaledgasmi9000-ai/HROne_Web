@@ -212,12 +212,66 @@ class GestionAdministrativeController extends AbstractController
         $offset = ($currentPage - 1) * $rowsPerPage;
         $employees = array_slice($filtered, $offset, $rowsPerPage);
         
+        // ===== KPI CALCULATIONS =====
+
+        $totalEmployeesRaw = count($allEmployees);
+
+        $avgSalary = 0;
+        $avgHours  = 0;
+        $avgCongeTaken = 0;
+
+        if ($totalEmployeesRaw > 0) {
+
+            $totalSalary = array_sum(array_column($allEmployees, 'salaire'));
+            $totalHours  = array_sum(array_column($allEmployees, 'heures'));
+
+            $avgSalary = round($totalSalary / $totalEmployeesRaw, 2);
+            $avgHours  = round($totalHours / $totalEmployeesRaw, 2);
+
+            // ===== CONGE USAGE RATE =====
+            $totalUsageRate = 0;
+            $validEmployees = 0;
+
+            foreach ($allEmployees as $emp) {
+
+                $available = (int)$emp['soldeConge'];
+                $restant   = (int)$emp['soldeRestant'];
+
+                // Avoid division by zero
+                if ($available <= 0) {
+                    continue;
+                }
+
+                $used = $available - $restant;
+
+                // Clamp safety (optional but smart)
+                if ($used < 0) $used = 0;
+                if ($used > $available) $used = $available;
+
+                $usageRate = $used / $available;
+
+                $totalUsageRate += $usageRate;
+                $validEmployees++;
+            }
+
+            if ($validEmployees > 0) {
+                $avgCongeTaken = round(($totalUsageRate / $validEmployees) * 100, 2); // %
+            }
+        }
+
+        $kpi = [
+            'avgSalary' => $avgSalary,
+            'avgHours' => $avgHours,
+            'avgCongeTaken' => $avgCongeTaken
+        ];
+
         return $this->render('Gestion Administrative/overview.html.twig', [
             'employees' => $employees,
             'currentPage' => $currentPage,
             'totalPages' => $totalPages,
             'totalEmployees' => $totalEmployees,
-            'rowsPerPage' => $rowsPerPage
+            'rowsPerPage' => $rowsPerPage,
+            'kpi' => $kpi
         ]);
     }
 
@@ -290,6 +344,42 @@ class GestionAdministrativeController extends AbstractController
         };
     }
     
+    #[Route('/Gestion_Administrative/employee/{id}/tools', name: 'employee_tools_get', methods: ['GET'])]
+    public function getEmployeeTools(int $id,EmployeeRepository $employeeRepo,OutilsDeTravailRepository $toolRepo): Response {
+
+        $allTools = $toolRepo->findAllTools();
+
+        $assignedTools = $employeeRepo->getEmployeeTools($id);
+
+        // Convert assigned to simple ID array
+        $assignedIds = array_map(fn($t) => $t['ID_OUTIL'], $assignedTools);
+
+        $tools = array_map(function($tool) use ($assignedIds) {
+            return [
+                'id' => $tool['ID_Outil'],
+                'name' => $tool['Nom_Outil'],
+                'checked' => in_array($tool['ID_Outil'], $assignedIds)
+            ];
+        }, $allTools);
+
+        return $this->json([
+            'tools' => $tools
+        ]);
+    }
+
+
+    #[Route('/Gestion_Administrative/employee/{id}/tools', name: 'employee_tools_save', methods: ['POST'])]
+    public function saveEmployeeTools(int $id,Request $request,EmployeeRepository $employeeRepo): Response {
+
+        $data = json_decode($request->getContent(), true);
+
+        $tools = $data['tools'] ?? [];
+
+        $employeeRepo->updateEmployeeTools($id, $tools);
+
+        return $this->json(['success' => true]);
+    }
+
     // ========== End Employee Controller ==========  //
 
 #pragma endregion
