@@ -38,7 +38,15 @@ class CondidatureRepository extends ServiceEntityRepository
                 o.Nbr_Annee_Experience,
                 tsc.Description_Status_Condidature,
                 GROUP_CONCAT(DISTINCT tc.Description_Competence ORDER BY tc.Description_Competence SEPARATOR ", ") AS Competences,
-                CASE WHEN COUNT(e.ID_Condidat) > 0 THEN 1 ELSE 0 END AS Has_Interview
+                     MAX(ie.Num_Ordre_Entretien) AS Interview_Num_Ordre,
+                     MAX(ie.Localisation) AS Interview_Localisation,
+                     MAX(ie.Evaluation) AS Interview_Evaluation,
+                     MAX(io.AAAA) AS Interview_AAAA,
+                     MAX(io.MM) AS Interview_MM,
+                     MAX(io.JJ) AS Interview_JJ,
+                     MAX(io.HH) AS Interview_HH,
+                     MAX(io.MN) AS Interview_MN,
+                     CASE WHEN MAX(ie.Num_Ordre_Entretien) IS NOT NULL THEN 1 ELSE 0 END AS Has_Interview
              FROM condidature c
              INNER JOIN condidat cd ON cd.ID_Condidat = c.ID_Condidat
              INNER JOIN utilisateur u ON u.ID_UTILISATEUR = cd.ID_UTILISATEUR
@@ -46,7 +54,16 @@ class CondidatureRepository extends ServiceEntityRepository
              LEFT JOIN type_status_condidature tsc ON tsc.Code_Type_Status_Condidature = c.Code_Type_Status
              LEFT JOIN detail_offre_competence doc ON doc.ID_Offre = o.ID_Offre
              LEFT JOIN type_competence tc ON tc.Code_Type_Competence = doc.Code_Type_Competence
-             LEFT JOIN entretien e ON e.ID_Condidat = c.ID_Condidat
+                 LEFT JOIN (
+                     SELECT e1.ID_Condidat, e1.Num_Ordre_Entretien, e1.Localisation, e1.Evaluation
+                     FROM entretien e1
+                     INNER JOIN (
+                          SELECT ID_Condidat, MAX(Num_Ordre_Entretien) AS Max_Num_Ordre_Entretien
+                          FROM entretien
+                          GROUP BY ID_Condidat
+                     ) latest_e ON latest_e.ID_Condidat = e1.ID_Condidat AND latest_e.Max_Num_Ordre_Entretien = e1.Num_Ordre_Entretien
+                 ) ie ON ie.ID_Condidat = c.ID_Condidat
+                 LEFT JOIN ordre io ON io.Num_Ordre = ie.Num_Ordre_Entretien
              GROUP BY
                 c.ID_Condidature,
                 c.ID_Offre,
@@ -106,7 +123,15 @@ class CondidatureRepository extends ServiceEntityRepository
                 o.Nbr_Annee_Experience,
                 tsc.Description_Status_Condidature,
                 GROUP_CONCAT(DISTINCT tc.Description_Competence ORDER BY tc.Description_Competence SEPARATOR ", ") AS Competences,
-                CASE WHEN COUNT(e.ID_Condidat) > 0 THEN 1 ELSE 0 END AS Has_Interview
+                     MAX(ie.Num_Ordre_Entretien) AS Interview_Num_Ordre,
+                     MAX(ie.Localisation) AS Interview_Localisation,
+                     MAX(ie.Evaluation) AS Interview_Evaluation,
+                     MAX(io.AAAA) AS Interview_AAAA,
+                     MAX(io.MM) AS Interview_MM,
+                     MAX(io.JJ) AS Interview_JJ,
+                     MAX(io.HH) AS Interview_HH,
+                     MAX(io.MN) AS Interview_MN,
+                     CASE WHEN MAX(ie.Num_Ordre_Entretien) IS NOT NULL THEN 1 ELSE 0 END AS Has_Interview
              FROM condidature c
              INNER JOIN condidat cd ON cd.ID_Condidat = c.ID_Condidat
              INNER JOIN utilisateur u ON u.ID_UTILISATEUR = cd.ID_UTILISATEUR
@@ -114,7 +139,16 @@ class CondidatureRepository extends ServiceEntityRepository
              LEFT JOIN type_status_condidature tsc ON tsc.Code_Type_Status_Condidature = c.Code_Type_Status
              LEFT JOIN detail_offre_competence doc ON doc.ID_Offre = o.ID_Offre
              LEFT JOIN type_competence tc ON tc.Code_Type_Competence = doc.Code_Type_Competence
-             LEFT JOIN entretien e ON e.ID_Condidat = c.ID_Condidat
+                 LEFT JOIN (
+                     SELECT e1.ID_Condidat, e1.Num_Ordre_Entretien, e1.Localisation, e1.Evaluation
+                     FROM entretien e1
+                     INNER JOIN (
+                          SELECT ID_Condidat, MAX(Num_Ordre_Entretien) AS Max_Num_Ordre_Entretien
+                          FROM entretien
+                          GROUP BY ID_Condidat
+                     ) latest_e ON latest_e.ID_Condidat = e1.ID_Condidat AND latest_e.Max_Num_Ordre_Entretien = e1.Num_Ordre_Entretien
+                 ) ie ON ie.ID_Condidat = c.ID_Condidat
+                 LEFT JOIN ordre io ON io.Num_Ordre = ie.Num_Ordre_Entretien
              WHERE c.ID_Condidature = :id
              GROUP BY
                 c.ID_Condidature,
@@ -167,14 +201,16 @@ class CondidatureRepository extends ServiceEntityRepository
             throw new RuntimeException('Le statut cible est introuvable en base.');
         }
 
-        $exists = $this->getEntityManager()->getConnection()->fetchOne(
-            'SELECT 1 FROM condidature WHERE ID_Condidature = :id LIMIT 1',
+        $candidatureRow = $this->getEntityManager()->getConnection()->fetchAssociative(
+            'SELECT ID_Condidat FROM condidature WHERE ID_Condidature = :id LIMIT 1',
             ['id' => $id]
         );
 
-        if ($exists === false) {
+        if ($candidatureRow === false) {
             return null;
         }
+
+        $candidateId = (int) ($candidatureRow['ID_Condidat'] ?? 0);
 
         $this->getEntityManager()->getConnection()->executeStatement(
             'UPDATE condidature SET Code_Type_Status = :statusCode WHERE ID_Condidature = :id',
@@ -184,10 +220,18 @@ class CondidatureRepository extends ServiceEntityRepository
             ]
         );
 
+        if ($target === 'REJECTED' && $candidateId > 0) {
+            // A rejected candidature must not keep a planned interview.
+            $this->getEntityManager()->getConnection()->executeStatement(
+                'DELETE FROM entretien WHERE ID_Condidat = :candidateId',
+                ['candidateId' => $candidateId]
+            );
+        }
+
         return $this->fetchRhCandidateByCandidatureId($id);
     }
 
-    public function scheduleInterviewForRh(int $candidatureId, DateTimeInterface $scheduledAt, string $location): bool
+    public function scheduleInterviewForRh(int $candidatureId, DateTimeInterface $scheduledAt, string $location, string $evaluation = ''): bool
     {
         $row = $this->getEntityManager()->getConnection()->fetchAssociative(
             'SELECT
@@ -205,7 +249,7 @@ class CondidatureRepository extends ServiceEntityRepository
         }
 
         $status = strtoupper((string) ($row['Description_Status_Condidature'] ?? ''));
-        if ($status !== 'ACCEPTED') {
+        if (!in_array($status, ['ACCEPTED', 'ACCEPTEE', 'ACCEPTE'], true)) {
             throw new RuntimeException('La candidature doit etre acceptee avant de planifier un entretien.');
         }
 
@@ -214,23 +258,27 @@ class CondidatureRepository extends ServiceEntityRepository
             throw new RuntimeException('Impossible de determiner le RH pour planifier lentretien.');
         }
 
-        $numOrdre = (int) $scheduledAt->format('U');
+        $numOrdre = (((int) $scheduledAt->format('U')) * 100000) + ($candidatureId % 100000);
         $this->ensureOrdreExists($numOrdre, $scheduledAt);
+
+        $candidateId = (int) $row['ID_Condidat'];
+
+        // Keep one interview plan per candidate to avoid cross-update side effects.
+        $this->getEntityManager()->getConnection()->executeStatement(
+            'DELETE FROM entretien WHERE ID_Condidat = :candidateId',
+            ['candidateId' => $candidateId]
+        );
 
         $this->getEntityManager()->getConnection()->executeStatement(
             'INSERT INTO entretien (ID_Condidat, ID_RH, Num_Ordre_Entretien, Localisation, Status_Entretien, Evaluation)
-             VALUES (:candidateId, :rhId, :numOrdre, :location, :statusEntretien, :evaluation)
-             ON DUPLICATE KEY UPDATE
-               Localisation = VALUES(Localisation),
-               Status_Entretien = VALUES(Status_Entretien),
-               Evaluation = VALUES(Evaluation)',
+             VALUES (:candidateId, :rhId, :numOrdre, :location, :statusEntretien, :evaluation)',
             [
-                'candidateId' => (int) $row['ID_Condidat'],
+                'candidateId' => $candidateId,
                 'rhId' => $rhId,
                 'numOrdre' => $numOrdre,
                 'location' => trim($location) !== '' ? trim($location) : 'A definir',
                 'statusEntretien' => 1,
-                'evaluation' => null,
+                'evaluation' => trim($evaluation) !== '' ? trim($evaluation) : null,
             ]
         );
 
@@ -245,6 +293,16 @@ class CondidatureRepository extends ServiceEntityRepository
     {
         $statusRaw = strtoupper((string) ($row['Description_Status_Condidature'] ?? ''));
         [$statusLabel, $statusClass] = $this->mapStatusForRh($statusRaw);
+        $isAccepted = in_array($statusRaw, ['ACCEPTED', 'ACCEPTEE', 'ACCEPTE'], true);
+        $interviewDate = $this->formatInterviewDate($row);
+        $interviewTime = $this->formatInterviewTime($row);
+        $interviewDateTimeIso = $this->formatInterviewDateTimeIso($row);
+        $hasInterview = $isAccepted && ((int) ($row['Has_Interview'] ?? 0)) > 0;
+        $interviewLocation = $hasInterview ? (string) ($row['Interview_Localisation'] ?? '') : '';
+        $interviewEvaluation = $hasInterview ? (string) ($row['Interview_Evaluation'] ?? '') : '';
+        $safeInterviewDate = $hasInterview ? $interviewDate : '';
+        $safeInterviewTime = $hasInterview ? $interviewTime : '';
+        $safeInterviewDateTimeIso = $hasInterview ? $interviewDateTimeIso : '';
 
         return [
             'id' => (int) ($row['ID_Condidature'] ?? 0),
@@ -263,7 +321,13 @@ class CondidatureRepository extends ServiceEntityRepository
             'portfolio' => (string) ($row['Portfolio'] ?? ''),
             'recommendationFileName' => (string) ($row['Lettre_Recomendation'] ?? ''),
             'cvFileName' => (string) ($row['CV'] ?? ''),
-            'hasInterview' => ((int) ($row['Has_Interview'] ?? 0)) > 0,
+            'hasInterview' => $hasInterview,
+            'interviewLocation' => $interviewLocation,
+            'interviewEvaluation' => $interviewEvaluation,
+            'interviewDate' => $safeInterviewDate,
+            'interviewTime' => $safeInterviewTime,
+            'interviewDateTimeIso' => $safeInterviewDateTimeIso,
+            'interviewComment' => $this->buildInterviewComment($safeInterviewDate, $safeInterviewTime),
         ];
     }
 
@@ -273,8 +337,8 @@ class CondidatureRepository extends ServiceEntityRepository
     private function mapStatusForRh(string $statusRaw): array
     {
         return match ($statusRaw) {
-            'ACCEPTED' => ['Acceptee', 'status-live'],
-            'REJECTED' => ['Rejetee', 'status-draft'],
+            'ACCEPTED', 'ACCEPTEE', 'ACCEPTE' => ['Acceptee', 'status-live'],
+            'REJECTED', 'REJETEE', 'REJETE' => ['Rejetee', 'status-draft'],
             default => ['En attente', 'status-review'],
         };
     }
@@ -304,6 +368,64 @@ class CondidatureRepository extends ServiceEntityRepository
                 'second' => (int) $scheduledAt->format('s'),
             ]
         );
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private function formatInterviewDate(array $row): string
+    {
+        $year = isset($row['Interview_AAAA']) ? (int) $row['Interview_AAAA'] : 0;
+        $month = isset($row['Interview_MM']) ? (int) $row['Interview_MM'] : 0;
+        $day = isset($row['Interview_JJ']) ? (int) $row['Interview_JJ'] : 0;
+
+        if ($year > 0 && $month > 0 && $day > 0 && checkdate($month, $day, $year)) {
+            return sprintf('%02d/%02d/%04d', $day, $month, $year);
+        }
+
+        return '';
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private function formatInterviewTime(array $row): string
+    {
+        $hour = isset($row['Interview_HH']) ? (int) $row['Interview_HH'] : -1;
+        $minute = isset($row['Interview_MN']) ? (int) $row['Interview_MN'] : -1;
+
+        if ($hour >= 0 && $minute >= 0) {
+            return sprintf('%02d:%02d', $hour, $minute);
+        }
+
+        return '';
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private function formatInterviewDateTimeIso(array $row): string
+    {
+        $year = isset($row['Interview_AAAA']) ? (int) $row['Interview_AAAA'] : 0;
+        $month = isset($row['Interview_MM']) ? (int) $row['Interview_MM'] : 0;
+        $day = isset($row['Interview_JJ']) ? (int) $row['Interview_JJ'] : 0;
+        $hour = isset($row['Interview_HH']) ? (int) $row['Interview_HH'] : -1;
+        $minute = isset($row['Interview_MN']) ? (int) $row['Interview_MN'] : -1;
+
+        if ($year > 0 && $month > 0 && $day > 0 && checkdate($month, $day, $year) && $hour >= 0 && $minute >= 0) {
+            return sprintf('%04d-%02d-%02dT%02d:%02d', $year, $month, $day, $hour, $minute);
+        }
+
+        return '';
+    }
+
+    private function buildInterviewComment(string $date, string $time): string
+    {
+        if ($date === '' || $time === '') {
+            return '';
+        }
+
+        return sprintf('Entretien planifie le %s a %s.', $date, $time);
     }
 
 //    /**

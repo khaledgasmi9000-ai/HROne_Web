@@ -36,13 +36,30 @@ class CondidatRepository extends ServiceEntityRepository
                 o.Work_Type,
                 o.Nbr_Annee_Experience,
                 tc.Description_Contrat,
-                tsc.Description_Status_Condidature
+                tsc.Description_Status_Condidature,
+                ie.Localisation AS Interview_Localisation,
+                ie.Evaluation AS Interview_Evaluation,
+                io.AAAA AS Interview_AAAA,
+                io.MM AS Interview_MM,
+                io.JJ AS Interview_JJ,
+                io.HH AS Interview_HH,
+                io.MN AS Interview_MN
              FROM condidature c
                  INNER JOIN condidat cd ON cd.ID_Condidat = c.ID_Condidat
                  INNER JOIN utilisateur u ON u.ID_UTILISATEUR = cd.ID_UTILISATEUR
              LEFT JOIN offre o ON o.ID_Offre = c.ID_Offre
              LEFT JOIN type_contrat tc ON tc.Code_Type_Contrat = o.Code_Type_Contrat
              LEFT JOIN type_status_condidature tsc ON tsc.Code_Type_Status_Condidature = c.Code_Type_Status
+             LEFT JOIN (
+                SELECT e1.ID_Condidat, e1.Num_Ordre_Entretien, e1.Localisation, e1.Evaluation
+                FROM entretien e1
+                INNER JOIN (
+                    SELECT ID_Condidat, MAX(Num_Ordre_Entretien) AS Max_Num_Ordre_Entretien
+                    FROM entretien
+                    GROUP BY ID_Condidat
+                ) latest_e ON latest_e.ID_Condidat = e1.ID_Condidat AND latest_e.Max_Num_Ordre_Entretien = e1.Num_Ordre_Entretien
+             ) ie ON ie.ID_Condidat = c.ID_Condidat
+             LEFT JOIN ordre io ON io.Num_Ordre = ie.Num_Ordre_Entretien
              WHERE c.ID_Condidat = :candidateId
              ORDER BY c.ID_Condidature DESC',
             ['candidateId' => $candidateId]
@@ -87,13 +104,30 @@ class CondidatRepository extends ServiceEntityRepository
                 o.Work_Type,
                 o.Nbr_Annee_Experience,
                 tc.Description_Contrat,
-                tsc.Description_Status_Condidature
+                tsc.Description_Status_Condidature,
+                ie.Localisation AS Interview_Localisation,
+                ie.Evaluation AS Interview_Evaluation,
+                io.AAAA AS Interview_AAAA,
+                io.MM AS Interview_MM,
+                io.JJ AS Interview_JJ,
+                io.HH AS Interview_HH,
+                io.MN AS Interview_MN
              FROM condidature c
                  INNER JOIN condidat cd ON cd.ID_Condidat = c.ID_Condidat
                  INNER JOIN utilisateur u ON u.ID_UTILISATEUR = cd.ID_UTILISATEUR
              LEFT JOIN offre o ON o.ID_Offre = c.ID_Offre
              LEFT JOIN type_contrat tc ON tc.Code_Type_Contrat = o.Code_Type_Contrat
              LEFT JOIN type_status_condidature tsc ON tsc.Code_Type_Status_Condidature = c.Code_Type_Status
+             LEFT JOIN (
+                SELECT e1.ID_Condidat, e1.Num_Ordre_Entretien, e1.Localisation, e1.Evaluation
+                FROM entretien e1
+                INNER JOIN (
+                    SELECT ID_Condidat, MAX(Num_Ordre_Entretien) AS Max_Num_Ordre_Entretien
+                    FROM entretien
+                    GROUP BY ID_Condidat
+                ) latest_e ON latest_e.ID_Condidat = e1.ID_Condidat AND latest_e.Max_Num_Ordre_Entretien = e1.Num_Ordre_Entretien
+             ) ie ON ie.ID_Condidat = c.ID_Condidat
+             LEFT JOIN ordre io ON io.Num_Ordre = ie.Num_Ordre_Entretien
              WHERE c.ID_Condidature = :id AND c.ID_Condidat = :candidateId',
             ['id' => $id, 'candidateId' => $candidateId]
         );
@@ -325,12 +359,19 @@ class CondidatRepository extends ServiceEntityRepository
     private function mapCandidatureRow(array $row): array
     {
         $statusLabel = strtoupper((string) ($row['Description_Status_Condidature'] ?? 'SUBMITTED'));
+        $isAccepted = in_array($statusLabel, ['ACCEPTED', 'ACCEPTEE', 'ACCEPTE'], true);
         $statusClass = match ($statusLabel) {
             'REVIEW' => 'status--review',
-            'ACCEPTED' => 'status--meet',
+            'ACCEPTED', 'ACCEPTEE', 'ACCEPTE' => 'status--meet',
             'REJECTED' => 'status--closed',
             default => 'status--sent',
         };
+
+        $interviewDate = $this->formatInterviewDate($row);
+        $interviewTime = $this->formatInterviewTime($row);
+        $interviewComment = ($isAccepted && $interviewDate !== '' && $interviewTime !== '')
+            ? sprintf('Vous avez un entretien le %s a %s.', $interviewDate, $interviewTime)
+            : '';
 
         return [
             'id' => (int) $row['ID_Condidature'],
@@ -351,7 +392,44 @@ class CondidatRepository extends ServiceEntityRepository
             'candidateEmail' => (string) ($row['Email'] ?? ''),
             'cvFileName' => (string) ($row['CV'] ?? ''),
             'recommendationFileName' => (string) ($row['Lettre_Recomendation'] ?? ''),
+            'hasInterview' => $interviewComment !== '',
+            'interviewDate' => $interviewComment !== '' ? $interviewDate : '',
+            'interviewTime' => $interviewComment !== '' ? $interviewTime : '',
+            'interviewLocation' => $interviewComment !== '' ? (string) ($row['Interview_Localisation'] ?? '') : '',
+            'interviewEvaluation' => $interviewComment !== '' ? (string) ($row['Interview_Evaluation'] ?? '') : '',
+            'interviewComment' => $interviewComment,
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private function formatInterviewDate(array $row): string
+    {
+        $year = isset($row['Interview_AAAA']) ? (int) $row['Interview_AAAA'] : 0;
+        $month = isset($row['Interview_MM']) ? (int) $row['Interview_MM'] : 0;
+        $day = isset($row['Interview_JJ']) ? (int) $row['Interview_JJ'] : 0;
+
+        if ($year > 0 && $month > 0 && $day > 0 && checkdate($month, $day, $year)) {
+            return sprintf('%02d/%02d/%04d', $day, $month, $year);
+        }
+
+        return '';
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private function formatInterviewTime(array $row): string
+    {
+        $hour = isset($row['Interview_HH']) ? (int) $row['Interview_HH'] : -1;
+        $minute = isset($row['Interview_MN']) ? (int) $row['Interview_MN'] : -1;
+
+        if ($hour >= 0 && $minute >= 0) {
+            return sprintf('%02d:%02d', $hour, $minute);
+        }
+
+        return '';
     }
 
 //    /**

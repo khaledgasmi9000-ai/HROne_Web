@@ -25,20 +25,20 @@
 
     <section class="stats" id="statsSection">
       <div class="stat">
-        <div class="stat-value">12</div>
+        <div class="stat-value" id="kpiActiveOffers">0</div>
         <div class="stat-label">Offres actives</div>
       </div>
       <div class="stat">
-        <div class="stat-value">86</div>
+        <div class="stat-value" id="kpiApplicationsCount">0</div>
         <div class="stat-label">Candidatures recues</div>
       </div>
       <div class="stat">
-        <div class="stat-value">4</div>
-        <div class="stat-label">Offres en validation</div>
+        <div class="stat-value" id="kpiDraftOffers">0</div>
+        <div class="stat-label">Brouillon</div>
       </div>
       <div class="stat">
-        <div class="stat-value">5 j</div>
-        <div class="stat-label">Delai moyen</div>
+        <div class="stat-value" id="kpiMachineClock">--:--:--</div>
+        <div class="stat-label">Date et heure machine (temps reel)</div>
       </div>
     </section>
 
@@ -207,6 +207,10 @@
     const offerEducationLevelSelect = document.getElementById("offerEducationLevel");
     const offerList = document.getElementById("offerList");
     const formFeedback = document.getElementById("formFeedback");
+    const kpiActiveOffers = document.getElementById("kpiActiveOffers");
+    const kpiApplicationsCount = document.getElementById("kpiApplicationsCount");
+    const kpiDraftOffers = document.getElementById("kpiDraftOffers");
+    const kpiMachineClock = document.getElementById("kpiMachineClock");
 
     const offersApiCreateUrl = "{{ path('rh_offres_api_create') }}";
     const offersApiGetUrlPattern = "{{ path('rh_offres_api_get', {id: '__ID__'}) }}";
@@ -498,6 +502,37 @@
         item.append(info, actions);
         offerList.appendChild(item);
       });
+
+      updateKpis();
+    };
+
+    const updateKpis = () => {
+      const activeOffers = offers.filter((offer) => (offer.statusClass || "") === "status-live").length;
+      const draftOffers = offers.filter((offer) => (offer.statusClass || "") === "status-draft").length;
+      const applicationsCount = offers.reduce((sum, offer) => {
+        const count = Number(offer.applicationsCount ?? 0);
+        return sum + (Number.isFinite(count) ? count : 0);
+      }, 0);
+
+      if (kpiActiveOffers) {
+        kpiActiveOffers.textContent = String(activeOffers);
+      }
+      if (kpiApplicationsCount) {
+        kpiApplicationsCount.textContent = String(applicationsCount);
+      }
+      if (kpiDraftOffers) {
+        kpiDraftOffers.textContent = String(draftOffers);
+      }
+    };
+
+    const updateMachineClock = () => {
+      if (!kpiMachineClock) {
+        return;
+      }
+      const now = new Date();
+      const datePart = [now.getDate(), now.getMonth() + 1, now.getFullYear()].map((value) => String(value).padStart(2, "0")).join("/");
+      const timePart = [now.getHours(), now.getMinutes(), now.getSeconds()].map((value) => String(value).padStart(2, "0")).join(":");
+      kpiMachineClock.textContent = `${datePart} ${timePart}`;
     };
 
     if (offerSearch) {
@@ -563,5 +598,7 @@
     attachFilter(languagesSearch, languagesSelect);
     attachFilter(backgroundSearch, backgroundSelect);
     renderOffers();
+    updateMachineClock();
+    window.setInterval(updateMachineClock, 1000);
   </script>
 {% endblock %}

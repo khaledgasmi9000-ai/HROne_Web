@@ -64,6 +64,9 @@
               <span>{{ candidaturesItem.workType }}</span>
               <span>{{ candidaturesItem.experience }}</span>
             </div>
+            {% if candidaturesItem.interviewComment is defined and candidaturesItem.interviewComment %}
+              <p class="interview-note">{{ candidaturesItem.interviewComment }}</p>
+            {% endif %}
           </div>
           <div class="card__actions">
             <button class="btn btn--ghost btn-edit-candidature" type="button" data-id="{{ candidaturesItem.id }}">Modifier</button>

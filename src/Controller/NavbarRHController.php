@@ -132,19 +132,29 @@ class NavbarRHController extends AbstractController
 
             $scheduledAtInput = (string) ($payload['scheduledAt'] ?? '');
             $location = (string) ($payload['location'] ?? '');
+            $evaluation = (string) ($payload['evaluation'] ?? '');
 
             if (trim($scheduledAtInput) === '') {
                 return $this->json(['message' => 'La date et l heure de lentretien sont obligatoires.'], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
 
+            if (trim($evaluation) === '') {
+                return $this->json(['message' => 'Levaluation RH est obligatoire lors de la planification.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
             $scheduledAt = new DateTimeImmutable($scheduledAtInput);
-            $scheduled = $condidatureRepository->scheduleInterviewForRh($id, $scheduledAt, $location);
+            $scheduled = $condidatureRepository->scheduleInterviewForRh($id, $scheduledAt, $location, $evaluation);
 
             if (!$scheduled) {
                 return $this->json(['message' => 'Candidature introuvable.'], Response::HTTP_NOT_FOUND);
             }
 
-            return $this->json(['scheduled' => true]);
+            $candidate = $condidatureRepository->fetchRhCandidateByCandidatureId($id);
+
+            return $this->json([
+                'scheduled' => true,
+                'candidate' => $candidate,
+            ]);
         } catch (Throwable $exception) {
             return $this->json([
                 'message' => 'Erreur serveur lors de la planification de lentretien.',

@@ -35,12 +35,29 @@ class OffreRepository extends ServiceEntityRepository
                 o.Code_Type_Contrat,
                 o.Code_Type_Niveau_Etude,
                 tc.Description_Contrat,
+                     COUNT(c.ID_Condidature) AS Applications_Count,
                 oe.AAAA AS Exp_AAAA,
                 oe.MM AS Exp_MM,
                 oe.JJ AS Exp_JJ
              FROM offre o
              LEFT JOIN type_contrat tc ON tc.Code_Type_Contrat = o.Code_Type_Contrat
+                 LEFT JOIN condidature c ON c.ID_Offre = o.ID_Offre
              LEFT JOIN ordre oe ON oe.Num_Ordre = o.Num_Ordre_Expiration
+                 GROUP BY
+                     o.ID_Offre,
+                     o.Titre,
+                     o.Work_Type,
+                     o.Nbr_Annee_Experience,
+                     o.Min_Salaire,
+                     o.Max_Salaire,
+                     o.Description,
+                     o.Localisation,
+                     o.Code_Type_Contrat,
+                     o.Code_Type_Niveau_Etude,
+                     tc.Description_Contrat,
+                     oe.AAAA,
+                     oe.MM,
+                     oe.JJ
              ORDER BY o.ID_Offre DESC'
         );
 
@@ -360,6 +377,7 @@ class OffreRepository extends ServiceEntityRepository
             'expirationDate' => $expirationDate,
             'status' => $status,
             'statusClass' => $statusClass,
+            'applicationsCount' => isset($row['Applications_Count']) ? (int) $row['Applications_Count'] : 0,
         ];
 
         if ($includeEmptyDetails) {
