@@ -16,28 +16,97 @@ class ParticipationFormationRepository extends ServiceEntityRepository
         parent::__construct($registry, ParticipationFormation::class);
     }
 
-//    /**
-//     * @return ParticipationFormation[] Returns an array of ParticipationFormation objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('p')
-//            ->andWhere('p.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('p.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function findActiveParticipation(int $formationId, int $participantId): ?ParticipationFormation
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.ID_Formation = :formationId')
+            ->andWhere('p.ID_Participant = :participantId')
+            ->andWhere('p.Statut = :status')
+            ->setParameter('formationId', $formationId)
+            ->setParameter('participantId', $participantId)
+            ->setParameter('status', 'inscrit')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 
-//    public function findOneBySomeField($value): ?ParticipationFormation
-//    {
-//        return $this->createQueryBuilder('p')
-//            ->andWhere('p.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    public function hasActiveParticipation(int $formationId, int $participantId): bool
+    {
+        return $this->findActiveParticipation($formationId, $participantId) instanceof ParticipationFormation;
+    }
+
+    /**
+     * @return ParticipationFormation[]
+     */
+    public function findByParticipantOrdered(int $participantId): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.ID_Participant = :participantId')
+            ->setParameter('participantId', $participantId)
+            ->orderBy('p.Num_Ordre_Participation', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return ParticipationFormation[]
+     */
+    public function findActiveByParticipant(int $participantId): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.ID_Participant = :participantId')
+            ->andWhere('p.Statut = :status')
+            ->setParameter('participantId', $participantId)
+            ->setParameter('status', 'inscrit')
+            ->orderBy('p.Num_Ordre_Participation', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return ParticipationFormation[]
+     */
+    public function findByFormationOrdered(int $formationId): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.ID_Formation = :formationId')
+            ->setParameter('formationId', $formationId)
+            ->orderBy('p.Num_Ordre_Participation', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function getNextOrderNumber(): int
+    {
+        $max = $this->createQueryBuilder('p')
+            ->select('MAX(p.Num_Ordre_Participation)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return ((int) $max) + 1;
+    }
+
+    public function removeActiveParticipation(int $formationId, int $participantId): int
+    {
+        return $this->createQueryBuilder('p')
+            ->delete()
+            ->andWhere('p.ID_Formation = :formationId')
+            ->andWhere('p.ID_Participant = :participantId')
+            ->andWhere('p.Statut = :status')
+            ->setParameter('formationId', $formationId)
+            ->setParameter('participantId', $participantId)
+            ->setParameter('status', 'inscrit')
+            ->getQuery()
+            ->execute();
+    }
+
+    public function removeByFormationId(int $formationId): int
+    {
+        return $this->createQueryBuilder('p')
+            ->delete()
+            ->andWhere('p.ID_Formation = :formationId')
+            ->setParameter('formationId', $formationId)
+            ->getQuery()
+            ->execute();
+    }
 }

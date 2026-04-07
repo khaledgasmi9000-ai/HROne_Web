@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HR One - Gestion des formations{% endblock %}</title>
+    <link rel="stylesheet" href="/styles/admin-sidebar.css">
+    {% block stylesheets %}{% endblock %}
+</head>
+<body class="{% block body_class %}page-gestion-formations{% endblock %}">
+<div class="layout">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="logo">HR</div>
+            <div>
+                <div class="brand-name">HR One</div>
+                <div class="brand-sub">Espace RH</div>
+            </div>
+        </div>
+
+        <nav class="nav">
+            <a class="nav-link" href="#">Gestion des utilisateurs</a>
+            <a class="nav-link" href="#">Historique des actions</a>
+            <a class="nav-link" href="#">Activity Watch</a>
+            <a class="nav-link" href="#">Gestion des conges</a>
+            <a class="nav-link" href="#">Gestion administrative</a>
+            <a class="nav-link" href="#">Gestion des outils</a>
+            <a class="nav-link" href="#">Gestion des entretiens</a>
+            <a class="nav-link" href="#">Gestion des offres d'emploi</a>
+            <a class="nav-link" href="#">Gestion des evenements</a>
+            <a class="nav-link active" href="{{ path('app_admin_formation_index') }}">Gestion des formations</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+        {% block body %}{% endblock %}
+    </main>
+</div>
+</body>
+</html>

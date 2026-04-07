@@ -3,41 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}HR One - Espace Employé{% endblock %}</title>
-    
-    {# Vos styles originaux Top Navbar #}
+    <title>{% block title %}HR One - Espace employe{% endblock %}</title>
+    <link rel="stylesheet" href="/styles/front-shared.css">
     <link rel="stylesheet" href="{{ asset('css/topNavbar-shared.css') }}">
-    
-    <style>
-        /* Ajustements mineurs pour Symfony */
-        body { background-color: #f1f5f9 !important; }
-        .top-nav { margin-bottom: 2rem; }
-        .nav-link { text-decoration: none; text-align: center; }
-        .badge { font-size: 0.8rem; padding: 4px 10px; border-radius: 20px; }
-        .badge-blue { background: #dbeafe; color: #1e40af; }
-    </style>
+    {% block stylesheets %}{% endblock %}
 </head>
-<body>
-    <div class="app-shell">
-        <header class="top-navbar">
-            <nav class="top-nav">
-                <button id="btnOffres" class="nav-link" type="button" data-page="offres" data-href="#">Offres d'emploi</button>
-                <button id="btnTraining" class="nav-link" type="button" data-page="formations" data-href="#">Formations</button>
-                <button id="btnEvents" class="nav-link active" type="button" data-page="evenements" data-href="{{ path('app_front_evenement_index') }}">Evenements</button>
-                <button id="btnParticipation" class="nav-link" type="button" data-page="participations" data-href="#">Mes participations</button>
-                <button id="btnDemandeConge" class="nav-link" type="button" data-page="demande-conge" data-href="#">Demande de conge</button>
-                <button id="btnCommunaute" class="nav-link" type="button" data-page="communaute" data-href="#">Communaute</button>
-            </nav>
-        </header>
+<body class="{% block body_class %}page-formations{% endblock %}">
+{% set current_route = app.request.attributes.get('_route') %}
+<div class="app-shell">
+    <header class="top-navbar">
+        <nav class="top-nav">
+            <a class="nav-link" href="#">Offres d'emploi</a>
+            <a class="nav-link {% if current_route starts with 'app_formation_' and current_route != 'app_my_participations' %}active{% endif %}" href="{{ path('app_formation_index') }}">Formations</a>
+            <a class="nav-link {% if current_route starts with 'app_front_evenement_' %}active{% endif %}" href="{{ path('app_front_evenement_index') }}">Evenements</a>
+            <a class="nav-link {% if current_route == 'app_my_participations' %}active{% endif %}" href="{{ path('app_my_participations') }}">Mes participations</a>
+            <a class="nav-link" href="#">Demande de conge</a>
+            <a class="nav-link" href="#">Communaute</a>
+        </nav>
+    </header>
 
-        <main class="page-placeholder">
-            <section class="interface-shell">
-                {% block body %}{% endblock %}
-            </section>
-        </main>
-    </div>
+    <main class="page-content">
+        {% block body %}{% endblock %}
+    </main>
+</div>
 
-    {# Votre JS original Top Navbar #}
     <script src="{{ asset('js/topNavbar.js') }}"></script>
 </body>
 </html>
