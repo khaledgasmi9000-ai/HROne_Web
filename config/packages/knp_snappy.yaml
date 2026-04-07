@@ -1,9 +1,0 @@
-knp_snappy:
-    pdf:
-        enabled:    true
-        binary:     '"F:\Global Dependency\wkhtmltopdf\bin\wkhtmltopdf.exe"'
-        options:    []
-    image:
-        enabled:    true
-        binary:     '"F:\Global Dependency\wkhtmltopdf\bin\wkhtmltoimage.exe"'
-        options:    []

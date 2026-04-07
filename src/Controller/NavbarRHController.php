@@ -19,7 +19,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class NavbarRHController extends AbstractController
 {
-    #[Route('/', name: 'rh_home')]
+    #[Route('/rh', name: 'rh_home')]
     public function home(): Response
     {
         return $this->redirectToRoute('rh_users');
