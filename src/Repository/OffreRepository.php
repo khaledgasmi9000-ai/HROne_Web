@@ -15,6 +15,9 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class OffreRepository extends ServiceEntityRepository
 {
+    private ?bool $hasOffreLocalisationColumn = null;
+    private ?bool $hasCondidatureOfferColumn = null;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Offre::class);
@@ -22,8 +25,19 @@ class OffreRepository extends ServiceEntityRepository
 
     public function fetchOffersForManagement(): array
     {
+        $locationSelect = $this->hasOffreLocalisationColumn()
+            ? 'o.Localisation'
+            : "COALESCE(ent.Nom_Entreprise, '-') AS Localisation";
+        $applicationsSelect = $this->hasCondidatureOfferColumn()
+            ? 'COUNT(c.ID_Condidature) AS Applications_Count'
+            : '0 AS Applications_Count';
+        $applicationsJoin = $this->hasCondidatureOfferColumn()
+            ? 'LEFT JOIN condidature c ON c.ID_Offre = o.ID_Offre'
+            : '';
+
         $rows = $this->getConnection()->fetchAllAssociative(
-            'SELECT
+            sprintf(
+                'SELECT
                 o.ID_Offre,
                 o.Titre,
                 o.Work_Type,
@@ -31,34 +45,39 @@ class OffreRepository extends ServiceEntityRepository
                 o.Min_Salaire,
                 o.Max_Salaire,
                 o.Description,
-                     o.Localisation,
+                %s,
                 o.Code_Type_Contrat,
                 o.Code_Type_Niveau_Etude,
                 tc.Description_Contrat,
-                     COUNT(c.ID_Condidature) AS Applications_Count,
+                %s,
                 oe.AAAA AS Exp_AAAA,
                 oe.MM AS Exp_MM,
                 oe.JJ AS Exp_JJ
              FROM offre o
+             LEFT JOIN entreprise ent ON ent.ID_Entreprise = o.ID_Entreprise
              LEFT JOIN type_contrat tc ON tc.Code_Type_Contrat = o.Code_Type_Contrat
-                 LEFT JOIN condidature c ON c.ID_Offre = o.ID_Offre
+             %s
              LEFT JOIN ordre oe ON oe.Num_Ordre = o.Num_Ordre_Expiration
-                 GROUP BY
-                     o.ID_Offre,
-                     o.Titre,
-                     o.Work_Type,
-                     o.Nbr_Annee_Experience,
-                     o.Min_Salaire,
-                     o.Max_Salaire,
-                     o.Description,
-                     o.Localisation,
-                     o.Code_Type_Contrat,
-                     o.Code_Type_Niveau_Etude,
-                     tc.Description_Contrat,
-                     oe.AAAA,
-                     oe.MM,
-                     oe.JJ
-             ORDER BY o.ID_Offre DESC'
+             GROUP BY
+                 o.ID_Offre,
+                 o.Titre,
+                 o.Work_Type,
+                 o.Nbr_Annee_Experience,
+                 o.Min_Salaire,
+                 o.Max_Salaire,
+                 o.Description,
+                 Localisation,
+                 o.Code_Type_Contrat,
+                 o.Code_Type_Niveau_Etude,
+                 tc.Description_Contrat,
+                 oe.AAAA,
+                 oe.MM,
+                 oe.JJ
+             ORDER BY o.ID_Offre DESC',
+                $locationSelect,
+                $applicationsSelect,
+                $applicationsJoin
+            )
         );
 
         return array_map(fn (array $row): array => $this->normalizeOfferRow($row, false), $rows);
@@ -75,8 +94,13 @@ class OffreRepository extends ServiceEntityRepository
     public function fetchOfferForManagement(int $id): ?array
     {
         $connection = $this->getConnection();
+        $locationSelect = $this->hasOffreLocalisationColumn()
+            ? 'o.Localisation'
+            : "COALESCE(ent.Nom_Entreprise, '-') AS Localisation";
+
         $row = $connection->fetchAssociative(
-            'SELECT
+            sprintf(
+                'SELECT
                 o.ID_Offre,
                 o.Titre,
                 o.Work_Type,
@@ -84,7 +108,7 @@ class OffreRepository extends ServiceEntityRepository
                 o.Min_Salaire,
                 o.Max_Salaire,
                 o.Description,
-                     o.Localisation,
+                %s,
                 o.Code_Type_Contrat,
                 o.Code_Type_Niveau_Etude,
                 tc.Description_Contrat,
@@ -92,9 +116,12 @@ class OffreRepository extends ServiceEntityRepository
                 oe.MM AS Exp_MM,
                 oe.JJ AS Exp_JJ
              FROM offre o
+             LEFT JOIN entreprise ent ON ent.ID_Entreprise = o.ID_Entreprise
              LEFT JOIN type_contrat tc ON tc.Code_Type_Contrat = o.Code_Type_Contrat
              LEFT JOIN ordre oe ON oe.Num_Ordre = o.Num_Ordre_Expiration
              WHERE o.ID_Offre = :id',
+                $locationSelect
+            ),
             ['id' => $id]
         );
 
@@ -133,7 +160,7 @@ class OffreRepository extends ServiceEntityRepository
         if ($title === '') {
             $errors['title'] = 'Le titre du poste est obligatoire.';
         }
-        if ($location === '') {
+        if ($location === '' && $this->hasOffreLocalisationColumn()) {
             $errors['location'] = 'Le lieu est obligatoire.';
         }
 
@@ -234,10 +261,9 @@ class OffreRepository extends ServiceEntityRepository
             $creationOrderId = $this->findOrCreateOrdre(new DateTimeImmutable());
             $expirationOrderId = $this->findOrCreateOrdre($data['expirationDate']->setTime(23, 59, 59));
 
-            $connection->insert('offre', [
+            $insertData = [
                 'Titre' => $data['title'],
                 'Description' => $data['description'],
-                'Localisation' => $data['location'],
                 'ID_Entreprise' => $entrepriseId,
                 'Work_Type' => $data['workType'],
                 'Code_Type_Contrat' => $data['contractCode'],
@@ -247,7 +273,12 @@ class OffreRepository extends ServiceEntityRepository
                 'Max_Salaire' => $data['maxSalary'],
                 'Num_Ordre_Creation' => $creationOrderId,
                 'Num_Ordre_Expiration' => $expirationOrderId,
-            ]);
+            ];
+            if ($this->hasOffreLocalisationColumn()) {
+                $insertData['Localisation'] = $data['location'];
+            }
+
+            $connection->insert('offre', $insertData);
 
             $id = (int) $connection->lastInsertId();
             $this->syncOfferDetails($id, $data['skillCodes'], $data['languageCodes'], $data['backgroundCodes']);
@@ -279,10 +310,9 @@ class OffreRepository extends ServiceEntityRepository
         try {
             $expirationOrderId = $this->findOrCreateOrdre($data['expirationDate']->setTime(23, 59, 59));
 
-            $connection->update('offre', [
+            $updateData = [
                 'Titre' => $data['title'],
                 'Description' => $data['description'],
-                'Localisation' => $data['location'],
                 'Work_Type' => $data['workType'],
                 'Nbr_Annee_Experience' => $data['experienceYears'],
                 'Min_Salaire' => $data['minSalary'],
@@ -291,7 +321,12 @@ class OffreRepository extends ServiceEntityRepository
                 'Code_Type_Niveau_Etude' => $data['educationCode'],
                 'Num_Ordre_Creation' => (int) $creationOrderId,
                 'Num_Ordre_Expiration' => $expirationOrderId,
-            ], ['ID_Offre' => $id]);
+            ];
+            if ($this->hasOffreLocalisationColumn()) {
+                $updateData['Localisation'] = $data['location'];
+            }
+
+            $connection->update('offre', $updateData, ['ID_Offre' => $id]);
 
             $this->syncOfferDetails($id, $data['skillCodes'], $data['languageCodes'], $data['backgroundCodes']);
             $connection->commit();
@@ -313,7 +348,9 @@ class OffreRepository extends ServiceEntityRepository
             $connection->delete('detail_offre_competence', ['ID_Offre' => $id]);
             $connection->delete('detail_offre_langue', ['ID_Offre' => $id]);
             $connection->delete('detail_offre_background', ['ID_Offre' => $id]);
-            $connection->delete('condidature', ['ID_Offre' => $id]);
+            if ($this->hasCondidatureOfferColumn()) {
+                $connection->delete('condidature', ['ID_Offre' => $id]);
+            }
 
             $deleted = $connection->delete('offre', ['ID_Offre' => $id]);
             if ($deleted === 0) {
@@ -555,6 +592,48 @@ class OffreRepository extends ServiceEntityRepository
         }
 
         return (int) $value;
+    }
+
+    private function hasOffreLocalisationColumn(): bool
+    {
+        if ($this->hasOffreLocalisationColumn !== null) {
+            return $this->hasOffreLocalisationColumn;
+        }
+
+        $databaseName = (string) $this->getConnection()->fetchOne('SELECT DATABASE()');
+        $count = $this->getConnection()->fetchOne(
+            'SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :table AND COLUMN_NAME = :column',
+            [
+                'schema' => $databaseName,
+                'table' => 'offre',
+                'column' => 'Localisation',
+            ]
+        );
+
+        $this->hasOffreLocalisationColumn = ((int) $count) > 0;
+
+        return $this->hasOffreLocalisationColumn;
+    }
+
+    private function hasCondidatureOfferColumn(): bool
+    {
+        if ($this->hasCondidatureOfferColumn !== null) {
+            return $this->hasCondidatureOfferColumn;
+        }
+
+        $databaseName = (string) $this->getConnection()->fetchOne('SELECT DATABASE()');
+        $count = $this->getConnection()->fetchOne(
+            'SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :table AND COLUMN_NAME = :column',
+            [
+                'schema' => $databaseName,
+                'table' => 'condidature',
+                'column' => 'ID_Offre',
+            ]
+        );
+
+        $this->hasCondidatureOfferColumn = ((int) $count) > 0;
+
+        return $this->hasCondidatureOfferColumn;
     }
 
 //    /**
