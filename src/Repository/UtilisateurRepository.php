@@ -16,28 +16,41 @@ class UtilisateurRepository extends ServiceEntityRepository
         parent::__construct($registry, Utilisateur::class);
     }
 
-//    /**
-//     * @return Utilisateur[] Returns an array of Utilisateur objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('u')
-//            ->andWhere('u.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('u.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function updateUser(Utilisateur $user, array $data): void
+    {
+        $user->setNomUtilisateur($data['name']);
 
-//    public function findOneBySomeField($value): ?Utilisateur
-//    {
-//        return $this->createQueryBuilder('u')
-//            ->andWhere('u.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        $this->getEntityManager()->flush();
+    }
+
+    public function emailExistsForOther(string $email, ?int $excludeUserId): bool
+    {      
+        $qb = $this->createQueryBuilder('u')
+            ->select('COUNT(u.ID_UTILISATEUR)')
+            ->where('u.Email = :email')
+            ->setParameter('email', $email);
+
+        if ($excludeUserId) {
+            $qb->andWhere('u.ID_UTILISATEUR != :id')
+            ->setParameter('id', $excludeUserId);
+        }
+
+        return (int)$qb->getQuery()->getSingleScalarResult() > 0;
+    }
+
+    
+    public function cinExistsForOther(string $cin, ?int $excludeUserId): bool
+    {
+        $$qb = $this->createQueryBuilder('u')
+            ->select('COUNT(u.ID_UTILISATEUR)')
+            ->where('u.CIN = :cin')
+            ->setParameter('cin', $cin);
+
+        if ($excludeUserId) {
+            $qb->andWhere('u.ID_UTILISATEUR != :id')
+            ->setParameter('id', $excludeUserId);
+        }
+
+        return (int)$qb->getQuery()->getSingleScalarResult() > 0;
+    }
 }

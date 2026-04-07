@@ -14,7 +14,7 @@ class OutilsDeTravail
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'ID_Outil', type: 'integer')]
     private ?int $ID_Outil = null;
 
     public function getID_Outil(): ?int
@@ -70,16 +70,7 @@ class OutilsDeTravail
         return $this;
     }
 
-    #[ORM\ManyToMany(targetEntity: Employee::class, inversedBy: 'outilsDeTravails')]
-    #[ORM\JoinTable(
-        name: 'outil_employee',
-        joinColumns: [
-            new ORM\JoinColumn(name: 'ID_OUTIL', referencedColumnName: 'ID_Outil')
-        ],
-        inverseJoinColumns: [
-            new ORM\JoinColumn(name: 'ID_EMPLOYEE', referencedColumnName: 'ID_Employe')
-        ]
-    )]
+    #[ORM\ManyToMany(targetEntity: Employee::class, mappedBy: 'outilsDeTravails')]
     private Collection $employees;
 
     public function __construct()
@@ -111,43 +102,6 @@ class OutilsDeTravail
         $this->getEmployees()->removeElement($employee);
         return $this;
     }
-
-    // #[ORM\ManyToMany(targetEntity: Employee::class, inversedBy: 'outilsDeTravails')]
-    // #[ORM\JoinTable(
-    //     name: 'performance',
-    //     joinColumns: [
-    //         new ORM\JoinColumn(name: 'ID_Outil', referencedColumnName: 'ID_Outil')
-    //     ],
-    //     inverseJoinColumns: [
-    //         new ORM\JoinColumn(name: 'ID_Employe', referencedColumnName: 'ID_Employe')
-    //     ]
-    // )]
-    // private Collection $employees;
-
-    // /**
-    //  * @return Collection<int, Employee>
-    //  */
-    // public function getEmployees(): Collection
-    // {
-    //     if (!$this->employees instanceof Collection) {
-    //         $this->employees = new ArrayCollection();
-    //     }
-    //     return $this->employees;
-    // }
-
-    // public function addEmployee(Employee $employee): self
-    // {
-    //     if (!$this->getEmployees()->contains($employee)) {
-    //         $this->getEmployees()->add($employee);
-    //     }
-    //     return $this;
-    // }
-
-    // public function removeEmployee(Employee $employee): self
-    // {
-    //     $this->getEmployees()->removeElement($employee);
-    //     return $this;
-    // }
 
     public function getIDOutil(): ?int
     {

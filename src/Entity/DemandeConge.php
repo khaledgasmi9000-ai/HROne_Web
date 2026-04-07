@@ -29,7 +29,11 @@ class DemandeConge
     }
 
     #[ORM\ManyToOne(targetEntity: Employee::class, inversedBy: 'demandeConges')]
-    #[ORM\JoinColumn(name: 'ID_Employe', referencedColumnName: 'ID_Employe')]
+    #[ORM\JoinColumn(
+        name: 'ID_Employe',
+        referencedColumnName: 'ID_Employe',
+        nullable: false
+    )]
     private ?Employee $employee = null;
 
     public function getEmployee(): ?Employee
@@ -57,7 +61,7 @@ class DemandeConge
         return $this;
     }
 
-    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'demandeConges')]
+    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'demandeCongesDebut')]
     #[ORM\JoinColumn(name: 'Num_Ordre_Debut_Conge', referencedColumnName: 'Num_Ordre')]
     private ?Ordre $ordreDebut = null;
 
@@ -72,7 +76,7 @@ class DemandeConge
         return $this;
     }
 
-    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'demandeConges')]
+    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'demandeCongesFin')]
     #[ORM\JoinColumn(name: 'Num_Ordre_Fin_Conge', referencedColumnName: 'Num_Ordre')]
     private ?Ordre $ordreFin = null;
 
@@ -99,11 +103,6 @@ class DemandeConge
     {
         $this->Status = $Status;
         return $this;
-    }
-
-    public function getIDDemende(): ?int
-    {
-        return $this->ID_Demende;
     }
 
     public function getNbrJourDemande(): ?int

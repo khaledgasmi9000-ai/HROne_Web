@@ -14,7 +14,7 @@ class Employee
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'ID_Employe', type: 'integer')]
     private ?int $ID_Employe = null;
 
     public function getID_Employe(): ?int
@@ -29,7 +29,7 @@ class Employee
     }
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'employees')]
-    #[ORM\JoinColumn(name: 'ID_UTILISATEUR', referencedColumnName: 'ID_UTILISATEUR')]
+    #[ORM\JoinColumn(name: 'ID_UTILISATEUR',referencedColumnName: 'ID_UTILISATEUR',nullable: false)]
     private ?Utilisateur $utilisateur = null;
 
     public function getUtilisateur(): ?Utilisateur
@@ -99,7 +99,7 @@ class Employee
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: DemandeConge::class, mappedBy: 'employee')]
+    #[ORM\OneToMany(targetEntity: DemandeConge::class, mappedBy: 'employee',orphanRemoval: true)]
     private Collection $demandeConges;
 
     /**
@@ -117,13 +117,18 @@ class Employee
     {
         if (!$this->getDemandeConges()->contains($demandeConge)) {
             $this->getDemandeConges()->add($demandeConge);
+            $demandeConge->setEmployee($this);
         }
         return $this;
     }
 
     public function removeDemandeConge(DemandeConge $demandeConge): self
     {
-        $this->getDemandeConges()->removeElement($demandeConge);
+        if ($this->demandeConges->removeElement($demandeConge)) {
+            if ($demandeConge->getEmployee() === $this) {
+                $demandeConge->setEmployee(null);
+            }
+        }
         return $this;
     }
 
@@ -169,43 +174,6 @@ class Employee
         $this->getOutilsDeTravails()->removeElement($outilsDeTravail);
         return $this;
     }
-
-    // #[ORM\ManyToMany(targetEntity: OutilsDeTravail::class, inversedBy: 'employees')]
-    // #[ORM\JoinTable(
-    //     name: 'performance',
-    //     joinColumns: [
-    //         new ORM\JoinColumn(name: 'ID_Employe', referencedColumnName: 'ID_Employe')
-    //     ],
-    //     inverseJoinColumns: [
-    //         new ORM\JoinColumn(name: 'ID_Outil', referencedColumnName: 'ID_Outil')
-    //     ]
-    // )]
-    // private Collection $outilsDeTravails;
-
-    // /**
-    //  * @return Collection<int, OutilsDeTravail>
-    //  */
-    // public function getOutilsDeTravails(): Collection
-    // {
-    //     if (!$this->outilsDeTravails instanceof Collection) {
-    //         $this->outilsDeTravails = new ArrayCollection();
-    //     }
-    //     return $this->outilsDeTravails;
-    // }
-
-    // public function addOutilsDeTravail(OutilsDeTravail $outilsDeTravail): self
-    // {
-    //     if (!$this->getOutilsDeTravails()->contains($outilsDeTravail)) {
-    //         $this->getOutilsDeTravails()->add($outilsDeTravail);
-    //     }
-    //     return $this;
-    // }
-
-    // public function removeOutilsDeTravail(OutilsDeTravail $outilsDeTravail): self
-    // {
-    //     $this->getOutilsDeTravails()->removeElement($outilsDeTravail);
-    //     return $this;
-    // }
 
     public function getIDEmploye(): ?int
     {

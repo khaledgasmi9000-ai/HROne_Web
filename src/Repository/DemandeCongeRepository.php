@@ -19,56 +19,84 @@ class DemandeCongeRepository extends ServiceEntityRepository
 
     public function findAllConges(): array
     {
-        $conn = $this->getEntityManager()->getConnection();
-
-        $sql = "SELECT ID_Demende,Nom_Utilisateur,Num_Ordre_Debut_Conge,Num_Ordre_Fin_Conge,Nbr_Jour_Demande FROM demande_conge JOIN employee ON demande_conge.ID_Employe = employee.ID_Employe JOIN utilisateur on employee.ID_UTILISATEUR = utilisateur.ID_UTILISATEUR WHERE STATUS = 0;";
-
-        $array = $conn->executeQuery($sql)->fetchAllAssociative();
-        return $array;
+        return $this->createQueryBuilder('dc')
+            ->select([
+                'dc.ID_Demende',
+                'u.Nom_Utilisateur',
+                'od.Num_Ordre AS Num_Ordre_Debut_Conge',
+                'ofi.Num_Ordre AS Num_Ordre_Fin_Conge',
+                'dc.Nbr_Jour_Demande'
+            ])
+            ->join('dc.employee', 'e')
+            ->join('e.utilisateur', 'u')
+            ->leftJoin('dc.ordreDebut', 'od')
+            ->leftJoin('dc.ordreFin', 'ofi')
+            ->where('dc.Status = 0')
+            ->getQuery()
+            ->getArrayResult();
     }
 
-    public function deleteConge(int $id): void
+    public function deleteConge(int $id): bool
     {
-        $conn = $this->getEntityManager()->getConnection();
+        $em = $this->getEntityManager();
 
-        $sql = "
-            DELETE FROM demande_conge
-            WHERE ID_DEMeNDE =  :id
-        ";
+        $conge = $this->find($id);
+        if (!$conge) {
+            return false;
+        }
 
-        $conn->executeStatement($sql, ['id' => $id]);
+        $em->remove($conge);
+        $em->flush();
+
+        return true;
     }
     
-    public function updateCongeStatus(int $id, int $status): void
+    public function updateCongeStatus(int $id, int $status): bool
     {
-        $conn = $this->getEntityManager()->getConnection();
+        $em = $this->getEntityManager();
 
-        $sql = "
-            UPDATE demande_conge
-            SET STATUS = :status
-            WHERE ID_DEMeNDE = :id
-        ";
+        $conge = $this->find($id);
+        if (!$conge) {
+            return false;
+        }
 
-        $conn->executeStatement($sql, [
-            'status' => $status,
-            'id' => $id
-        ]);
+        $conge->setStatus($status);
+
+        $em->flush();
+
+        return true;
     }
 
-    public function createConge(int $idEmployee, string $start, string $end, int $nbrJours): void
+    public function createConge(int $idEmployee, string $start, string $end, int $nbrJours): DemandeConge
     {
-        $conn = $this->getEntityManager()->getConnection();
+        $em = $this->getEntityManager();
 
-        $sql = "
-            INSERT INTO demande_conge (ID_Employe, Num_Ordre_Debut_Conge, Num_Ordre_Fin_Conge, Nbr_Jour_Demande, STATUS)
-            VALUES (:idEmployee, :start, :end, :nbrJours, 0)
-        ";
+        $employee = $em->getReference(\App\Entity\Employee::class, $idEmployee);
 
-        $conn->executeStatement($sql, [
-            'idEmployee' => $idEmployee,
-            'start' => Ordre::dateToNumOrdre(new \DateTime($start)),
-            'end' => Ordre::dateToNumOrdre(new \DateTime($end)),
-            'nbrJours' => $nbrJours
-        ]);
+        // $ordreDebut = $em->getRepository(Ordre::class)
+        //     ->find(Ordre::dateToNumOrdre(new \DateTime($start)));
+
+        // $ordreFin = $em->getRepository(Ordre::class)
+        //     ->find(Ordre::dateToNumOrdre(new \DateTime($end)));
+        echo "Start: $start, End: $end\n";
+        $ordreDebut = new Ordre();
+        $ordreDebut->setNum_Ordre(Ordre::dateToNumOrdre(new \DateTime($start)));
+        $ordreFin = new Ordre();
+        $ordreFin->setNum_Ordre(Ordre::dateToNumOrdre(new \DateTime($end)));
+        
+        echo "Ordre Debut Num: " . $ordreDebut->getNum_Ordre() . "\n";
+        echo "Ordre Fin Num: " . $ordreFin->getNum_Ordre() . "\n";
+        $conge = new DemandeConge();
+        $conge->setEmployee($employee);
+        $conge->setOrdreDebut($ordreDebut);
+        $conge->setOrdreFin($ordreFin);
+        $conge->setNbrJourDemande($nbrJours);
+        $conge->setStatus(0);
+
+        dump($conge);
+        $em->persist($conge);
+        $em->flush();
+
+        return $conge;
     }
 }

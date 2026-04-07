@@ -18,67 +18,65 @@ class OutilsDeTravailRepository extends ServiceEntityRepository
 
     public function findAllTools(): array
     {
-        $conn = $this->getEntityManager()->getConnection();
-
-        $sql = "SELECT * FROM outils_de_travail";
-
-        $array = $conn->executeQuery($sql)->fetchAllAssociative();
-        return $array; 
+        return $this->findAll();
     }
     
-    public function deleteTool(int $id): void
+    public function deleteTool(int $id): bool
     {
-        $conn = $this->getEntityManager()->getConnection();
+        $em = $this->getEntityManager();
 
-        $conn->executeStatement(
-            "DELETE FROM outil_employee WHERE ID_OUTIL = :id",
-            ['id' => $id]
-        );
+        $tool = $this->find($id);
+        if (!$tool) {
+            return false;
+        }
 
-        $conn->executeStatement(
-            "DELETE FROM outils_de_travail WHERE ID_OUTIL = :id",
-            ['id' => $id]
-        );
+        // Optional but safer: detach relations
+        foreach ($tool->getEmployees() as $employee) {
+            $employee->removeOutilsDeTravail($tool);
+        }
 
+        $em->remove($tool);
+        $em->flush();
+
+        return true;
     }
 
-    public function findToolById(int $id): ?array
+    public function findToolById(int $id): ?OutilsDeTravail
     {
-        $conn = $this->getEntityManager()->getConnection();
-
-        $sql = "SELECT * FROM outils_de_travail WHERE ID_OUTIL = :id";
-
-        $result = $conn->executeQuery($sql, [
-            'id' => $id
-        ])->fetchAssociative();
-
-        return $result ?: null;
+        return $this->find($id);
     }
 
-    public function createTool(array $data): void
+    public function createTool(array $data): OutilsDeTravail
     {
-        $conn = $this->getEntityManager()->getConnection();
+        $tool = new OutilsDeTravail();
 
-        $sql = "INSERT INTO outils_de_travail (NOM_OUTIL,Identifiant_Universelle,Hash_App) VALUES (:name,:exe,:hash)";
+        $tool->setNomOutil($data['name']);
+        $tool->setIdentifiantUniverselle($data['exe']);
+        $tool->setHashApp($data['hash']);
 
-        $conn->executeStatement($sql, [
-            'name' => $data['name'],
-            'exe'  => $data['exe'],
-            'hash' => $data['hash'],
-        ]);
+        $em = $this->getEntityManager();
+        $em->persist($tool);
+        $em->flush();
+
+        return $tool;
     }
 
-    public function updateTool(int $id, array $data): void
+    public function updateTool(int $id, array $data): ?OutilsDeTravail
     {
-        $conn = $this->getEntityManager()->getConnection();
+        $em = $this->getEntityManager();
 
-        $sql = "UPDATE outils_de_travail SET NOM_OUTIL = :name,Identifiant_Universelle = :exe,Hash_App = :hash WHERE ID_OUTIL = :id";
+        $tool = $this->find($id);
+        if (!$tool) {
+            return null;
+        }
 
-        $conn->executeStatement($sql, [
-            'id'   => $id,
-            'name' => $data['name'],
-            'exe'  => $data['exe'],
-            'hash' => $data['hash'],
-        ]);
+        $tool->setNomOutil($data['name']);
+        $tool->setIdentifiantUniverselle($data['exe']);
+        $tool->setHashApp($data['hash']);
+
+        $em->flush();
+
+        return $tool;
     }
+
 }

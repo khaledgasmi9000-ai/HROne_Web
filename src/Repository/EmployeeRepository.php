@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Employee;
 use App\Entity\Ordre;
+use App\Entity\Utilisateur;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -19,202 +20,128 @@ class EmployeeRepository extends ServiceEntityRepository
 
     public function findAllEmployees(): array
     {
-        $conn = $this->getEntityManager()->getConnection();
-
-        $sql = "SELECT * FROM employee JOIN utilisateur on employee.ID_UTILISATEUR = utilisateur.ID_UTILISATEUR";
-
-        $stmt = $conn->executeQuery($sql);
-        $array = $stmt->fetchAllAssociative();
-        return $array;
+        return $this->createQueryBuilder('e')
+            ->join('e.utilisateur', 'u')
+            ->addSelect('u')
+            ->getQuery()
+            ->getResult();
     }
 
-    public function findEmployeeById(int $id): ?array
+    public function findEmployeeById(int $id): ?Employee
     {
-        $conn = $this->getEntityManager()->getConnection();
-
-        $sql = "SELECT * FROM employee JOIN utilisateur on employee.ID_UTILISATEUR = utilisateur.ID_UTILISATEUR WHERE ID_EMPLOYE = :id";
-
-        $stmt = $conn->executeQuery($sql, ['id' => $id]);
-        $employee = $stmt->fetchAssociative();
-
-        return $employee ?: null;
+        return $this->createQueryBuilder('e')
+            ->join('e.utilisateur', 'u')
+            ->addSelect('u')
+            ->where('e.ID_Employe = :id')
+            ->setParameter('id', $id)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 
-    public function getNumberofUsedConge(int $employeeId){
-        $conn = $this->getEntityManager()->getConnection();
-
-        $sql = "
-            SELECT SUM(Nbr_Jour_Demande) AS used_conge
-            FROM demande_conge
-            WHERE ID_Employe = :employeeId
-            AND Num_Ordre_Fin_Conge < :numOrdreNow
-            AND STATUS = 1
-        ";
-
-        $result = $conn->executeQuery($sql, [
-            'employeeId' => $employeeId,
-            'numOrdreNow' => Ordre::GetNumOrdreNow()
-        ])->fetchOne();
-        
-        return (int) $result;
-    }
-
-    public function deleteEmployee(int $id): void
+    public function getNumberofUsedConge(int $employeeId): int
     {
-        $conn = $this->getEntityManager()->getConnection();
-
-        $conn->executeStatement(
-            "DELETE FROM outil_employee WHERE ID_EMPLOYEE = :id",
-            ['id' => $id]
-        );
-
-        $conn->executeStatement(
-            "DELETE FROM demande_conge WHERE ID_EMPLOYE = :id",
-            ['id' => $id]
-        );
-
-        $conn->executeStatement(
-            "DELETE FROM employee WHERE ID_EMPLOYE = :id",
-            ['id' => $id]
-        );
-
+        return (int) $this->createQueryBuilder('e')
+            ->select('SUM(dc.Nbr_Jour_Demande)')
+            ->join('e.demandeConges', 'dc')
+            ->where('e.ID_Employe = :id')
+            ->andWhere('dc.Status = 1')
+            ->andWhere('dc.ordreFin < :now')
+            ->setParameter('id', $employeeId)
+            ->setParameter('now', Ordre::GetNumOrdreNow())
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
-    public function createEmployee(array $data): void
+    public function deleteEmployee(int $id): bool
     {
-        $conn = $this->getEntityManager()->getConnection();
+        $em = $this->getEntityManager();
 
-        $sql = "INSERT INTO UTILISATEUR (ID_Entreprise,ID_Profil,Nom_Utilisateur,Mot_Passe, Email,Date_Naissance,Gender,CIN,Num_Tel,Num_Ordre_Sign_In) VALUES (:companyId, :profileId, :name, :password, :email, :birthDate, :gender, :cin, :phone, :numOrdreSignIn)";
-        
-        $conn->executeStatement($sql, [
-            'companyId' => 1,
-            'profileId' => 3,
-            'name' => $data['name'],
-            'password' => "TempPassword",
-            'email' => $data['email'],
-            'birthDate' => $data['birth'],
-            'gender' => $data['gender'],
-            'cin' => $data['cin'],
-            'phone' => $data['phone'],
-            'numOrdreSignIn' => Ordre::GetNumOrdreNow()
-        ]);
-        
-        $sql = "INSERT INTO employee (ID_UTILISATEUR, Solde_Conge, SALAIRE, Nbr_Heure_De_Travail) VALUES (:userId, :solde, :salaire, :heures)";
-        
-        $conn->executeStatement($sql, [
-            'userId' => $conn->lastInsertId(),
-            'solde' => $data['solde'],
-            'salaire' => $data['salaire'],
-            'heures' => $data['heures']
-        ]);
+        $employee = $this->find($id);
+        if (!$employee) {
+            return false;
+        }
+
+        // detach tools
+        foreach ($employee->getOutilsDeTravails() as $tool) {
+            $employee->removeOutilsDeTravail($tool);
+        }
+
+        $em->remove($employee);
+        $em->flush();
+
+        return true;
     }
 
-    public function updateEmployee(int $id, array $data): void
+    public function createEmployee(array $data, Utilisateur $user): Employee
     {
-        $conn = $this->getEntityManager()->getConnection();
+        $employee = new Employee();
 
-        $sql = "
-            UPDATE employee SET  
-            Solde_Conge = :solde, 
-            SALAIRE = :salaire, 
-            Nbr_Heure_De_Travail = :heures
-            WHERE ID_EMPLOYE = :id";
+        $employee->setUtilisateur($user);
+        $employee->setSoldeConge($data['solde']);
+        $employee->setSalaire($data['salaire']);
+        $employee->setNbrHeureDeTravail($data['heures']);
 
-        $conn->executeStatement($sql, [
-            'id' => $id,
-            'solde' => $data['solde'],
-            'salaire' => $data['salaire'],
-            'heures' => $data['heures'],
-        ]);
+        $em = $this->getEntityManager();
+        $em->persist($employee);
+        $em->flush();
 
-        $sql = "SELECT ID_UTILISATEUR FROM employee WHERE ID_EMPLOYE = :id";
-        $userId = $conn->executeQuery($sql, ['id' => $id])->fetchOne();
+        return $employee;
+    }
 
-        $sql = "UPDATE UTILISATEUR SET Nom_Utilisateur = :name, Email = :email WHERE ID_UTILISATEUR = :userId";
-        $conn->executeStatement($sql, [
-            'userId' => $userId,
-            'name' => $data['name'],
-            'email' => $data['email']
-        ]);
+    public function updateEmployee(int $id, array $data): ?Employee
+    {
+        $em = $this->getEntityManager();
+
+        $employee = $this->find($id);
+        if (!$employee) {
+            return null;
+        }
+
+        $employee->setSoldeConge($data['solde']);
+        $employee->setSalaire($data['salaire']);
+        $employee->setNbrHeureDeTravail($data['heures']);
+
+        $em->flush();
+
+        return $employee;
     }
 
     public function getSoldeConge(int $employeeId): int
     {
-        $conn = $this->getEntityManager()->getConnection();
-
-        $sql = "SELECT Solde_Conge FROM employee WHERE ID_EMPLOYE = :employeeId";
-        $result = $conn->executeQuery($sql, ['employeeId' => $employeeId])->fetchOne();
-
-        return (int) $result;
+        return (int) $this->createQueryBuilder('e')
+            ->select('e.Solde_Conge')
+            ->where('e.ID_Employe = :id')
+            ->setParameter('id', $employeeId)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
-    public function emailExistsForOther(string $email, ?int $id): bool
-    {
-        $conn = $this->getEntityManager()->getConnection();
-
-        $sql = "SELECT COUNT(*) FROM utilisateur WHERE Email = :email";
-
-        if ($id) {
-            $sql .= " AND ID_UTILISATEUR != (
-                SELECT ID_UTILISATEUR FROM employee WHERE ID_EMPLOYE = :id
-            )";
-        }
-
-        return (int)$conn->fetchOne($sql, [
-            'email' => $email,
-            'id' => $id
-        ]) > 0;
-    }
-
-    public function cinExistsForOther(string $cin, ?int $id): bool
-    {
-        $conn = $this->getEntityManager()->getConnection();
-
-        $sql = "SELECT COUNT(*) FROM utilisateur WHERE CIN = :cin";
-
-        if ($id) {
-            $sql .= " AND ID_UTILISATEUR != (
-                SELECT ID_UTILISATEUR FROM employee WHERE ID_EMPLOYE = :id
-            )";
-        }
-
-        return (int)$conn->fetchOne($sql, [
-            'cin' => $cin,
-            'id' => $id
-        ]) > 0;
-    }
 
     public function updateEmployeeTools(int $employeeId, array $toolIds): void
     {
-        $conn = $this->getEntityManager()->getConnection();
+        $em = $this->getEntityManager();
 
-        // Supprimer les associations existantes
-        $conn->executeStatement(
-            "DELETE FROM outil_employee WHERE ID_EMPLOYEE = :employeeId",
-            ['employeeId' => $employeeId]
-        );
+        $employee = $this->find($employeeId);
 
-        // Insérer les nouvelles associations
+        $employee->getOutilsDeTravails()->clear();
+
         foreach ($toolIds as $toolId) {
-            $conn->executeStatement(
-                "INSERT INTO outil_employee (ID_EMPLOYEE, ID_OUTIL) VALUES (:employeeId, :toolId)",
-                ['employeeId' => $employeeId, 'toolId' => $toolId]
-            );
+            $tool = $em->getReference(\App\Entity\OutilsDeTravail::class, $toolId);
+            $employee->addOutilsDeTravail($tool);
         }
+
+        $em->flush();
     }
 
     public function getEmployeeTools(int $employeeId): array
     {
-        $conn = $this->getEntityManager()->getConnection();
-
-        $sql = "
-            SELECT o.ID_OUTIL, o.Nom_Outil
-            FROM outil_employee oe
-            JOIN outils_de_travail o ON oe.ID_OUTIL = o.ID_OUTIL
-            WHERE oe.ID_EMPLOYEE = :employeeId
-        ";
-
-        return $conn->fetchAllAssociative($sql, ['employeeId' => $employeeId]);
+        return $this->createQueryBuilder('e')
+            ->select('o.ID_Outil, o.Nom_Outil')
+            ->join('e.outilsDeTravails', 'o')
+            ->where('e.ID_Employe = :id')
+            ->setParameter('id', $employeeId)
+            ->getQuery()
+            ->getArrayResult();
     }
 
 }

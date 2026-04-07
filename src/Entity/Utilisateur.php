@@ -15,7 +15,7 @@ class Utilisateur
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'ID_UTILISATEUR', type: 'integer')]
     private ?int $ID_UTILISATEUR = null;
 
     public function getID_UTILISATEUR(): ?int
@@ -29,8 +29,8 @@ class Utilisateur
         return $this;
     }
 
-    #[ORM\ManyToOne(targetEntity: Entreprise::class, inversedBy: 'utilisateurs')]
-    #[ORM\JoinColumn(name: 'ID_Entreprise', referencedColumnName: 'ID_Entreprise')]
+    // #[ORM\ManyToOne(targetEntity: Entreprise::class, inversedBy: 'utilisateurs')]
+    // #[ORM\JoinColumn(name: 'ID_Entreprise', referencedColumnName: 'ID_Entreprise')]
     private ?Entreprise $entreprise = null;
 
     public function getEntreprise(): ?Entreprise
@@ -44,8 +44,8 @@ class Utilisateur
         return $this;
     }
 
-    #[ORM\ManyToOne(targetEntity: Profil::class, inversedBy: 'utilisateurs')]
-    #[ORM\JoinColumn(name: 'ID_Profil', referencedColumnName: 'ID_Profil')]
+    //#[ORM\ManyToOne(targetEntity: Profil::class, inversedBy: 'utilisateurs')]
+    //#[ORM\JoinColumn(name: 'ID_Profil', referencedColumnName: 'ID_Profil')]
     private ?Profil $profil = null;
 
     public function getProfil(): ?Profil
@@ -73,8 +73,8 @@ class Utilisateur
         return $this;
     }
 
-    #[ORM\Column(type: 'string', nullable: false)]
-    private ?string $Mot_Passe = null;
+    #[ORM\Column(name:"Mot_Passe", type: 'string', nullable: false)]
+    private ?string $Mot_Passe = "TempPassword";
 
     public function getMot_Passe(): ?string
     {
@@ -143,8 +143,8 @@ class Utilisateur
         return $this;
     }
 
-    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'utilisateurs')]
-    #[ORM\JoinColumn(name: 'Num_Ordre_Sign_In', referencedColumnName: 'Num_Ordre')]
+    // #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'utilisateurs')]
+    // #[ORM\JoinColumn(name: 'Num_Ordre_Sign_In', referencedColumnName: 'Num_Ordre')]
     private ?Ordre $ordre = null;
 
     public function getOrdre(): ?Ordre
@@ -186,8 +186,8 @@ class Utilisateur
         return $this;
     }
 
-    #[ORM\Column(type: 'integer', nullable: true)]
-    private ?int $firstLogin = null;
+    #[ORM\Column(name:"firstLogin", type: 'integer', nullable: true)]
+    private ?int $firstLogin = 0;
 
     public function getFirstLogin(): ?int
     {
@@ -200,89 +200,6 @@ class Utilisateur
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Condidat::class, mappedBy: 'utilisateur')]
-    private Collection $condidats;
-
-    /**
-     * @return Collection<int, Condidat>
-     */
-    public function getCondidats(): Collection
-    {
-        if (!$this->condidats instanceof Collection) {
-            $this->condidats = new ArrayCollection();
-        }
-        return $this->condidats;
-    }
-
-    public function addCondidat(Condidat $condidat): self
-    {
-        if (!$this->getCondidats()->contains($condidat)) {
-            $this->getCondidats()->add($condidat);
-        }
-        return $this;
-    }
-
-    public function removeCondidat(Condidat $condidat): self
-    {
-        $this->getCondidats()->removeElement($condidat);
-        return $this;
-    }
-
-    #[ORM\OneToMany(targetEntity: Email::class, mappedBy: 'utilisateur')]
-    private Collection $emailsEmployee;
-
-    /**
-     * @return Collection<int, Email>
-     */
-    public function getEmailsEmployee(): Collection
-    {
-        if (!$this->emailsEmployee instanceof Collection) {
-            $this->emailsEmployee = new ArrayCollection();
-        }
-        return $this->emailsEmployee;
-    }
-
-    public function addEmailEmployee(Email $email): self
-    {
-        if (!$this->getEmailsEmployee()->contains($email)) {
-            $this->getEmailsEmployee()->add($email);
-        }
-        return $this;
-    }
-
-    public function removeEmailEmployee(Email $email): self
-    {
-        $this->getEmailsEmployee()->removeElement($email);
-        return $this;
-    }
-
-    #[ORM\OneToMany(targetEntity: Email::class, mappedBy: 'utilisateur')]
-    private Collection $emailsCandidat;
-
-    /**
-     * @return Collection<int, Email>
-     */
-    public function getEmailsCandidat(): Collection
-    {
-        if (!$this->emailsCandidat instanceof Collection) {
-            $this->emailsCandidat = new ArrayCollection();
-        }
-        return $this->emailsCandidat;
-    }
-
-    public function addEmailCandidat(Email $email): self
-    {
-        if (!$this->getEmailsCandidat()->contains($email)) {
-            $this->getEmailsCandidat()->add($email);
-        }
-        return $this;
-    }
-
-    public function removeEmailCandidat(Email $email): self
-    {
-        $this->getEmailsCandidat()->removeElement($email);
-        return $this;
-    }
 
     #[ORM\OneToMany(targetEntity: Employee::class, mappedBy: 'utilisateur')]
     private Collection $employees;
@@ -312,138 +229,18 @@ class Utilisateur
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Entretien::class, mappedBy: 'utilisateur')]
-    private Collection $entretiens;
-
-    /**
-     * @return Collection<int, Entretien>
-     */
-    public function getEntretiens(): Collection
-    {
-        if (!$this->entretiens instanceof Collection) {
-            $this->entretiens = new ArrayCollection();
-        }
-        return $this->entretiens;
-    }
-
-    public function addEntretien(Entretien $entretien): self
-    {
-        if (!$this->getEntretiens()->contains($entretien)) {
-            $this->getEntretiens()->add($entretien);
-        }
-        return $this;
-    }
-
-    public function removeEntretien(Entretien $entretien): self
-    {
-        $this->getEntretiens()->removeElement($entretien);
-        return $this;
-    }
-
-    #[ORM\OneToMany(targetEntity: Message::class, mappedBy: 'utilisateur')]
-    private Collection $messages;
-
-    /**
-     * @return Collection<int, Message>
-     */
-    public function getMessages(): Collection
-    {
-        if (!$this->messages instanceof Collection) {
-            $this->messages = new ArrayCollection();
-        }
-        return $this->messages;
-    }
-
-    public function addMessage(Message $message): self
-    {
-        if (!$this->getMessages()->contains($message)) {
-            $this->getMessages()->add($message);
-        }
-        return $this;
-    }
-
-    public function removeMessage(Message $message): self
-    {
-        $this->getMessages()->removeElement($message);
-        return $this;
-    }
-
-    #[ORM\OneToMany(targetEntity: ParticipationEvenement::class, mappedBy: 'utilisateur')]
-    private Collection $participationEvenements;
-
-    /**
-     * @return Collection<int, ParticipationEvenement>
-     */
-    public function getParticipationEvenements(): Collection
-    {
-        if (!$this->participationEvenements instanceof Collection) {
-            $this->participationEvenements = new ArrayCollection();
-        }
-        return $this->participationEvenements;
-    }
-
-    public function addParticipationEvenement(ParticipationEvenement $participationEvenement): self
-    {
-        if (!$this->getParticipationEvenements()->contains($participationEvenement)) {
-            $this->getParticipationEvenements()->add($participationEvenement);
-        }
-        return $this;
-    }
-
-    public function removeParticipationEvenement(ParticipationEvenement $participationEvenement): self
-    {
-        $this->getParticipationEvenements()->removeElement($participationEvenement);
-        return $this;
-    }
-
-    #[ORM\ManyToMany(targetEntity: Ordre::class, inversedBy: 'utilisateurs')]
-    #[ORM\JoinTable(
-        name: 'action_utilisateur',
-        joinColumns: [
-            new ORM\JoinColumn(name: 'ID_UTILISATEUR', referencedColumnName: 'ID_UTILISATEUR')
-        ],
-        inverseJoinColumns: [
-            new ORM\JoinColumn(name: 'Num_Ordre', referencedColumnName: 'Num_Ordre')
-        ]
-    )]
-    private Collection $ordres;
-
     public function __construct()
     {
-        $this->condidats = new ArrayCollection();
-        $this->emailsEmployee = new ArrayCollection();
-        $this->emailsCandidat = new ArrayCollection();
+        //$this->condidats = new ArrayCollection();
+        //$this->emailsEmployee = new ArrayCollection();
+        //$this->emailsCandidat = new ArrayCollection();
         $this->employees = new ArrayCollection();
-        $this->entretiens = new ArrayCollection();
-        $this->messages = new ArrayCollection();
-        $this->participationEvenements = new ArrayCollection();
-        $this->ordres = new ArrayCollection();
+        //$this->entretiens = new ArrayCollection();
+        //$this->messages = new ArrayCollection();
+        //$this->participationEvenements = new ArrayCollection();
+        //$this->ordres = new ArrayCollection();
     }
 
-    /**
-     * @return Collection<int, Ordre>
-     */
-    public function getOrdres(): Collection
-    {
-        if (!$this->ordres instanceof Collection) {
-            $this->ordres = new ArrayCollection();
-        }
-        return $this->ordres;
-    }
-
-    public function addOrdre(Ordre $ordre): self
-    {
-        if (!$this->getOrdres()->contains($ordre)) {
-            $this->getOrdres()->add($ordre);
-        }
-        return $this;
-    }
-
-    public function removeOrdre(Ordre $ordre): self
-    {
-        $this->getOrdres()->removeElement($ordre);
-        return $this;
-    }
 
     public function getIDUTILISATEUR(): ?int
     {
@@ -494,50 +291,6 @@ class Utilisateur
     public function setDateNaissance(?\DateTime $Date_Naissance): static
     {
         $this->Date_Naissance = $Date_Naissance;
-
-        return $this;
-    }
-
-    public function addEmailsEmployee(Email $emailsEmployee): static
-    {
-        if (!$this->emailsEmployee->contains($emailsEmployee)) {
-            $this->emailsEmployee->add($emailsEmployee);
-            $emailsEmployee->setUtilisateurReceiver($this);
-        }
-
-        return $this;
-    }
-
-    public function removeEmailsEmployee(Email $emailsEmployee): static
-    {
-        if ($this->emailsEmployee->removeElement($emailsEmployee)) {
-            // set the owning side to null (unless already changed)
-            if ($emailsEmployee->getUtilisateurReceiver() === $this) {
-                $emailsEmployee->setUtilisateurReceiver(null);
-            }
-        }
-
-        return $this;
-    }
-
-    public function addEmailsCandidat(Email $emailsCandidat): static
-    {
-        if (!$this->emailsCandidat->contains($emailsCandidat)) {
-            $this->emailsCandidat->add($emailsCandidat);
-            $emailsCandidat->setUtilisateurSender($this);
-        }
-
-        return $this;
-    }
-
-    public function removeEmailsCandidat(Email $emailsCandidat): static
-    {
-        if ($this->emailsCandidat->removeElement($emailsCandidat)) {
-            // set the owning side to null (unless already changed)
-            if ($emailsCandidat->getUtilisateurSender() === $this) {
-                $emailsCandidat->setUtilisateurSender(null);
-            }
-        }
 
         return $this;
     }

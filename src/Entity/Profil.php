@@ -42,7 +42,7 @@ class Profil
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Utilisateur::class, mappedBy: 'profil')]
+    //#[ORM\OneToMany(targetEntity: Utilisateur::class, mappedBy: 'profil')]
     private Collection $utilisateurs;
 
     public function __construct()
