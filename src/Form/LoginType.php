@@ -54,6 +54,7 @@ class LoginType extends AbstractType
     {
         $resolver->setDefaults([
             'csrf_protection' => false,
+            'allow_extra_fields' => true,
         ]);
     }
 
