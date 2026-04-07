@@ -1,0 +1,430 @@
+.page-mes-candidatures .page {
+  display: grid;
+  gap: 16px;
+}
+
+.page-mes-candidatures .hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  border: 1px solid #d6e2f1;
+  border-radius: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f7fbff, #ecf4ff);
+}
+
+.page-mes-candidatures .eyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0f766e;
+}
+
+.page-mes-candidatures h1 {
+  margin: 6px 0;
+  color: #0f172a;
+}
+
+.page-mes-candidatures .subtitle {
+  margin: 0;
+  color: #4c5f79;
+}
+
+.page-mes-candidatures .hero__meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.page-mes-candidatures .pill {
+  border-radius: 999px;
+  border: 1px solid #c7d6ea;
+  background: #ffffff;
+  color: #1d3552;
+  padding: 7px 11px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.page-mes-candidatures .pill--accent {
+  border-color: #93c5fd;
+  background: #e0f2fe;
+  color: #0c4a6e;
+}
+
+.page-mes-candidatures .toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.page-mes-candidatures .search {
+  display: flex;
+  gap: 8px;
+  width: min(640px, 100%);
+}
+
+.page-mes-candidatures .search input {
+  flex: 1;
+  border: 1px solid #cad9eb;
+  border-radius: 11px;
+  padding: 10px 12px;
+}
+
+.page-mes-candidatures .grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.page-mes-candidatures .card {
+  border: 1px solid #d8e3f0;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.page-mes-candidatures .card__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.page-mes-candidatures .card__head h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.05rem;
+}
+
+.page-mes-candidatures .muted {
+  margin: 4px 0 0;
+  color: #5a6d85;
+  font-size: 0.88rem;
+}
+
+.page-mes-candidatures .tags {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.page-mes-candidatures .tags span {
+  border-radius: 999px;
+  background: #eef4fb;
+  color: #24405f;
+  padding: 4px 9px;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.page-mes-candidatures .interview-note {
+  margin: 10px 0 0;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1e40af;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.page-mes-candidatures .status {
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.page-mes-candidatures .status--review {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.page-mes-candidatures .status--sent {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.page-mes-candidatures .status--meet {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.page-mes-candidatures .status--closed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.page-mes-candidatures .card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.page-mes-candidatures .btn {
+  border: 0;
+  border-radius: 10px;
+  padding: 9px 13px;
+  background: linear-gradient(135deg, #0f766e, #06b6d4);
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.page-mes-candidatures .btn--ghost {
+  background: #eaf2fb;
+  color: #1f3551;
+}
+
+.page-mes-candidatures .btn--danger {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.page-mes-candidatures .edit-panel {
+  border: 1px solid #cfe0f4;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 10px 30px rgba(21, 63, 111, 0.08);
+}
+
+.page-mes-candidatures .edit-panel__head {
+  align-items: flex-start;
+  border-bottom: 1px solid #dbe7f5;
+  padding-bottom: 10px;
+}
+
+.page-mes-candidatures .edit-panel__head h2 {
+  margin: 0;
+  color: #0b2746;
+  font-size: 1.15rem;
+}
+
+.page-mes-candidatures .edit-panel .card__body {
+  padding-top: 2px;
+}
+
+.page-mes-candidatures .edit-form {
+  display: grid;
+  gap: 12px;
+}
+
+.page-mes-candidatures .edit-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.page-mes-candidatures .field {
+  display: grid;
+  gap: 6px;
+}
+
+.page-mes-candidatures .field--full {
+  grid-column: 1 / -1;
+}
+
+.page-mes-candidatures .field label {
+  margin: 0;
+  color: #14324f;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.page-mes-candidatures .field input,
+.page-mes-candidatures .field select,
+.page-mes-candidatures .field textarea {
+  width: 100%;
+  border: 1px solid #c7d7ea;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #10263f;
+  font-size: 0.92rem;
+  padding: 10px 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.page-mes-candidatures .field textarea {
+  resize: vertical;
+  min-height: 102px;
+}
+
+.page-mes-candidatures .field input:focus,
+.page-mes-candidatures .field select:focus,
+.page-mes-candidatures .field textarea:focus {
+  outline: 0;
+  border-color: #5a9df0;
+  box-shadow: 0 0 0 3px rgba(90, 157, 240, 0.2);
+}
+
+.page-mes-candidatures .file-hint {
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #eef4fb;
+  color: #2a4462;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.page-mes-candidatures #editFeedback {
+  margin-top: 2px;
+  display: block;
+  border-radius: 8px;
+  background: #f5f9ff;
+  border: 1px solid #d9e7f8;
+  padding: 8px 10px;
+}
+
+.page-mes-candidatures .edit-form__actions {
+  justify-content: flex-end;
+  border-top: 1px solid #dbe7f5;
+  padding-top: 10px;
+}
+
+.page-mes-candidatures .edit-form__actions .btn {
+  min-width: 120px;
+}
+
+@media (max-width: 980px) {
+  .page-mes-candidatures .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-mes-candidatures .edit-form__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .page-mes-candidatures .hero,
+  .page-mes-candidatures .toolbar,
+  .page-mes-candidatures .search,
+  .page-mes-candidatures .card__head,
+  .page-mes-candidatures .card__actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .page-mes-candidatures .search {
+    width: 100%;
+  }
+}
+
+/* Specific edit-box polish to override generic form styles */
+.page-mes-candidatures #editCandidaturePanel {
+  margin-top: 2px;
+  border-radius: 16px;
+  border: 1px solid #c8dbf1;
+  background: linear-gradient(165deg, #ffffff 0%, #f5faff 100%);
+  box-shadow: 0 14px 36px rgba(16, 58, 102, 0.1);
+  padding: 16px;
+}
+
+.page-mes-candidatures #editCandidaturePanel .edit-panel__head {
+  padding-bottom: 12px;
+  margin-bottom: 2px;
+}
+
+.page-mes-candidatures #editCandidaturePanel .edit-panel__head .eyebrow {
+  color: #0d9488;
+  margin: 0 0 4px;
+}
+
+.page-mes-candidatures #editCandidaturePanel .edit-panel__head .muted {
+  margin-top: 8px;
+  max-width: 740px;
+}
+
+.page-mes-candidatures #editCandidaturePanel .edit-form__grid {
+  gap: 14px;
+}
+
+.page-mes-candidatures #editCandidaturePanel .field {
+  display: grid !important;
+  align-content: start;
+  gap: 7px;
+}
+
+.page-mes-candidatures #editCandidaturePanel .field label {
+  font-size: 0.84rem;
+  color: #123456;
+  letter-spacing: 0.01em;
+}
+
+.page-mes-candidatures #editCandidaturePanel .field input,
+.page-mes-candidatures #editCandidaturePanel .field select,
+.page-mes-candidatures #editCandidaturePanel .field textarea {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  min-height: 42px;
+  border-radius: 11px;
+  border: 1px solid #bfd4eb;
+  background: #ffffff;
+  padding: 10px 12px;
+  font-size: 0.93rem;
+  color: #10263f;
+}
+
+.page-mes-candidatures #editCandidaturePanel .field textarea {
+  min-height: 118px;
+  line-height: 1.45;
+}
+
+.page-mes-candidatures #editCandidaturePanel .field input[type="file"] {
+  padding: 8px;
+  background: #f8fbff;
+}
+
+.page-mes-candidatures #editCandidaturePanel .field input[type="file"]::file-selector-button {
+  border: 1px solid #c2d7ee;
+  border-radius: 8px;
+  background: #eaf3ff;
+  color: #1f3f63;
+  padding: 7px 11px;
+  margin-right: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.page-mes-candidatures #editCandidaturePanel .file-hint {
+  margin-top: 2px;
+  padding: 7px 9px;
+  border: 1px dashed #c6dbf2;
+  background: #f1f7ff;
+}
+
+.page-mes-candidatures #editCandidaturePanel .edit-form__actions {
+  margin-top: 6px;
+  padding-top: 12px;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.page-mes-candidatures #editCandidaturePanel .edit-form__actions .btn {
+  min-width: 128px;
+  border-radius: 11px;
+  padding: 10px 14px;
+}
+
+@media (max-width: 760px) {
+  .page-mes-candidatures #editCandidaturePanel {
+    padding: 12px;
+  }
+
+  .page-mes-candidatures #editCandidaturePanel .edit-form__actions {
+    width: 100%;
+  }
+
+  .page-mes-candidatures #editCandidaturePanel .edit-form__actions .btn {
+    width: 100%;
+  }
+}

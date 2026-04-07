@@ -1,0 +1,604 @@
+{% extends 'navbarRH/base.html.twig' %}
+
+{% set page_title = "HR One - Gestion des offres d'emploi" %}
+{% set page_class = 'page-gestion-offres' %}
+{% set page_css = 'gestion-offres.css' %}
+
+{% block content_title %}{% endblock %}
+
+{% block content_body %}
+  <main class="main">
+    <header class="topbar">
+      <div class="user">
+        <div class="user-info">
+          <div class="user-name">Agent RH</div>
+          <div class="user-role">Recruter</div>
+        </div>
+        <div class="avatar">AR</div>
+      </div>
+    </header>
+
+    <section class="page-title">
+      <h1>Gestion d'offre d'emploi</h1>
+      <p>Creez, modifiez et suivez vos offres d'emploi en temps reel.</p>
+    </section>
+
+    <section class="stats" id="statsSection">
+      <div class="stat">
+        <div class="stat-value" id="kpiActiveOffers">0</div>
+        <div class="stat-label">Offres actives</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="kpiApplicationsCount">0</div>
+        <div class="stat-label">Candidatures recues</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="kpiDraftOffers">0</div>
+        <div class="stat-label">Brouillon</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="kpiMachineClock">--:--:--</div>
+        <div class="stat-label">Date et heure machine (temps reel)</div>
+      </div>
+    </section>
+
+    <section class="grid" id="offersSection">
+      <div class="card">
+        <div class="card-header">
+          <h2>Offres en cours</h2>
+          <div class="card-actions">
+            <input class="offer-search" id="offerSearch" type="text" placeholder="Rechercher une offre..." />
+          </div>
+        </div>
+        <div class="offer-list" id="offerList"></div>
+      </div>
+
+      <div class="card">
+        <h2>Creer une offre</h2>
+        <p class="muted">Completez les informations principales de l'offre.</p>
+
+        <form class="offer-form" id="offerForm">
+          <div class="field">
+            <label for="offerTitle">Titre du poste</label>
+            <input id="offerTitle" type="text" placeholder="Ex: Responsable Marketing" />
+          </div>
+          <div class="field">
+            <label for="offerLocation">Lieu</label>
+            <input id="offerLocation" type="text" placeholder="Ex: Casablanca" />
+          </div>
+          <div class="field">
+            <label for="offerContract">Type de contrat</label>
+            <select id="offerContract">
+              {% for contrat in typeContrats %}
+                <option value="{{ contrat.codeTypeContrat }}">{{ contrat.descriptionContrat }}</option>
+              {% else %}
+                <option value="">Aucun type de contrat disponible</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="offerWorkType">Type de travail</label>
+            <select id="offerWorkType">
+              <option>En ligne</option>
+              <option>Sur site</option>
+              <option>Hybride</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="offerExperience">Experience</label>
+            <select id="offerExperience">
+              <option>0-2 ans</option>
+              <option>3-5 ans</option>
+              <option>6-10 ans</option>
+              <option>10+ ans</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Intervalle de salaire (DTN)</label>
+            <div class="range-field">
+              <input id="offerSalaryMin" type="number" min="0" placeholder="Min" />
+              <span class="range-sep">-</span>
+              <input id="offerSalaryMax" type="number" min="0" placeholder="Max" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Date d'expiration de l'offre</label>
+            <input id="offerExpirationDate" type="date" />
+          </div>
+          <div class="field">
+            <label>Niveau d'etude requis</label>
+            <select id="offerEducationLevel">
+              {% for niveau in typeNiveauxEtude %}
+                <option value="{{ niveau.codeTypeNiveauEtude }}">{{ niveau.descriptionTypeEtude }}</option>
+              {% else %}
+                <option value="">Aucun niveau d'etude disponible</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field full">
+            <label>Description</label>
+            <textarea id="offerDescription" rows="4" placeholder="Decrivez le poste et les missions..."></textarea>
+          </div>
+
+          <div class="field full">
+            <label>Competences cles</label>
+            <div class="choice-panel">
+              <div class="choice-toolbar">
+                <input class="choice-search" type="text" id="skillsSearch" placeholder="Rechercher une competence..." />
+              </div>
+              <div class="choice-list" id="skillsSelect" aria-describedby="skillsHelp">
+                {% for competence in typeCompetences %}
+                  <label class="choice-item"><input type="checkbox" name="skills" value="{{ competence.codeTypeCompetence }}" />{{ competence.descriptionCompetence }}</label>
+                {% else %}
+                  <div class="choice-item">Aucune competence disponible</div>
+                {% endfor %}
+              </div>
+            </div>
+            <small class="help" id="skillsHelp">Minimum 2 competences.</small>
+          </div>
+
+          <div class="field full">
+            <label>Langues necessaires</label>
+            <div class="choice-panel">
+              <div class="choice-toolbar">
+                <input class="choice-search" type="text" id="languagesSearch" placeholder="Rechercher une langue..." />
+              </div>
+              <div class="choice-list" id="languagesSelect" aria-describedby="languagesHelp">
+                {% for langue in typeLangues %}
+                  <label class="choice-item"><input type="checkbox" name="languages" value="{{ langue.codeTypeLangue }}" />{{ langue.descriptionLangue }}</label>
+                {% else %}
+                  <div class="choice-item">Aucune langue disponible</div>
+                {% endfor %}
+              </div>
+            </div>
+            <small class="help" id="languagesHelp">Minimum 1 langue.</small>
+          </div>
+
+          <div class="field full">
+            <label>Background d'etude necessaire</label>
+            <div class="choice-panel">
+              <div class="choice-toolbar">
+                <input class="choice-search" type="text" id="backgroundSearch" placeholder="Rechercher un background..." />
+              </div>
+              <div class="choice-list" id="backgroundSelect" aria-describedby="backgroundHelp">
+                {% for background in typeBackgroundEtudes %}
+                  <label class="choice-item"><input type="checkbox" name="background" value="{{ background.codeTypeBackgroundEtude }}" />{{ background.descriptionTypeBackgroundEtude }}</label>
+                {% else %}
+                  <div class="choice-item">Aucun background disponible</div>
+                {% endfor %}
+              </div>
+            </div>
+            <small class="help" id="backgroundHelp">Minimum 1 background.</small>
+          </div>
+
+          <div class="field full">
+            <small class="help" id="formFeedback" role="alert" aria-live="polite"></small>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-ghost" type="button">Enregistrer en brouillon</button>
+            <button class="btn btn-primary" id="publishBtn" type="button">Publier l'offre</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const publishBtn = document.getElementById("publishBtn");
+    const skillsSelect = document.getElementById("skillsSelect");
+    const languagesSelect = document.getElementById("languagesSelect");
+    const backgroundSelect = document.getElementById("backgroundSelect");
+    const skillsSearch = document.getElementById("skillsSearch");
+    const languagesSearch = document.getElementById("languagesSearch");
+    const backgroundSearch = document.getElementById("backgroundSearch");
+    const offerSearch = document.getElementById("offerSearch");
+
+    const offerForm = document.getElementById("offerForm");
+    const offerTitleInput = document.getElementById("offerTitle");
+    const offerLocationInput = document.getElementById("offerLocation");
+    const offerContractSelect = document.getElementById("offerContract");
+    const offerWorkTypeSelect = document.getElementById("offerWorkType");
+    const offerExperienceSelect = document.getElementById("offerExperience");
+    const offerSalaryMinInput = document.getElementById("offerSalaryMin");
+    const offerSalaryMaxInput = document.getElementById("offerSalaryMax");
+    const offerExpirationDateInput = document.getElementById("offerExpirationDate");
+    const offerDescriptionInput = document.getElementById("offerDescription");
+    const offerEducationLevelSelect = document.getElementById("offerEducationLevel");
+    const offerList = document.getElementById("offerList");
+    const formFeedback = document.getElementById("formFeedback");
+    const kpiActiveOffers = document.getElementById("kpiActiveOffers");
+    const kpiApplicationsCount = document.getElementById("kpiApplicationsCount");
+    const kpiDraftOffers = document.getElementById("kpiDraftOffers");
+    const kpiMachineClock = document.getElementById("kpiMachineClock");
+
+    const offersApiCreateUrl = "{{ path('rh_offres_api_create') }}";
+    const offersApiGetUrlPattern = "{{ path('rh_offres_api_get', {id: '__ID__'}) }}";
+    const offersApiUpdateUrlPattern = "{{ path('rh_offres_api_update', {id: '__ID__'}) }}";
+    const offersApiDeleteUrlPattern = "{{ path('rh_offres_api_delete', {id: '__ID__'}) }}";
+
+    let offers = {{ offres|default([])|json_encode(constant('JSON_UNESCAPED_UNICODE'))|raw }};
+    let editingOfferId = null;
+
+    const attachFilter = (input, list) => {
+      if (!input || !list) {
+        return;
+      }
+
+      input.addEventListener("input", () => {
+        const query = input.value.trim().toLowerCase();
+        list.querySelectorAll(".choice-item").forEach((item) => {
+          const text = item.textContent.trim().toLowerCase();
+          item.style.display = text.includes(query) ? "flex" : "none";
+        });
+      });
+    };
+
+    const getApiUrlById = (pattern, id) => pattern.replace("__ID__", String(id));
+
+    const getCheckedValues = (container) =>
+      Array.from(container?.querySelectorAll("input[type='checkbox']:checked") || []).map((input) => Number(input.value));
+
+    const setCheckedValues = (container, values) => {
+      const selected = new Set((values || []).map((entry) => String(entry)));
+      (container?.querySelectorAll("input[type='checkbox']") || []).forEach((input) => {
+        input.checked = selected.has(input.value);
+      });
+    };
+
+    const showFeedback = (messages, type = "error") => {
+      if (!formFeedback) {
+        return;
+      }
+
+      if (!messages || messages.length === 0) {
+        formFeedback.textContent = "";
+        formFeedback.style.color = "";
+        return;
+      }
+
+      formFeedback.style.color = type === "success" ? "#0f7a45" : "#b42318";
+      formFeedback.innerHTML = messages.map((message) => `- ${message}`).join("<br>");
+    };
+
+    const parseApiResponse = async (response) => {
+      const rawText = await response.text();
+      let data = null;
+
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch (error) {
+        data = null;
+      }
+
+      if (!response.ok) {
+        const validationErrors = data?.errors && typeof data.errors === "object" ? Object.values(data.errors) : [];
+        const message = data?.message || rawText.split("\n")[0] || "Erreur serveur.";
+        const details = data?.details ? [data.details] : [];
+        throw new Error([message, ...validationErrors, ...details].filter(Boolean).join("\n"));
+      }
+
+      if (!data || typeof data !== "object") {
+        throw new Error("Reponse serveur invalide.");
+      }
+
+      return data;
+    };
+
+    const mapYearsToExperienceOption = (years) => {
+      if (years == null || Number.isNaN(Number(years))) {
+        return "0-2 ans";
+      }
+
+      const value = Number(years);
+      if (value <= 2) {
+        return "0-2 ans";
+      }
+      if (value <= 5) {
+        return "3-5 ans";
+      }
+      if (value <= 10) {
+        return "6-10 ans";
+      }
+
+      return "10+ ans";
+    };
+
+    const collectFormData = () => {
+      const contractRaw = offerContractSelect?.value || "";
+      const educationRaw = offerEducationLevelSelect?.value || "";
+
+      return {
+        title: offerTitleInput?.value.trim() || "",
+        location: offerLocationInput?.value.trim() || "",
+        contractCode: contractRaw === "" ? null : Number(contractRaw),
+        workType: offerWorkTypeSelect?.value || "",
+        experience: offerExperienceSelect?.value || "",
+        minSalary: offerSalaryMinInput?.value === "" ? null : Number(offerSalaryMinInput.value),
+        maxSalary: offerSalaryMaxInput?.value === "" ? null : Number(offerSalaryMaxInput.value),
+        expirationDate: offerExpirationDateInput?.value || "",
+        educationCode: educationRaw === "" ? null : Number(educationRaw),
+        description: offerDescriptionInput?.value.trim() || "",
+        skills: getCheckedValues(skillsSelect),
+        languages: getCheckedValues(languagesSelect),
+        background: getCheckedValues(backgroundSelect),
+      };
+    };
+
+    const validateFormData = (data) => {
+      const errors = [];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const expiration = data.expirationDate ? new Date(`${data.expirationDate}T00:00:00`) : null;
+
+      if (!data.title) {
+        errors.push("Le titre du poste est obligatoire.");
+      }
+      if (!data.location) {
+        errors.push("Le lieu est obligatoire.");
+      }
+      if (data.contractCode == null) {
+        errors.push("Le type de contrat est obligatoire.");
+      }
+      if (!data.workType) {
+        errors.push("Le type de travail est obligatoire.");
+      }
+      if (!data.experience) {
+        errors.push("Le niveau d'experience est obligatoire.");
+      }
+      if (data.minSalary == null || Number.isNaN(data.minSalary) || data.minSalary < 0) {
+        errors.push("Le salaire minimum est obligatoire et doit etre positif.");
+      }
+      if (data.maxSalary == null || Number.isNaN(data.maxSalary) || data.maxSalary < 0) {
+        errors.push("Le salaire maximum est obligatoire et doit etre positif.");
+      }
+      if (
+        data.minSalary != null &&
+        data.maxSalary != null &&
+        !Number.isNaN(data.minSalary) &&
+        !Number.isNaN(data.maxSalary) &&
+        data.minSalary >= data.maxSalary
+      ) {
+        errors.push("Le salaire minimum doit etre strictement inferieur au salaire maximum.");
+      }
+      if (!data.expirationDate || !(expiration instanceof Date) || Number.isNaN(expiration.getTime())) {
+        errors.push("La date d'expiration est obligatoire.");
+      } else if (expiration <= today) {
+        errors.push("La date d'expiration doit etre posterieure a la date du jour.");
+      }
+      if (data.educationCode == null) {
+        errors.push("Le niveau d'etude est obligatoire.");
+      }
+      if (!data.description) {
+        errors.push("La description est obligatoire.");
+      }
+      if (data.skills.length < 2) {
+        errors.push("Selectionnez au moins 2 competences.");
+      }
+      if (data.languages.length < 1) {
+        errors.push("Selectionnez au moins 1 langue.");
+      }
+      if (data.background.length < 1) {
+        errors.push("Selectionnez au moins 1 background d'etude.");
+      }
+
+      return errors;
+    };
+
+    const populateFormFromOffer = (offer) => {
+      editingOfferId = offer.id;
+      showFeedback([]);
+
+      if (offerTitleInput) {
+        offerTitleInput.value = offer.title || "";
+      }
+      if (offerLocationInput) {
+        offerLocationInput.value = offer.location || "";
+      }
+      if (offerContractSelect) {
+        offerContractSelect.value = offer.contractCode ? String(offer.contractCode) : "";
+      }
+      if (offerWorkTypeSelect) {
+        offerWorkTypeSelect.value = offer.workType || "En ligne";
+      }
+      if (offerExperienceSelect) {
+        offerExperienceSelect.value = mapYearsToExperienceOption(offer.experienceYears);
+      }
+      if (offerSalaryMinInput) {
+        offerSalaryMinInput.value = offer.minSalary ?? "";
+      }
+      if (offerSalaryMaxInput) {
+        offerSalaryMaxInput.value = offer.maxSalary ?? "";
+      }
+      if (offerExpirationDateInput) {
+        offerExpirationDateInput.value = offer.expirationDate || "";
+      }
+      if (offerDescriptionInput) {
+        offerDescriptionInput.value = offer.description || "";
+      }
+      if (offerEducationLevelSelect) {
+        offerEducationLevelSelect.value = offer.educationCode ? String(offer.educationCode) : "";
+      }
+
+      setCheckedValues(skillsSelect, offer.skills || []);
+      setCheckedValues(languagesSelect, offer.languages || []);
+      setCheckedValues(backgroundSelect, offer.background || []);
+
+      offerTitleInput?.focus();
+    };
+
+    const renderOffers = () => {
+      if (!offerList) {
+        return;
+      }
+
+      offerList.innerHTML = "";
+
+      offers.forEach((offer) => {
+        const item = document.createElement("div");
+        item.className = "offer-item";
+
+        const info = document.createElement("div");
+        const title = document.createElement("div");
+        title.className = "offer-title";
+        title.textContent = offer.title;
+
+        const meta = document.createElement("div");
+        meta.className = "offer-meta";
+        const expirationLabel = offer.expirationDate ? ` - Exp: ${offer.expirationDate}` : "";
+        meta.textContent = `${offer.location} - ${offer.contract} - ${offer.experience}${expirationLabel}`;
+        info.append(title, meta);
+
+        const actions = document.createElement("div");
+        actions.className = "list-item-actions";
+
+        const status = document.createElement("span");
+        status.className = `status ${offer.statusClass || "status-live"}`;
+        status.textContent = offer.status || "En ligne";
+
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "btn btn-small";
+        editBtn.textContent = "Modifier";
+        editBtn.addEventListener("click", async () => {
+          try {
+            const response = await fetch(getApiUrlById(offersApiGetUrlPattern, offer.id), {
+              method: "GET",
+            });
+            const data = await parseApiResponse(response);
+            populateFormFromOffer(data.offer);
+          } catch (error) {
+            showFeedback([(error?.message || "Chargement impossible.").replace(/\n/g, " ")]);
+          }
+        });
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "btn btn-small btn-danger";
+        deleteBtn.textContent = "Supprimer";
+        deleteBtn.addEventListener("click", async () => {
+          if (!window.confirm("Confirmez-vous la suppression de cette offre ?")) {
+            return;
+          }
+
+          try {
+            const response = await fetch(getApiUrlById(offersApiDeleteUrlPattern, offer.id), {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+
+            await parseApiResponse(response);
+            offers = offers.filter((entry) => entry.id !== offer.id);
+            renderOffers();
+            showFeedback(["Offre supprimee avec succes."], "success");
+          } catch (error) {
+            showFeedback([(error?.message || "Suppression impossible.").replace(/\n/g, " ")]);
+          }
+        });
+
+        actions.append(status, editBtn, deleteBtn);
+        item.append(info, actions);
+        offerList.appendChild(item);
+      });
+
+      updateKpis();
+    };
+
+    const updateKpis = () => {
+      const activeOffers = offers.filter((offer) => (offer.statusClass || "") === "status-live").length;
+      const draftOffers = offers.filter((offer) => (offer.statusClass || "") === "status-draft").length;
+      const applicationsCount = offers.reduce((sum, offer) => {
+        const count = Number(offer.applicationsCount ?? 0);
+        return sum + (Number.isFinite(count) ? count : 0);
+      }, 0);
+
+      if (kpiActiveOffers) {
+        kpiActiveOffers.textContent = String(activeOffers);
+      }
+      if (kpiApplicationsCount) {
+        kpiApplicationsCount.textContent = String(applicationsCount);
+      }
+      if (kpiDraftOffers) {
+        kpiDraftOffers.textContent = String(draftOffers);
+      }
+    };
+
+    const updateMachineClock = () => {
+      if (!kpiMachineClock) {
+        return;
+      }
+      const now = new Date();
+      const datePart = [now.getDate(), now.getMonth() + 1, now.getFullYear()].map((value) => String(value).padStart(2, "0")).join("/");
+      const timePart = [now.getHours(), now.getMinutes(), now.getSeconds()].map((value) => String(value).padStart(2, "0")).join(":");
+      kpiMachineClock.textContent = `${datePart} ${timePart}`;
+    };
+
+    if (offerSearch) {
+      offerSearch.addEventListener("input", () => {
+        const query = offerSearch.value.trim().toLowerCase();
+        document.querySelectorAll(".offer-item").forEach((item) => {
+          const text = item.textContent.trim().toLowerCase();
+          item.style.display = text.includes(query) ? "flex" : "none";
+        });
+      });
+    }
+
+    publishBtn?.addEventListener("click", async () => {
+      const formData = collectFormData();
+      const errors = validateFormData(formData);
+      if (errors.length > 0) {
+        showFeedback(errors);
+        return;
+      }
+
+      showFeedback([]);
+      publishBtn.disabled = true;
+
+      try {
+        const endpoint = editingOfferId
+          ? getApiUrlById(offersApiUpdateUrlPattern, editingOfferId)
+          : offersApiCreateUrl;
+        const method = editingOfferId ? "PUT" : "POST";
+
+        const response = await fetch(endpoint, {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
+
+        const data = await parseApiResponse(response);
+        const savedOffer = data.offer;
+
+        if (editingOfferId) {
+          offers = offers.map((entry) => (entry.id === editingOfferId ? savedOffer : entry));
+        } else {
+          offers.unshift(savedOffer);
+        }
+
+        editingOfferId = null;
+        offerForm?.reset();
+        setCheckedValues(skillsSelect, []);
+        setCheckedValues(languagesSelect, []);
+        setCheckedValues(backgroundSelect, []);
+
+        renderOffers();
+        showFeedback(["Offre enregistree avec succes."], "success");
+      } catch (error) {
+        showFeedback((error?.message || "Erreur lors de l'enregistrement.").split("\n").filter(Boolean));
+      } finally {
+        publishBtn.disabled = false;
+      }
+    });
+
+    attachFilter(skillsSearch, skillsSelect);
+    attachFilter(languagesSearch, languagesSelect);
+    attachFilter(backgroundSearch, backgroundSelect);
+    renderOffers();
+    updateMachineClock();
+    window.setInterval(updateMachineClock, 1000);
+  </script>
+{% endblock %}

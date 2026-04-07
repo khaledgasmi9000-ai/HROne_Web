@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ page_title|default('HR One') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/navbarRH/logo.png') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/navbarRH/navbarRH.css') }}" />
+    {% if page_css is defined and page_css %}
+      <link rel="stylesheet" href="{{ asset('assets/navbarRH/' ~ page_css) }}" />
+    {% endif %}
+  </head>
+  <body class="{{ page_class|default('') }}">
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="logo">
+            <img src="{{ asset('assets/navbarRH/logo.png') }}" alt="HR One" />
+          </div>
+          <div>
+            <div class="brand-name">HR One</div>
+            <div class="brand-sub">Espace RH</div>
+          </div>
+        </div>
+
+        <nav class="nav">
+          <a class="nav-link" href="{{ path('topnav_offres') }}">Aller vers Espace Employe</a>
+          <a class="nav-link" href="{{ path('rh_users') }}">Gestion des utilisateurs</a>
+          <a class="nav-link" href="{{ path('rh_history') }}">Historique des actions</a>
+          <a class="nav-link" href="{{ path('rh_activity_watch') }}">Activity Watch</a>
+          <a class="nav-link" href="{{ path('rh_conges') }}">Gestion des conges</a>
+          <a class="nav-link" href="{{ path('rh_admin') }}">Gestion administrative</a>
+          <a class="nav-link" href="{{ path('rh_outils') }}">Gestion des outils</a>
+          <a class="nav-link" href="{{ path('rh_entretiens') }}">Gestion des entretiens</a>
+          <a class="nav-link" href="{{ path('rh_offres') }}">Gestion des offres d'emploi</a>
+          <a class="nav-link" href="{{ path('rh_evenements') }}">Gestion des evenements</a>
+          <a class="nav-link" href="{{ path('rh_formations') }}">Gestion des formations</a>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <section class="interface-shell">
+          <h1>{% block content_title %}{% endblock %}</h1>
+          {% block content_body %}{% endblock %}
+        </section>
+      </main>
+    </div>
+    <script src="{{ asset('assets/navbarRH/navbarRH.js') }}"></script>
+  </body>
+</html>

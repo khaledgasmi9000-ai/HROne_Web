@@ -1,0 +1,355 @@
+/* Styles specifiques: Gestion des offres d'emploi */
+.page-gestion-offres .interface-shell {
+	background: radial-gradient(circle at top right, #eff6ff 0, #ffffff 42%);
+	border: 1px solid #d9e2ef;
+}
+
+.page-gestion-offres .main {
+	display: grid;
+	gap: 20px;
+}
+
+.page-gestion-offres .topbar {
+	display: flex;
+	justify-content: flex-end;
+}
+
+.page-gestion-offres .user {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	background: #f8fbff;
+	border: 1px solid #dbe7f3;
+	border-radius: 14px;
+	padding: 8px 10px 8px 14px;
+}
+
+.page-gestion-offres .user-name {
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: #0f172a;
+}
+
+.page-gestion-offres .user-role {
+	font-size: 0.8rem;
+	color: #53627a;
+}
+
+.page-gestion-offres .avatar {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	display: grid;
+	place-items: center;
+	background: linear-gradient(135deg, #0f766e, #06b6d4);
+	color: #fff;
+	font-weight: 700;
+	font-size: 0.78rem;
+}
+
+.page-gestion-offres .page-title h1 {
+	margin: 0;
+	font-size: 1.7rem;
+	color: #0f172a;
+}
+
+.page-gestion-offres .page-title p {
+	margin: 8px 0 0;
+	color: #4a5d78;
+}
+
+.page-gestion-offres .grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 18px;
+	align-items: start;
+}
+
+.page-gestion-offres .card {
+	background: #fff;
+	border: 1px solid #dce6f2;
+	border-radius: 16px;
+	padding: 18px;
+	box-shadow: 0 8px 28px -20px rgba(15, 23, 42, 0.65);
+}
+
+.page-gestion-offres .card h2 {
+	margin: 0;
+	color: #0f172a;
+	font-size: 1.1rem;
+}
+
+.page-gestion-offres .muted {
+	margin-top: 6px;
+	color: #5d6f87;
+	font-size: 0.88rem;
+}
+
+.page-gestion-offres .offer-form {
+	margin-top: 14px;
+	display: grid;
+	grid-template-columns: repeat(2, minmax(220px, 1fr));
+	gap: 12px;
+}
+
+.page-gestion-offres .field {
+	display: grid;
+	gap: 6px;
+}
+
+.page-gestion-offres .field.full {
+	grid-column: 1 / -1;
+}
+
+.page-gestion-offres label {
+	color: #1f2f46;
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
+.page-gestion-offres input,
+.page-gestion-offres select,
+.page-gestion-offres textarea {
+	width: 100%;
+	border: 1px solid #cad7e6;
+	border-radius: 10px;
+	background: #fbfdff;
+	padding: 9px 10px;
+	font: inherit;
+	color: #0f172a;
+}
+
+.page-gestion-offres textarea {
+	min-height: 112px;
+	resize: vertical;
+}
+
+.page-gestion-offres input:focus,
+.page-gestion-offres select:focus,
+.page-gestion-offres textarea:focus {
+	outline: 0;
+	border-color: #0891b2;
+	box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.16);
+}
+
+.page-gestion-offres .range-field {
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
+	align-items: center;
+	gap: 8px;
+}
+
+.page-gestion-offres .range-sep {
+	color: #5b6e87;
+	font-weight: 700;
+}
+
+.page-gestion-offres .choice-panel {
+	border: 1px solid #d6e2f0;
+	border-radius: 12px;
+	background: #fbfdff;
+	overflow: hidden;
+}
+
+.page-gestion-offres .choice-toolbar {
+	padding: 10px;
+	border-bottom: 1px solid #dfe9f5;
+}
+
+.page-gestion-offres .choice-list {
+	max-height: 220px;
+	overflow: auto;
+	display: grid;
+	gap: 6px;
+	padding: 10px;
+}
+
+.page-gestion-offres .choice-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px;
+	border-radius: 8px;
+	background: #f6faff;
+	border: 1px solid #e3edf8;
+	font-size: 0.88rem;
+}
+
+.page-gestion-offres .choice-item input {
+	width: auto;
+	margin: 0;
+}
+
+.page-gestion-offres .help {
+	margin-top: 5px;
+	color: #5f728b;
+	font-size: 0.8rem;
+}
+
+.page-gestion-offres .form-actions {
+	grid-column: 1 / -1;
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.page-gestion-offres .btn {
+	border: 0;
+	border-radius: 10px;
+	padding: 9px 14px;
+	font-size: 0.88rem;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.page-gestion-offres .btn-ghost {
+	background: #edf3fa;
+	color: #20324a;
+}
+
+.page-gestion-offres .btn-primary {
+	background: linear-gradient(135deg, #0f766e, #06b6d4);
+	color: #fff;
+}
+
+.page-gestion-offres .btn-small {
+	padding: 6px 10px;
+	font-size: 0.8rem;
+	background: #e7eef8;
+	color: #13253b;
+}
+
+.page-gestion-offres .btn-danger {
+	background: #fee2e2;
+	color: #b91c1c;
+}
+
+.page-gestion-offres .card-header {
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+	align-items: center;
+}
+
+.page-gestion-offres .offer-search {
+	min-width: 220px;
+}
+
+.page-gestion-offres .offer-list {
+	margin-top: 12px;
+	display: grid;
+	gap: 10px;
+}
+
+.page-gestion-offres .offer-item {
+	border: 1px solid #dde7f2;
+	border-radius: 12px;
+	padding: 10px;
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+	align-items: center;
+}
+
+.page-gestion-offres .offer-title {
+	font-weight: 700;
+	color: #0f172a;
+}
+
+.page-gestion-offres .offer-meta {
+	margin-top: 4px;
+	color: #5e7088;
+	font-size: 0.82rem;
+}
+
+.page-gestion-offres .list-item-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.page-gestion-offres .status {
+	border-radius: 999px;
+	padding: 4px 8px;
+	font-size: 0.75rem;
+	font-weight: 700;
+}
+
+.page-gestion-offres .status-live {
+	color: #166534;
+	background: #dcfce7;
+}
+
+.page-gestion-offres .status-review {
+	color: #854d0e;
+	background: #fef3c7;
+}
+
+.page-gestion-offres .status-draft {
+	color: #334155;
+	background: #e2e8f0;
+}
+
+.page-gestion-offres .stats {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(130px, 1fr));
+	gap: 12px;
+}
+
+.page-gestion-offres .stat {
+	border-radius: 14px;
+	border: 1px solid #dbe6f4;
+	background: #fff;
+	padding: 14px;
+}
+
+.page-gestion-offres .stat-value {
+	font-size: 1.35rem;
+	font-weight: 800;
+	color: #0f172a;
+}
+
+.page-gestion-offres .stat-label {
+	color: #556985;
+	font-size: 0.83rem;
+	margin-top: 4px;
+}
+
+@media (max-width: 1180px) {
+	.page-gestion-offres .grid {
+		grid-template-columns: 1fr;
+	}
+
+	.page-gestion-offres .stats {
+		grid-template-columns: repeat(2, minmax(130px, 1fr));
+	}
+}
+
+@media (max-width: 760px) {
+	.page-gestion-offres .interface-shell {
+		padding: 14px;
+	}
+
+	.page-gestion-offres .offer-form {
+		grid-template-columns: 1fr;
+	}
+
+	.page-gestion-offres .card-header {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.page-gestion-offres .offer-search {
+		min-width: 0;
+	}
+
+	.page-gestion-offres .offer-item {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.page-gestion-offres .stats {
+		grid-template-columns: 1fr;
+	}
+}

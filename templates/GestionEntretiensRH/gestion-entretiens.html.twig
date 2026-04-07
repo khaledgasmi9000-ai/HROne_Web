@@ -1,0 +1,643 @@
+{% extends 'navbarRH/base.html.twig' %}
+
+{% set page_title = 'HR One - Gestion des entretiens' %}
+{% set page_class = 'page-gestion-entretiens' %}
+{% set page_css = 'gestion-entretiens.css' %}
+
+{% block content_title %}{% endblock %}
+
+{% block content_body %}
+  <main class="main">
+    <header class="topbar">
+      <div class="user">
+        <div class="user-info">
+          <div class="user-name">Agent RH</div>
+          <div class="user-role">Recruter</div>
+        </div>
+        <div class="avatar">AR</div>
+      </div>
+    </header>
+
+    <section class="page-title">
+      <h1>Candidatures</h1>
+      <p>Consultez les candidatures par offre et acceptez ou rejetez en un clic.</p>
+    </section>
+
+    <section class="card filter-card">
+      <div class="card-header">
+        <div>
+          <h2>Filtrer les candidatures</h2>
+          <p class="muted">Selectionnez une offre ou cherchez un candidat.</p>
+        </div>
+        <span class="filter-pill" id="filterSummary">Filtres actifs: 0</span>
+      </div>
+
+      <form class="filter-form">
+        <div class="field">
+          <label for="offerFilter">Offre d'emploi</label>
+          <select id="offerFilter">
+            <option value="">Toutes les offres</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="statusFilter">Statut</label>
+          <select id="statusFilter">
+            <option value="">Tous les statuts</option>
+            <option value="En attente">En attente</option>
+            <option value="Acceptee">Acceptee</option>
+            <option value="Rejetee">Rejetee</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="candidateSearch">Recherche</label>
+          <div class="input-with-icon">
+            <span class="input-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0-2a8 8 0 1 0 4.9 14.3l4.4 4.4 1.4-1.4-4.4-4.4A8 8 0 0 0 10 2Z" />
+              </svg>
+            </span>
+            <input id="candidateSearch" type="search" placeholder="Nom, email, competences" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-ghost" type="button" id="resetFilters">Reinitialiser</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <h2>Liste des candidatures</h2>
+          <p class="muted">Cliquez pour accepter ou rejeter une candidature.</p>
+        </div>
+        <span class="table-count" id="candidateCount">0 candidature</span>
+      </div>
+      <div class="resource-list" id="candidateList"></div>
+      <p class="muted" id="candidateEmpty" hidden>Aucune candidature trouvee pour ces filtres.</p>
+    </section>
+
+    <div class="interview-modal" id="interviewModal" hidden>
+      <div class="interview-modal__backdrop" data-close-modal="true"></div>
+      <section class="interview-modal__panel" role="dialog" aria-modal="true" aria-labelledby="interviewModalTitle">
+        <header class="interview-modal__header">
+          <div>
+            <h2 id="interviewModalTitle">Planifier un entretien</h2>
+            <p class="muted" id="interviewModalSubtitle">Completez les informations de lentretien.</p>
+          </div>
+          <button class="btn btn-ghost" type="button" id="closeInterviewModalBtn">Fermer</button>
+        </header>
+
+        <form class="interview-form" id="interviewPlanForm" novalidate>
+          <input type="hidden" id="interviewCandidateId" />
+          <div class="field">
+            <label for="interviewDateTime">Date et heure</label>
+            <input id="interviewDateTime" type="datetime-local" />
+            <small class="field-error" id="interviewDateTimeError" hidden></small>
+          </div>
+          <div class="field">
+            <label for="interviewLocation">Localisation</label>
+            <input id="interviewLocation" type="text" placeholder="Ex: Salle RH - 2eme etage" />
+            <small class="field-error" id="interviewLocationError" hidden></small>
+          </div>
+          <div class="field">
+            <label for="interviewEvaluation">Evaluation RH</label>
+            <textarea id="interviewEvaluation" rows="4" placeholder="Donnez votre evaluation sur cette candidature..."></textarea>
+            <small class="field-error" id="interviewEvaluationError" hidden></small>
+          </div>
+
+          <small id="interviewFeedback" class="muted" role="alert" aria-live="polite"></small>
+
+          <div class="interview-form__actions">
+            <button class="btn btn-primary" type="submit" id="saveInterviewBtn">Enregistrer lentretien</button>
+            <button class="btn btn-ghost" type="button" id="cancelInterviewBtn">Annuler</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="details-modal" id="candidatureDetailsModal" hidden>
+      <div class="details-modal__backdrop" data-close-details-modal="true"></div>
+      <section class="details-modal__panel" role="dialog" aria-modal="true" aria-labelledby="detailsModalTitle">
+        <header class="details-modal__header">
+          <div>
+            <h2 id="detailsModalTitle">Details de la candidature</h2>
+            <p class="muted" id="detailsModalSubtitle">Profil et informations de candidature.</p>
+          </div>
+          <button class="btn btn-ghost" type="button" id="closeDetailsModalBtn">Fermer</button>
+        </header>
+
+        <div class="details-grid">
+          <article class="details-card">
+            <h3>Profil</h3>
+            <dl>
+              <div><dt>Nom</dt><dd id="detailsName">-</dd></div>
+              <div><dt>Email</dt><dd id="detailsEmail">-</dd></div>
+              <div><dt>Experience</dt><dd id="detailsExperience">-</dd></div>
+              <div><dt>Competences</dt><dd id="detailsSkills">-</dd></div>
+            </dl>
+          </article>
+
+          <article class="details-card">
+            <h3>Candidature</h3>
+            <dl>
+              <div><dt>Offre</dt><dd id="detailsOffer">-</dd></div>
+              <div><dt>Statut</dt><dd><span class="status status-review" id="detailsStatus">-</span></dd></div>
+              <div><dt>Portfolio</dt><dd id="detailsPortfolio">-</dd></div>
+              <div><dt>CV</dt><dd id="detailsCv">-</dd></div>
+              <div><dt>Lettre recommandation</dt><dd id="detailsRecommendation">-</dd></div>
+              <div><dt>Lettre motivation</dt><dd id="detailsMotivation">-</dd></div>
+            </dl>
+          </article>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const offers = {{ offers|default([])|json_encode(constant('JSON_UNESCAPED_UNICODE'))|raw }};
+    const candidates = {{ candidatures|default([])|json_encode(constant('JSON_UNESCAPED_UNICODE'))|raw }};
+    const detailsApiPattern = "{{ path('rh_entretiens_api_candidature_details', {id: '__ID__'}) }}";
+    const statusApiPattern = "{{ path('rh_entretiens_api_candidature_status', {id: '__ID__'}) }}";
+    const scheduleApiPattern = "{{ path('rh_entretiens_api_schedule_interview', {id: '__ID__'}) }}";
+
+    const offerFilter = document.getElementById("offerFilter");
+    const statusFilter = document.getElementById("statusFilter");
+    const candidateSearch = document.getElementById("candidateSearch");
+    const candidateList = document.getElementById("candidateList");
+    const candidateCount = document.getElementById("candidateCount");
+    const candidateEmpty = document.getElementById("candidateEmpty");
+    const filterSummary = document.getElementById("filterSummary");
+    const resetFilters = document.getElementById("resetFilters");
+    const interviewModal = document.getElementById("interviewModal");
+    const interviewPlanForm = document.getElementById("interviewPlanForm");
+    const interviewCandidateId = document.getElementById("interviewCandidateId");
+    const interviewDateTime = document.getElementById("interviewDateTime");
+    const interviewLocation = document.getElementById("interviewLocation");
+    const interviewEvaluation = document.getElementById("interviewEvaluation");
+    const interviewFeedback = document.getElementById("interviewFeedback");
+    const closeInterviewModalBtn = document.getElementById("closeInterviewModalBtn");
+    const cancelInterviewBtn = document.getElementById("cancelInterviewBtn");
+    const interviewModalSubtitle = document.getElementById("interviewModalSubtitle");
+    const saveInterviewBtn = document.getElementById("saveInterviewBtn");
+    const interviewDateTimeError = document.getElementById("interviewDateTimeError");
+    const interviewLocationError = document.getElementById("interviewLocationError");
+    const interviewEvaluationError = document.getElementById("interviewEvaluationError");
+    const candidatureDetailsModal = document.getElementById("candidatureDetailsModal");
+    const closeDetailsModalBtn = document.getElementById("closeDetailsModalBtn");
+    const detailsModalSubtitle = document.getElementById("detailsModalSubtitle");
+    const detailsName = document.getElementById("detailsName");
+    const detailsEmail = document.getElementById("detailsEmail");
+    const detailsExperience = document.getElementById("detailsExperience");
+    const detailsSkills = document.getElementById("detailsSkills");
+    const detailsOffer = document.getElementById("detailsOffer");
+    const detailsStatus = document.getElementById("detailsStatus");
+    const detailsPortfolio = document.getElementById("detailsPortfolio");
+    const detailsCv = document.getElementById("detailsCv");
+    const detailsRecommendation = document.getElementById("detailsRecommendation");
+    const detailsMotivation = document.getElementById("detailsMotivation");
+
+    const statusClassMap = {
+      "En attente": "status-review",
+      Acceptee: "status-live",
+      Rejetee: "status-draft",
+    };
+
+    const parseApiResponse = async (response) => {
+      const text = await response.text();
+      let data = null;
+
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (error) {
+        data = null;
+      }
+
+      if (!response.ok) {
+        const message = data?.message || text.split("\n")[0] || "Erreur serveur.";
+        const details = data?.details ? `\n${data.details}` : "";
+        throw new Error(`${message}${details}`.trim());
+      }
+
+      return data || {};
+    };
+
+    const showInterviewFeedback = (messages, isSuccess = false) => {
+      if (!interviewFeedback) {
+        return;
+      }
+
+      if (!messages || messages.length === 0) {
+        interviewFeedback.textContent = "";
+        interviewFeedback.style.color = "";
+        return;
+      }
+
+      interviewFeedback.style.color = isSuccess ? "#0f7a45" : "#b42318";
+      interviewFeedback.innerHTML = messages.map((message) => `- ${message}`).join("<br>");
+    };
+
+    const safeText = (value) => {
+      return (value ?? "").toString().trim() || "-";
+    };
+
+    const openDetailsModal = (candidate) => {
+      if (!candidate || !candidatureDetailsModal) {
+        return;
+      }
+
+      detailsModalSubtitle.textContent = `Reference candidature: CND-${safeText(candidate.id)}`;
+      detailsName.textContent = safeText(candidate.name);
+      detailsEmail.textContent = safeText(candidate.email);
+      detailsExperience.textContent = safeText(candidate.experience);
+      detailsSkills.textContent = safeText(candidate.skills);
+      detailsOffer.textContent = safeText(candidate.offerTitle || getOfferTitle(candidate.offerId));
+      detailsPortfolio.textContent = safeText(candidate.portfolio);
+      detailsCv.textContent = safeText(candidate.cvFileName);
+      detailsRecommendation.textContent = safeText(candidate.recommendationFileName);
+      detailsMotivation.textContent = safeText(candidate.motivationLetter);
+      detailsStatus.className = `status ${statusClassMap[candidate.status] || "status-review"}`;
+      detailsStatus.textContent = safeText(candidate.status);
+
+      candidatureDetailsModal.hidden = false;
+    };
+
+    const closeDetailsModal = () => {
+      if (!candidatureDetailsModal) {
+        return;
+      }
+      candidatureDetailsModal.hidden = true;
+    };
+
+    const fieldValidationRules = [
+      {
+        input: interviewDateTime,
+        errorNode: interviewDateTimeError,
+        validate: (value) => {
+          if (!value) {
+            return "La date et heure de lentretien est obligatoire.";
+          }
+          const selectedDate = new Date(value);
+          if (Number.isNaN(selectedDate.getTime())) {
+            return "Le format de date est invalide.";
+          }
+          return null;
+        },
+      },
+      {
+        input: interviewLocation,
+        errorNode: interviewLocationError,
+        validate: (value) => {
+          if (!value) {
+            return "La localisation est obligatoire.";
+          }
+          if (value.length < 3) {
+            return "La localisation doit contenir au moins 3 caracteres.";
+          }
+          return null;
+        },
+      },
+      {
+        input: interviewEvaluation,
+        errorNode: interviewEvaluationError,
+        validate: (value) => {
+          if (!value) {
+            return "Levaluation RH est obligatoire.";
+          }
+          if (value.length < 12) {
+            return "Levaluation doit contenir au moins 12 caracteres.";
+          }
+          return null;
+        },
+      },
+    ];
+
+    const setFieldValidationState = (input, errorNode, message) => {
+      if (!input || !errorNode) {
+        return;
+      }
+      const hasError = !!message;
+      input.classList.toggle("is-invalid", hasError);
+      input.setAttribute("aria-invalid", hasError ? "true" : "false");
+      errorNode.hidden = !hasError;
+      errorNode.textContent = message || "";
+    };
+
+    const clearFieldValidation = () => {
+      fieldValidationRules.forEach((rule) => {
+        setFieldValidationState(rule.input, rule.errorNode, null);
+      });
+    };
+
+    const validateInterviewForm = () => {
+      const errors = [];
+      fieldValidationRules.forEach((rule) => {
+        const value = (rule.input?.value || "").trim();
+        const error = rule.validate(value);
+        setFieldValidationState(rule.input, rule.errorNode, error);
+        if (error) {
+          errors.push(error);
+        }
+      });
+      return errors;
+    };
+
+    const openInterviewModal = (candidate) => {
+      if (!candidate || !interviewModal) {
+        return;
+      }
+
+      interviewCandidateId.value = String(candidate.id || "");
+      interviewDateTime.value = candidate.interviewDateTimeIso || "";
+      interviewLocation.value = candidate.interviewLocation || "En ligne";
+      interviewEvaluation.value = candidate.interviewEvaluation || "";
+      interviewModalSubtitle.textContent = `Candidat: ${candidate.name || "-"} | Offre: ${candidate.offerTitle || getOfferTitle(candidate.offerId)}`;
+      showInterviewFeedback([]);
+      clearFieldValidation();
+      interviewModal.hidden = false;
+    };
+
+    const closeInterviewModal = () => {
+      if (!interviewModal) {
+        return;
+      }
+      interviewModal.hidden = true;
+      interviewPlanForm?.reset();
+      showInterviewFeedback([]);
+      clearFieldValidation();
+    };
+
+    const getOfferTitle = (offerId) => {
+      return offers.find((offer) => offer.id === offerId)?.title || "-";
+    };
+
+    const renderOfferOptions = () => {
+      offers.forEach((offer) => {
+        const option = document.createElement("option");
+        option.value = String(offer.id);
+        option.textContent = offer.title;
+        offerFilter.appendChild(option);
+      });
+    };
+
+    const updateFilterSummary = (filtersCount) => {
+      if (filterSummary) {
+        filterSummary.textContent = `Filtres actifs: ${filtersCount}`;
+      }
+    };
+
+    const renderCandidates = () => {
+      if (!candidateList || !candidateCount || !candidateEmpty) {
+        return;
+      }
+
+      const selectedOffer = offerFilter.value;
+      const selectedStatus = statusFilter.value;
+      const query = candidateSearch.value.trim().toLowerCase();
+
+      let activeFilters = 0;
+      if (selectedOffer) {
+        activeFilters += 1;
+      }
+      if (selectedStatus) {
+        activeFilters += 1;
+      }
+      if (query) {
+        activeFilters += 1;
+      }
+      updateFilterSummary(activeFilters);
+
+      const filtered = candidates.filter((candidate) => {
+        const matchesOffer = !selectedOffer || String(candidate.offerId) === selectedOffer;
+        const matchesStatus = !selectedStatus || candidate.status === selectedStatus;
+        const haystack = `${candidate.name} ${candidate.email} ${candidate.skills}`.toLowerCase();
+        const matchesQuery = !query || haystack.includes(query);
+        return matchesOffer && matchesStatus && matchesQuery;
+      });
+
+      candidateList.innerHTML = "";
+      candidateEmpty.hidden = filtered.length > 0;
+      candidateCount.textContent = `${filtered.length} candidature${filtered.length > 1 ? "s" : ""}`;
+
+      filtered.forEach((candidate) => {
+        const item = document.createElement("div");
+        item.className = "resource-item";
+
+        const info = document.createElement("div");
+        const title = document.createElement("div");
+        title.className = "resource-title";
+        title.textContent = candidate.name;
+        const meta = document.createElement("div");
+        meta.className = "resource-meta";
+        meta.textContent = `${getOfferTitle(candidate.offerId)} - ${candidate.email} - ${candidate.experience}`;
+        info.append(title, meta);
+
+        if (candidate.interviewComment) {
+          const interviewMeta = document.createElement("div");
+          interviewMeta.className = "resource-meta";
+          interviewMeta.textContent = `${candidate.interviewComment}${candidate.interviewLocation ? ` (${candidate.interviewLocation})` : ""}`;
+          info.appendChild(interviewMeta);
+        }
+
+        const actions = document.createElement("div");
+        actions.className = "list-item-actions";
+        const status = document.createElement("span");
+        status.className = `status ${statusClassMap[candidate.status] || "status-review"}`;
+        status.textContent = candidate.status;
+
+        const detailsBtn = document.createElement("button");
+        detailsBtn.type = "button";
+        detailsBtn.className = "btn btn-small";
+        detailsBtn.textContent = "Voir candidature";
+        detailsBtn.addEventListener("click", async () => {
+          try {
+            const response = await fetch(detailsApiPattern.replace("__ID__", String(candidate.id)), {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+            const data = await parseApiResponse(response);
+            const details = data?.candidate || candidate;
+            openDetailsModal(details);
+          } catch (error) {
+            alert(error?.message || "Impossible de charger les details.");
+          }
+        });
+
+        const acceptBtn = document.createElement("button");
+        acceptBtn.type = "button";
+        acceptBtn.className = "btn btn-small";
+        acceptBtn.textContent = "Accepter";
+        acceptBtn.addEventListener("click", async () => {
+          try {
+            const response = await fetch(statusApiPattern.replace("__ID__", String(candidate.id)), {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ status: "ACCEPTED" }),
+            });
+            const data = await parseApiResponse(response);
+            const updated = data?.candidate;
+            if (updated && updated.id === candidate.id) {
+              candidate.status = updated.status;
+              candidate.hasInterview = !!updated.hasInterview;
+            } else {
+              candidate.status = "Acceptee";
+            }
+            renderCandidates();
+          } catch (error) {
+            alert(error?.message || "Impossible daccepter la candidature.");
+          }
+        });
+
+        const rejectBtn = document.createElement("button");
+        rejectBtn.type = "button";
+        rejectBtn.className = "btn btn-small btn-danger";
+        rejectBtn.textContent = "Rejeter";
+        rejectBtn.addEventListener("click", async () => {
+          try {
+            const response = await fetch(statusApiPattern.replace("__ID__", String(candidate.id)), {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ status: "REJECTED" }),
+            });
+            const data = await parseApiResponse(response);
+            const updated = data?.candidate;
+            if (updated && updated.id === candidate.id) {
+              candidate.status = updated.status;
+            } else {
+              candidate.status = "Rejetee";
+            }
+            renderCandidates();
+          } catch (error) {
+            alert(error?.message || "Impossible de rejeter la candidature.");
+          }
+        });
+
+        actions.append(status, detailsBtn, acceptBtn, rejectBtn);
+
+        if (candidate.status === "Acceptee") {
+          const scheduleBtn = document.createElement("button");
+          scheduleBtn.type = "button";
+          scheduleBtn.className = "btn btn-primary";
+          scheduleBtn.textContent = candidate.hasInterview ? "Mettre a jour entretien" : "Planifier un entretien";
+          scheduleBtn.addEventListener("click", () => {
+            openInterviewModal(candidate);
+          });
+          actions.appendChild(scheduleBtn);
+        }
+
+        item.append(info, actions);
+        candidateList.appendChild(item);
+      });
+    };
+
+    renderOfferOptions();
+    renderCandidates();
+
+    offerFilter.addEventListener("change", renderCandidates);
+    statusFilter.addEventListener("change", renderCandidates);
+    candidateSearch.addEventListener("input", renderCandidates);
+    resetFilters.addEventListener("click", () => {
+      offerFilter.value = "";
+      statusFilter.value = "";
+      candidateSearch.value = "";
+      renderCandidates();
+    });
+
+    closeInterviewModalBtn?.addEventListener("click", closeInterviewModal);
+    cancelInterviewBtn?.addEventListener("click", closeInterviewModal);
+    interviewModal?.addEventListener("click", (event) => {
+      if (event.target instanceof HTMLElement && event.target.dataset.closeModal === "true") {
+        closeInterviewModal();
+      }
+    });
+
+    closeDetailsModalBtn?.addEventListener("click", closeDetailsModal);
+    candidatureDetailsModal?.addEventListener("click", (event) => {
+      if (event.target instanceof HTMLElement && event.target.dataset.closeDetailsModal === "true") {
+        closeDetailsModal();
+      }
+    });
+
+    interviewPlanForm?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const candidateId = Number(interviewCandidateId?.value || 0);
+      if (!candidateId) {
+        showInterviewFeedback(["Candidature introuvable."]);
+        return;
+      }
+
+      const localErrors = validateInterviewForm();
+      if (localErrors.length > 0) {
+        showInterviewFeedback(localErrors);
+        return;
+      }
+
+      const scheduledAt = interviewDateTime?.value || "";
+      const location = interviewLocation?.value?.trim() || "";
+      const evaluation = interviewEvaluation?.value?.trim() || "";
+
+      saveInterviewBtn.disabled = true;
+      try {
+        const response = await fetch(scheduleApiPattern.replace("__ID__", String(candidateId)), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            scheduledAt: `${scheduledAt}:00`,
+            location,
+            evaluation,
+          }),
+        });
+
+        const data = await parseApiResponse(response);
+        const updated = data?.candidate;
+        if (updated && updated.id) {
+          const target = candidates.find((candidate) => candidate.id === updated.id);
+          if (target) {
+            Object.assign(target, updated);
+            target.hasInterview = true;
+          }
+        }
+
+        showInterviewFeedback(["Entretien enregistre avec succes."], true);
+        renderCandidates();
+        setTimeout(() => {
+          closeInterviewModal();
+        }, 450);
+      } catch (error) {
+        showInterviewFeedback((error?.message || "Impossible de planifier lentretien.").split("\n").filter(Boolean));
+      } finally {
+        saveInterviewBtn.disabled = false;
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && interviewModal && !interviewModal.hidden) {
+        closeInterviewModal();
+      }
+      if (event.key === "Escape" && candidatureDetailsModal && !candidatureDetailsModal.hidden) {
+        closeDetailsModal();
+      }
+    });
+
+    fieldValidationRules.forEach((rule) => {
+      rule.input?.addEventListener("input", () => {
+        const value = (rule.input?.value || "").trim();
+        const error = rule.validate(value);
+        setFieldValidationState(rule.input, rule.errorNode, error);
+      });
+      rule.input?.addEventListener("blur", () => {
+        const value = (rule.input?.value || "").trim();
+        const error = rule.validate(value);
+        setFieldValidationState(rule.input, rule.errorNode, error);
+      });
+    });
+  </script>
+{% endblock %}
