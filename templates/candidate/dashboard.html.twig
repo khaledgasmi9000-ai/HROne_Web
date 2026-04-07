@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HR One - Dashboard Candidat</title>
+  <link rel="stylesheet" href="{{ asset('styles.css') }}">
+</head>
+<body>
+  <div class="page">
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="{{ path('homepage') }}">
+          <div class="brand-logo">
+            <img src="{{ asset('logo.png') }}" alt="HR One">
+          </div>
+          <div>
+            <p class="brand-name">HR One</p>
+            <p class="brand-sub">Dashboard Candidat</p>
+          </div>
+        </a>
+        <div class="nav-actions">
+          <a class="nav-link" href="{{ path('logout') }}">Se deconnecter</a>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="hero">
+          <div class="hero-inner">
+            <span class="eyebrow">Espace candidat</span>
+            <h1>Bienvenue {{ user ? user.NomUtilisateur : 'Candidat' }}.</h1>
+            <p class="hero-copy">
+              Votre inscription et votre connexion candidat fonctionnent.
+              Le compte est rattache a l'entreprise PUBLIC comme prevu.
+            </p>
+            <div class="metrics">
+              <div class="metric">
+                <strong>{{ user ? user.Email : '-' }}</strong>
+                <span>Email connecte.</span>
+              </div>
+              <div class="metric">
+                <strong>{{ user and user.entreprise ? user.entreprise.NomEntreprise : '-' }}</strong>
+                <span>Entreprise associee.</span>
+              </div>
+              <div class="metric">
+                <strong>Candidat</strong>
+                <span>Profil detecte en session.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-side">
+          <div class="form-shell">
+            <div class="panel-head">
+              <h2>Connexion candidat reussie</h2>
+              <p>Cette page peut ensuite accueillir vos offres, candidatures et suivi de profil.</p>
+            </div>
+            <div class="trust-row">
+              <span class="trust-chip">Auth OK</span>
+              <span class="trust-chip">PUBLIC OK</span>
+              <span class="trust-chip">Twig OK</span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

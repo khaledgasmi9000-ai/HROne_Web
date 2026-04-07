@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HR One - Inscription Candidat</title>
+  <link rel="stylesheet" href="{{ asset('styles.css') }}">
+</head>
+<body>
+  <div class="page">
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="{{ path('homepage') }}">
+          <div class="brand-logo">
+            <img src="{{ asset('logo.png') }}" alt="HR One">
+          </div>
+          <div>
+            <p class="brand-name">HR One</p>
+            <p class="brand-sub">Candidate onboarding</p>
+          </div>
+        </a>
+        <div class="nav-actions">
+          <a class="nav-link" href="{{ path('login') }}">Retour connexion</a>
+          <a class="nav-cta" href="{{ path('signup_rh') }}">Version RH</a>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="hero">
+          <div class="hero-inner">
+            <span class="eyebrow">Parcours candidat</span>
+            <h1>Join the next role with <span class="hero-highlight">confidence.</span></h1>
+            <p class="hero-copy">
+              Cette version rend l'inscription candidat plus nette et plus premium:
+              grande respiration, structure lisible et ton plus proche des interfaces RH modernes.
+            </p>
+            <div class="metrics">
+              <div class="metric">
+                <strong>2x</strong>
+                <span>plus lisible grace a une grille mieux equilibree.</span>
+              </div>
+              <div class="metric">
+                <strong>8</strong>
+                <span>champs essentiels presentes sans surcharge visuelle.</span>
+              </div>
+              <div class="metric">
+                <strong>1 flow</strong>
+                <span>simple a brancher ensuite a votre backend.</span>
+              </div>
+            </div>
+            <div class="proof-card">
+              <div class="proof-top">
+                <span class="proof-badge">Candidate Space</span>
+                <span class="proof-stat">Fast onboarding</span>
+              </div>
+              <p>"Le candidat comprend immediatement quoi remplir, dans quel ordre."</p>
+              <span class="proof-author">Style cible: propre, premium et rassurant</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-side">
+          <div class="form-shell">
+            <div class="form-topbar">
+              <span class="micro-pill">Profil candidat</span>
+              <span class="mini-meta">Creation de compte</span>
+            </div>
+            <div class="panel-head">
+              <h2>Creer votre espace candidat.</h2>
+              <p>Remplissez vos informations principales pour acceder a votre espace personnel.</p>
+            </div>
+
+            {% for message in app.flashes('error') %}
+              <div class="flash-error">{{ message }}</div>
+            {% endfor %}
+            {% for message in app.flashes('success') %}
+              <div class="flash-success">{{ message }}</div>
+            {% endfor %}
+
+            {{ form_start(form, {'attr': {'class': 'auth-form grid-2'}}) }}
+              <div class="form-errors full">{{ form_errors(form) }}</div>
+              <div class="field">
+                <label>Nom d'utilisateur</label>
+                {{ form_widget(form.username, {'attr': {'placeholder': "Nom d'utilisateur"}}) }}
+                {{ form_errors(form.username) }}
+              </div>
+              <div class="field">
+                <label>Mot de passe</label>
+                {{ form_widget(form.password, {'attr': {'placeholder': 'Mot de passe'}}) }}
+                {{ form_errors(form.password) }}
+              </div>
+              <div class="field">
+                <label>Email</label>
+                {{ form_widget(form.email, {'attr': {'placeholder': 'email@exemple.com'}}) }}
+                {{ form_errors(form.email) }}
+              </div>
+              <div class="field">
+                <label>Adresse</label>
+                {{ form_widget(form.address, {'attr': {'placeholder': 'Adresse'}}) }}
+                {{ form_errors(form.address) }}
+              </div>
+              <div class="field">
+                <label>Telephone</label>
+                {{ form_widget(form.phone, {'attr': {'placeholder': '06 00 00 00 00'}}) }}
+                {{ form_errors(form.phone) }}
+              </div>
+              <div class="field">
+                <label>CIN</label>
+                {{ form_widget(form.cin, {'attr': {'placeholder': 'CIN'}}) }}
+                {{ form_errors(form.cin) }}
+              </div>
+              <div class="field">
+                <label>Date de naissance</label>
+                {{ form_widget(form.birth) }}
+                {{ form_errors(form.birth) }}
+              </div>
+              <div class="field">
+                <label>Genre</label>
+                {{ form_widget(form.gender) }}
+                {{ form_errors(form.gender) }}
+              </div>
+              <div class="actions full">
+                {{ form_widget(form.submit, {'attr': {'class': 'btn btn-primary'}}) }}
+                <a class="btn btn-outline" href="{{ path('login') }}">Retour connexion</a>
+              </div>
+            {{ form_end(form) }}
+
+            <div class="trust-row">
+              <span class="trust-chip">Onboarding lisible</span>
+              <span class="trust-chip">Structure moderne</span>
+              <span class="trust-chip">Mobile ready</span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

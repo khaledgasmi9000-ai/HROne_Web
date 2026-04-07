@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HR One - Connexion</title>
+  <link rel="stylesheet" href="{{ asset('styles.css') }}">
+</head>
+<body>
+  <div class="page">
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="{{ path('homepage') }}">
+          <div class="brand-logo">
+            <img src="{{ asset('logo.png') }}" alt="HR One">
+          </div>
+          <div>
+            <p class="brand-name">HR One</p>
+            <p class="brand-sub">Enterprise workforce operations</p>
+          </div>
+        </a>
+      </header>
+
+      <main class="layout">
+        <section class="hero">
+          <div class="hero-inner">
+            <span class="eyebrow">Plateforme RH Premium</span>
+            <h1>Manage hiring and teams with <span class="hero-highlight">clarity.</span></h1>
+            <p class="hero-copy">
+              Une experience d'authentification repensee dans un style SaaS plus editorial:
+              hierarchie forte, hero sombre, cartes nettes et parcours plus credible.
+            </p>
+            <div class="cta-row">
+              <a class="btn btn-primary" href="#login-form">Se connecter</a>
+              <a class="btn btn-secondary" href="{{ path('signup_candidat') }}">Explorer l'inscription</a>
+            </div>
+            <div class="metrics">
+              <div class="metric">
+                <strong>40k+</strong>
+                <span>organisations inspirent ce niveau de lisibilite produit.</span>
+              </div>
+              <div class="metric">
+                <strong>1</strong>
+                <span>point d'entree pour les responsables RH et les candidats.</span>
+              </div>
+              <div class="metric">
+                <strong>24/7</strong>
+                <span>acces clair aux operations, candidatures et activites RH.</span>
+              </div>
+            </div>
+            <div class="proof-card">
+              <div class="proof-top">
+                <span class="proof-badge">HR One Pro</span>
+                <span class="proof-stat">Experience unifiee</span>
+              </div>
+              <p>"Une interface plus premium renforce la confiance avant meme la premiere action."</p>
+              <span class="proof-author">Vision produit inspiree des meilleures plateformes RH modernes</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-side">
+          <div class="form-shell" id="login-form">
+            <div class="form-topbar">
+              <span class="micro-pill">Connexion securisee</span>
+              <span class="mini-meta">Acces entreprise</span>
+            </div>
+            <div class="panel-head">
+              <h2>Bienvenue de retour.</h2>
+              <p>Connectez-vous a votre espace HR One pour suivre les candidatures et centraliser les operations RH.</p>
+            </div>
+            <div class="stack">
+              <div class="info-strip">
+                <div class="info-card">
+                  <strong>Operations</strong>
+                  <span>Acces rapide aux modules RH.</span>
+                </div>
+                <div class="info-card">
+                  <strong>Confiance</strong>
+                  <span>Presentation solide pour demo ou client reel.</span>
+                </div>
+                <div class="info-card">
+                  <strong>Responsive</strong>
+                  <span>Lecture propre sur tous les ecrans.</span>
+                </div>
+              </div>
+            </div>
+
+            {% for message in app.flashes('error') %}
+              <div class="flash-error">{{ message }}</div>
+            {% endfor %}
+            {% for message in app.flashes('success') %}
+              <div class="flash-success">{{ message }}</div>
+            {% endfor %}
+
+            {{ form_start(form, {'attr': {'class': 'auth-form'}}) }}
+              <div class="form-errors full">{{ form_errors(form) }}</div>
+              <div class="field full">
+                <label>Email professionnel</label>
+                {{ form_widget(form.email, {'attr': {'placeholder': 'email@entreprise.com'}}) }}
+                {{ form_errors(form.email) }}
+              </div>
+              <div class="field full">
+                <label>Mot de passe</label>
+                {{ form_widget(form.password, {'attr': {'placeholder': 'Saisissez votre mot de passe'}}) }}
+                {{ form_errors(form.password) }}
+              </div>
+              <div class="helper-row full">
+                <span>Pas encore de compte ?</span>
+                <a class="helper-link" href="{{ path('signup_candidat') }}">Commencer l'inscription</a>
+              </div>
+              <div class="actions full">
+                {{ form_widget(form.submit, {'attr': {'class': 'btn btn-primary'}}) }}
+              </div>
+            {{ form_end(form) }}
+
+            <div class="trust-row">
+              <span class="trust-chip">Acces unifie</span>
+              <span class="trust-chip">Design premium</span>
+              <span class="trust-chip">Formulaires clairs</span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
