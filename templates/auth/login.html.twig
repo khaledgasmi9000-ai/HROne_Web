@@ -86,21 +86,18 @@
               </div>
             </div>
 
-            {% for message in app.flashes('error') %}
-              <div class="flash-error">{{ message }}</div>
-            {% endfor %}
             {% for message in app.flashes('success') %}
               <div class="flash-success">{{ message }}</div>
             {% endfor %}
 
             {{ form_start(form, {'action': path('login'), 'attr': {'class': 'auth-form'}}) }}
               <div class="form-errors full">{{ form_errors(form) }}</div>
-              <div class="field full">
+              <div class="field full{{ form.email.vars.errors|length ? ' has-error' : '' }}">
                 <label>Email professionnel</label>
                 {{ form_widget(form.email, {'attr': {'placeholder': 'email@entreprise.com'}}) }}
                 {{ form_errors(form.email) }}
               </div>
-              <div class="field full">
+              <div class="field full{{ form.password.vars.errors|length ? ' has-error' : '' }}">
                 <label>Mot de passe</label>
                 {{ form_widget(form.password, {'attr': {'placeholder': 'Saisissez votre mot de passe'}}) }}
                 {{ form_errors(form.password) }}

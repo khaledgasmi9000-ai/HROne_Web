@@ -32,11 +32,13 @@ class AuthController extends AbstractController
             $user = $this->authService->login($data['email'], $data['password']);
 
             if (!$user) {
-                $this->addFlash('error', 'Email ou mot de passe incorrect.');
-                return $this->redirectToRoute('login');
+                $message = 'Email ou mot de passe incorrect.';
+                $form->get('email')->addError(new FormError($message));
+                $form->get('password')->addError(new FormError($message));
+                $form->addError(new FormError($message));
+            } else {
+                return $this->redirectToDashboard();
             }
-
-            return $this->redirectToDashboard();
         }
 
         return $this->render('auth/login.html.twig', [
