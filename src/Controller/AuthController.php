@@ -125,10 +125,24 @@ class AuthController extends AbstractController
         ]);
     }
 
+    #[Route('/dashboard/admin', name: 'dashboard_admin')]
+    public function dashboardAdmin(): Response
+    {
+        if (!$this->authService->isAdmin()) {
+            return $this->redirectToRoute('login');
+        }
+
+        return $this->redirectToRoute('gestion_administrative');
+    }
+
     private function redirectToDashboard(): Response
     {
         if ($this->authService->isRH()) {
             return $this->redirectToRoute('dashboard_rh');
+        }
+
+        if ($this->authService->isAdmin()) {
+            return $this->redirectToRoute('dashboard_admin');
         }
 
         return $this->redirectToRoute('dashboard_candidate');

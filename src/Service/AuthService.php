@@ -137,6 +137,11 @@ class AuthService
         return $this->session()->get('role') === 'rh';
     }
 
+    public function isAdmin(): bool
+    {
+        return in_array($this->session()->get('role'), ['admin', 'employee'], true);
+    }
+
     public function hasRole(string $role): bool
     {
         return $this->session()->get('role') === $role;
@@ -146,6 +151,7 @@ class AuthService
     {
         return match (mb_strtolower(trim((string) $role))) {
             'rh' => 'rh',
+            'admin' => 'admin',
             'employee' => 'employee',
             default => 'candidate',
         };
