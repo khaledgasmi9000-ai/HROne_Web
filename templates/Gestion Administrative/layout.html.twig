@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ asset('css/Gestion Administrative/layout.css') }}">
+<link rel="stylesheet" href="{{ asset('css/Gestion Administrative/commun.css') }}">
+<link rel="stylesheet" href="{{ asset('css/Gestion Administrative/outils.css') }}">
+<link rel="stylesheet" href="{{ asset('css/Gestion Administrative/conges.css') }}">
+<link rel="stylesheet" href="{{ asset('css/Gestion Administrative/components/pagination.css') }}">
+<link rel="stylesheet" href="{{ asset('css/Gestion Administrative/components/row_actions.css') }}">
+<link rel="stylesheet" href="{{ asset('css/Gestion Administrative/components/modal.css') }}">
+
+{% block page_styles %}{% endblock %}
+{% endblock %}
+
+{% block body %}
+
+<div class="employee-dashboard" >
+    <!-- Tabs -->
+    <div class="tabs">
+        <a class="tab {{ activeTab == 'overview' ? 'active' : '' }}"
+        href="{{ path('employee_overview') }}">
+            Aperçu
+        </a>
+
+        <a class="tab {{ activeTab == 'outils' ? 'active' : '' }}"
+        href="{{ path('employee_outils') }}">
+            Outils
+        </a>
+
+        <a class="tab {{ activeTab == 'conges' ? 'active' : '' }}"
+        href="{{ path('employee_conges') }}">
+            Gestion des congés
+        </a>
+    </div>
+
+    <!-- Page content injected here -->
+    {% block employee_content %}{% endblock %}
+
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ asset('js/Gestion Administrative/components/modal_employee.js') }}"></script>
+    <script src="{{ asset('js/Gestion Administrative/components/modal_outils.js') }}"></script>
+    <script src="{{ asset('js/Gestion Administrative/components/modal_export.js') }}"></script>
+    <script src="{{ asset('js/Gestion Administrative/components/modal_import_outils.js') }}"></script>
+    <script src="{{ asset('js/Gestion Administrative/components/modal_outil_association.js') }}"></script>
+    <script src="{{ asset('js/Gestion Administrative/components/pagination.js') }}"></script>
+    <script src="{{ asset('js/Gestion Administrative/components/row_actions.js') }}"></script>
+    <script src="{{ asset('js/Gestion Administrative/employee.js') }}"></script>
+    <script src="{{ asset('js/Gestion Administrative/outils.js') }}"></script>
+    <script src="{{ asset('js/Gestion Administrative/conges.js') }}"></script>
+{% block page_scripts %}{% endblock %}
+{% endblock %}

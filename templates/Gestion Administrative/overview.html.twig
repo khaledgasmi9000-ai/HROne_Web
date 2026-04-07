@@ -1,0 +1,170 @@
+{% extends 'Gestion Administrative/layout.html.twig' %}
+
+{% set activeTab = 'overview' %}
+
+{% block title %}Employee Overview{% endblock %}
+
+{% block employee_content %}
+
+<!-- KPI -->
+<div class="kpi-grid compact">
+
+    <div class="kpi-card">
+        <span class="kpi-title">Salaire moyen</span>
+        <div class="kpi-row">
+            <h3 class="kpi-value">{{ kpi.avgSalary|number_format(2, '.', ' ') }}</h3>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <span class="kpi-title">Heures moyennes / mois</span>
+        <div class="kpi-row">
+            <h3 class="kpi-value">{{ kpi.avgHours|number_format(2, '.', ' ') }}</h3>
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <span class="kpi-title">Congé moyen pris</span>
+        <div class="kpi-row">
+            <h3 class="kpi-value">{{ kpi.avgCongeTaken|default('0') }}</h3>
+        </div>
+    </div>
+
+</div>
+
+<!-- Table Section -->
+<div class="table-section">
+
+    <div class="table-header">
+
+        <!-- LEFT -->
+        <div class="table-controls-left">
+
+            <!-- Work hours filter -->
+            <select name="hours" class="filter-select">
+                <option value="">Heures / mois ≥</option>
+                <option value="160" {{ app.request.get('hours') == '160' ? 'selected' }}>160</option>
+                <option value="180" {{ app.request.get('hours') == '180' ? 'selected' }}>180</option>
+            </select>
+
+            <!-- Salary filter -->
+            <select name="salary" class="filter-select">
+                <option value="">Salaire ≥</option>
+                <option value="3000" {{ app.request.get('salary') == '3000' ? 'selected' }}>3000</option>
+                <option value="2000" {{ app.request.get('salary') == '2000' ? 'selected' }}>2000</option>
+            </select>
+            
+            <!-- Search -->
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="searchEmployee" 
+                    value="{{ app.request.get('search') }}"
+                    placeholder="Rechercher..." 
+                />
+
+                <button id="searchBtnEmployee" class="btn secondary with-icon">
+                    <span class="icon">🔍</span>
+                </button>
+            </div>
+            
+
+        </div>
+
+        <!-- RIGHT -->
+        <div class="table-controls-right">
+
+            <button onclick="openExportModal({
+                url: window.exportEmployeeUrl,
+                filename: 'employees',
+                title: 'Exporter les employés'
+            })" class="btn secondary with-icon">
+                <span class="icon">⬇</span>
+                Export
+            </button>
+
+            <button id="btnAddEmployee"class="btn primary with-icon">
+                <span class="icon">＋</span>
+                Ajouter nouvel employé
+            </button>
+
+        </div>
+
+    </div>
+
+    <div class="table-container fixed">
+        <table>
+            <thead>
+                <tr>
+                    <th style="display:none;">ID</th>
+                    <th>Nom</th>
+                    <th>Email</th>
+                    <th>Solde Congé</th>
+                    <th>Solde Restant</th>
+                    <th>Salaire</th>
+                    <th>Heures / mois</th>
+                    <th></th> {# Operations column #}
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for employee in employees %}
+                    <tr data-id="{{ employee.id|default(0) }}">
+
+                        <!-- Hidden ID -->
+                        <td style="display:none;">{{ employee.id|default(0) }}</td>
+
+                        <td class="employee-name">{{ employee.name }}</td>
+                        <td>{{ employee.email|default('email@domain.com') }}</td>
+                        <td>{{ employee.soldeConge|default('20') }}</td>
+                        <td>{{ employee.soldeRestant|default('12') }}</td>
+                        <td>{{ employee.salaire|default('2500') }}</td>
+                        <td>{{ employee.heures|default('160') }}</td>
+
+                       <td class="actions-cell">
+                            {% include 'Gestion Administrative/components/row_actions.html.twig' with {
+                                employeeId: employee.id,
+                                context: 'employee',
+                                actions: [
+                                    {
+                                        name: 'tools',
+                                        label: 'Gérer outils',
+                                        icon: '🧰'
+                                    }
+                                ]
+                            } %}
+                        </td>
+
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8">Aucun employé trouvé</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% include 'Gestion Administrative/components/pagination.html.twig' with {
+        currentPage: currentPage,
+        totalPages: totalPages,
+        rowsPerPage: rowsPerPage,
+        totalEmployees: totalEmployees,
+        currentCount: employees|length
+    } %}
+
+    {% include 'Gestion Administrative/components/modal_employee.html.twig' %}   
+    {% include 'Gestion Administrative/components/modal_export.html.twig' %}
+    {% include 'Gestion Administrative/components/modal_outil_association.html.twig' %}
+<script>
+    window.deleteEmployeeUrlTemplate = "{{ path('employee_delete', {'id': 'EMP_ID'}) }}";
+    window.getEmployeeUrl = "{{ path('employee_get', {'id': 'EMP_ID'}) }}";
+    window.createEmployeeUrl = "{{ path('employee_create') }}";
+    window.updateEmployeeUrl = "{{ path('employee_update', {'id': 'EMP_ID'}) }}";
+    window.checkEmployeeUrl = "{{ path('employee_check') }}";
+    window.exportEmployeeUrl = "{{ path('employee_export') }}";
+    window.getEmployeeToolsUrl = "{{ path('employee_tools_get', {'id': 'EMP_ID'}) }}";
+    window.saveEmployeeToolsUrl = "{{ path('employee_tools_save', {'id': 'EMP_ID'}) }}";
+</script>
+
+{% endblock %}

@@ -1,0 +1,206 @@
+:root {
+    --bg-main: #0f172a;
+    --bg-card: #1e293b;
+    --bg-hover: #334155;
+
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+
+    --primary: #7c3aed;
+    --primary-light: #a78bfa;
+
+    --success: #22c55e;
+    --danger: #ef4444;
+
+    --border: #334155;
+}
+
+/* Layout */
+.employee-dashboard {
+    padding: 20px;
+    color: var(--text-main);
+}
+
+
+/* KPI */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* was 4 */
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.kpi-grid.compact {
+    grid-template-columns: repeat(3, 1fr); /* was 4 */
+    gap: 10px;
+}
+
+.kpi-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.kpi-card {
+    background: var(--bg-card);
+    padding: 12px;
+    border-radius: 12px;
+}
+
+.kpi-title {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.kpi-value {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.kpi-change {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.kpi-change.positive {
+    color: var(--success);
+}
+
+.kpi-change.negative {
+    color: var(--danger);
+}
+
+/* Table Section */
+.table-section {
+    background: var(--bg-card);
+    padding: 20px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    height: 550px; /* adjust later */
+}
+
+
+.table-container.fixed {
+    flex: 1;
+    overflow: visible;
+}
+
+/* Header */
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    align-items: center;
+}
+
+.table-controls-left {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.table-controls-left select,
+.table-controls-left input {
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 8px;
+    border-radius: 6px;
+}
+
+.filter-select {
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 8px 12px;
+    border-radius: 8px;
+    min-width: 140px;
+}
+
+.search-box input {
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 8px 12px;
+    border-radius: 8px;
+    width: 220px;
+}
+
+.table-controls-right {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* space between buttons */
+}
+
+.table-controls-right .btn {
+    padding: 10px 18px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 10px; /* was too small */
+    border: none;
+    cursor: pointer;
+    
+}
+
+/* Icon inside button */
+.btn .icon {
+    font-size: 14px;
+    display: inline-flex;
+}
+
+/* Stronger primary */
+.btn.primary {
+    background: var(--primary);
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+/* Secondary clearer */
+.btn.secondary {
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    border-radius: 10px;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    transition: all 0.15s ease;
+}
+
+.btn.primary:hover {
+    background: var(--primary-light);
+}
+
+.btn.secondary:hover {
+    background: var(--bg-card);
+}
+
+/* Table */
+.table-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+}
+
+thead {
+    color: var(--text-muted);
+}
+
+tbody tr {
+    border-top: 1px solid var(--border);
+}
+
+tbody tr:hover {
+    background: var(--bg-hover);
+}
