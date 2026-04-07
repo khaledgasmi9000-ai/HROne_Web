@@ -79,42 +79,42 @@
 
             {{ form_start(form, {'attr': {'class': 'auth-form grid-2'}}) }}
               <div class="form-errors full">{{ form_errors(form) }}</div>
-              <div class="field">
+              <div class="field{{ form.username.vars.errors|length ? ' has-error' : '' }}">
                 <label>Nom d'utilisateur</label>
                 {{ form_widget(form.username, {'attr': {'placeholder': "Nom d'utilisateur"}}) }}
                 {{ form_errors(form.username) }}
               </div>
-              <div class="field">
+              <div class="field{{ form.password.vars.errors|length ? ' has-error' : '' }}">
                 <label>Mot de passe</label>
                 {{ form_widget(form.password, {'attr': {'placeholder': 'Mot de passe'}}) }}
                 {{ form_errors(form.password) }}
               </div>
-              <div class="field">
+              <div class="field{{ form.email.vars.errors|length ? ' has-error' : '' }}">
                 <label>Email</label>
                 {{ form_widget(form.email, {'attr': {'placeholder': 'email@exemple.com'}}) }}
                 {{ form_errors(form.email) }}
               </div>
-              <div class="field">
+              <div class="field{{ form.address.vars.errors|length ? ' has-error' : '' }}">
                 <label>Adresse</label>
                 {{ form_widget(form.address, {'attr': {'placeholder': 'Adresse'}}) }}
                 {{ form_errors(form.address) }}
               </div>
-              <div class="field">
+              <div class="field{{ form.phone.vars.errors|length ? ' has-error' : '' }}">
                 <label>Telephone</label>
                 {{ form_widget(form.phone, {'attr': {'placeholder': '06 00 00 00 00'}}) }}
                 {{ form_errors(form.phone) }}
               </div>
-              <div class="field">
+              <div class="field{{ form.cin.vars.errors|length ? ' has-error' : '' }}">
                 <label>CIN</label>
                 {{ form_widget(form.cin, {'attr': {'placeholder': 'CIN'}}) }}
                 {{ form_errors(form.cin) }}
               </div>
-              <div class="field">
+              <div class="field{{ form.birth.vars.errors|length ? ' has-error' : '' }}">
                 <label>Date de naissance</label>
                 {{ form_widget(form.birth) }}
                 {{ form_errors(form.birth) }}
               </div>
-              <div class="field">
+              <div class="field{{ form.gender.vars.errors|length ? ' has-error' : '' }}">
                 <label>Genre</label>
                 {{ form_widget(form.gender) }}
                 {{ form_errors(form.gender) }}

@@ -105,49 +105,49 @@
 
               <p class="section-title full">Informations RH</p>
 
-              <div class="field">
+              <div class="field{{ form.Nom_Utilisateur.vars.errors|length ? ' has-error' : '' }}">
                 {{ form_label(form.Nom_Utilisateur) }}
                 {{ form_widget(form.Nom_Utilisateur, {'attr': {'placeholder': 'Nom d\'utilisateur'}}) }}
                 {{ form_errors(form.Nom_Utilisateur) }}
               </div>
 
-              <div class="field">
+              <div class="field{{ form.Mot_Passe.vars.errors|length ? ' has-error' : '' }}">
                 {{ form_label(form.Mot_Passe) }}
                 {{ form_widget(form.Mot_Passe, {'attr': {'placeholder': 'Mot de passe'}}) }}
                 {{ form_errors(form.Mot_Passe) }}
               </div>
 
-              <div class="field">
+              <div class="field{{ form.Email.vars.errors|length ? ' has-error' : '' }}">
                 {{ form_label(form.Email) }}
                 {{ form_widget(form.Email, {'attr': {'placeholder': 'email@entreprise.com'}}) }}
                 {{ form_errors(form.Email) }}
               </div>
 
-              <div class="field">
+              <div class="field{{ form.Adresse.vars.errors|length ? ' has-error' : '' }}">
                 {{ form_label(form.Adresse) }}
                 {{ form_widget(form.Adresse, {'attr': {'placeholder': 'Adresse'}}) }}
                 {{ form_errors(form.Adresse) }}
               </div>
 
-              <div class="field">
+              <div class="field{{ form.Num_Tel.vars.errors|length ? ' has-error' : '' }}">
                 {{ form_label(form.Num_Tel) }}
                 {{ form_widget(form.Num_Tel, {'attr': {'placeholder': '06 00 00 00 00'}}) }}
                 {{ form_errors(form.Num_Tel) }}
               </div>
 
-              <div class="field">
+              <div class="field{{ form.CIN.vars.errors|length ? ' has-error' : '' }}">
                 {{ form_label(form.CIN) }}
                 {{ form_widget(form.CIN, {'attr': {'placeholder': 'CIN'}}) }}
                 {{ form_errors(form.CIN) }}
               </div>
 
-              <div class="field">
+              <div class="field{{ form.Date_Naissance.vars.errors|length ? ' has-error' : '' }}">
                 {{ form_label(form.Date_Naissance) }}
                 {{ form_widget(form.Date_Naissance) }}
                 {{ form_errors(form.Date_Naissance) }}
               </div>
 
-              <div class="field">
+              <div class="field{{ form.Gender.vars.errors|length ? ' has-error' : '' }}">
                 {{ form_label(form.Gender) }}
                 {{ form_widget(form.Gender) }}
                 {{ form_errors(form.Gender) }}
@@ -155,13 +155,13 @@
 
               <p class="section-title full">Informations entreprise</p>
 
-              <div class="field">
+              <div class="field{{ form.entreprise.Nom_Entreprise.vars.errors|length ? ' has-error' : '' }}">
                 {{ form_label(form.entreprise.Nom_Entreprise) }}
                 {{ form_widget(form.entreprise.Nom_Entreprise, {'attr': {'placeholder': 'Nom de l\'entreprise'}}) }}
                 {{ form_errors(form.entreprise.Nom_Entreprise) }}
               </div>
 
-              <div class="field">
+              <div class="field{{ form.entreprise.Reference.vars.errors|length ? ' has-error' : '' }}">
                 {{ form_label(form.entreprise.Reference) }}
                 {{ form_widget(form.entreprise.Reference, {'attr': {'placeholder': 'Reference'}}) }}
                 {{ form_errors(form.entreprise.Reference) }}

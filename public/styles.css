@@ -1402,6 +1402,18 @@ img {
   font-weight: 600;
 }
 
+.field.has-error label {
+  color: var(--danger);
+}
+
+.field.has-error input,
+.field.has-error select,
+.field.has-error textarea {
+  border-color: rgba(180, 35, 24, 0.42);
+  background: linear-gradient(180deg, #ffffff, #fff7f6);
+  box-shadow: 0 0 0 4px rgba(180, 35, 24, 0.08);
+}
+
 .field:has(ul) input,
 .field:has(ul) select,
 .field:has(ul) textarea {

@@ -150,12 +150,14 @@ class AuthController extends AbstractController
 
     private function attachDomainErrorToCandidateForm(FormInterface $form, string $message): void
     {
-        if (str_contains($message, 'email')) {
+        $normalizedMessage = mb_strtolower($message);
+
+        if (str_contains($normalizedMessage, 'email')) {
             $form->get('email')->addError(new FormError($message));
             return;
         }
 
-        if (str_contains($message, 'CIN')) {
+        if (str_contains($normalizedMessage, 'cin')) {
             $form->get('cin')->addError(new FormError($message));
             return;
         }
@@ -165,22 +167,24 @@ class AuthController extends AbstractController
 
     private function attachDomainErrorToRhForm(FormInterface $form, string $message): void
     {
-        if (str_contains($message, 'email')) {
+        $normalizedMessage = mb_strtolower($message);
+
+        if (str_contains($normalizedMessage, 'email')) {
             $form->get('Email')->addError(new FormError($message));
             return;
         }
 
-        if (str_contains($message, 'CIN')) {
+        if (str_contains($normalizedMessage, 'cin')) {
             $form->get('CIN')->addError(new FormError($message));
             return;
         }
 
-        if (str_contains($message, 'nom d\'entreprise')) {
+        if (str_contains($normalizedMessage, 'nom d\'entreprise')) {
             $form->get('entreprise')->get('Nom_Entreprise')->addError(new FormError($message));
             return;
         }
 
-        if (str_contains($message, 'reference')) {
+        if (str_contains($normalizedMessage, 'reference')) {
             $form->get('entreprise')->get('Reference')->addError(new FormError($message));
             return;
         }
