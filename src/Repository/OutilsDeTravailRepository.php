@@ -31,12 +31,12 @@ class OutilsDeTravailRepository extends ServiceEntityRepository
         $conn = $this->getEntityManager()->getConnection();
 
         $conn->executeStatement(
-            "DELETE FROM outils_de_travail WHERE ID_OUTIL = :id",
+            "DELETE FROM outil_employee WHERE ID_OUTIL = :id",
             ['id' => $id]
         );
 
         $conn->executeStatement(
-            "DELETE FROM outil_employee WHERE ID_OUTIL = :id",
+            "DELETE FROM outils_de_travail WHERE ID_OUTIL = :id",
             ['id' => $id]
         );
 
