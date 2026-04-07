@@ -2,21 +2,75 @@
 
 namespace App\Entity;
 
-use Doctrine\DBAL\Types\Types;
-use Doctrine\ORM\Mapping as ORM;
+use App\Repository\EvenementRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-
-use App\Repository\EvenementRepository;
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: EvenementRepository::class)]
 #[ORM\Table(name: 'evenement')]
 class Evenement
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'ID_Evenement', type: 'integer')]
     private ?int $ID_Evenement = null;
+
+    #[ORM\Column(name: 'Titre', type: 'string', nullable: false)]
+    #[Assert\NotBlank(message: "Le titre est obligatoire.")]
+    #[Assert\Length(min: 3, max: 100)]
+    private ?string $Titre = null;
+
+    #[ORM\Column(name: 'Description', type: 'text', nullable: true)]
+    private ?string $Description = null;
+
+    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'evenementsCreation')]
+    #[ORM\JoinColumn(name: 'Num_Ordre_Creation', referencedColumnName: 'Num_Ordre')]
+    private ?Ordre $ordreCreation = null;
+
+    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'evenementsDebut')]
+    #[ORM\JoinColumn(name: 'Num_Ordre_Debut_Evenement', referencedColumnName: 'Num_Ordre')]
+    private ?Ordre $ordreDebut = null;
+
+    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'evenementsFin')]
+    #[ORM\JoinColumn(name: 'Num_Ordre_Fin_Evenement', referencedColumnName: 'Num_Ordre')]
+    private ?Ordre $ordreFin = null;
+
+    #[ORM\Column(name: 'Localisation', type: 'string', nullable: true)]
+    #[Assert\NotBlank(message: 'La localisation est obligatoire.')]
+    private ?string $Localisation = null;
+
+    #[ORM\Column(name: 'Image', type: 'string', nullable: true)]
+    #[Assert\Url(message: "L'URL de l'image n'est pas valide.")]
+    private ?string $Image = null;
+
+    #[ORM\Column(name: 'est_payant', type: 'boolean', nullable: true)]
+    private ?bool $est_payant = null;
+
+    #[ORM\Column(name: 'prix', type: 'decimal', precision: 10, scale: 2, nullable: true)]
+    #[Assert\PositiveOrZero(message: 'Le prix ne peut pas etre negatif.')]
+    private ?float $prix = null;
+
+    #[ORM\Column(name: 'nbMax', type: 'integer', nullable: true)]
+    #[Assert\PositiveOrZero(message: 'Le nombre maximum de participants doit etre positif ou nul.')]
+    private ?int $nbMax = null;
+
+    #[ORM\OneToMany(targetEntity: ListeAttente::class, mappedBy: 'evenement')]
+    private Collection $listeAttentes;
+
+    #[ORM\OneToMany(targetEntity: ParticipationEvenement::class, mappedBy: 'evenement')]
+    private Collection $participationEvenements;
+
+    #[ORM\OneToMany(targetEntity: DetailEvenement::class, mappedBy: 'evenement', cascade: ['persist', 'remove'])]
+    private Collection $details;
+
+    public function __construct()
+    {
+        $this->listeAttentes = new ArrayCollection();
+        $this->participationEvenements = new ArrayCollection();
+        $this->details = new ArrayCollection();
+    }
 
     public function getID_Evenement(): ?int
     {
@@ -26,11 +80,9 @@ class Evenement
     public function setID_Evenement(int $ID_Evenement): self
     {
         $this->ID_Evenement = $ID_Evenement;
+
         return $this;
     }
-
-    #[ORM\Column(type: 'string', nullable: false)]
-    private ?string $Titre = null;
 
     public function getTitre(): ?string
     {
@@ -40,11 +92,9 @@ class Evenement
     public function setTitre(string $Titre): self
     {
         $this->Titre = $Titre;
+
         return $this;
     }
-
-    #[ORM\Column(type: 'text', nullable: true)]
-    private ?string $Description = null;
 
     public function getDescription(): ?string
     {
@@ -54,12 +104,9 @@ class Evenement
     public function setDescription(?string $Description): self
     {
         $this->Description = $Description;
+
         return $this;
     }
-
-    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'evenements')]
-    #[ORM\JoinColumn(name: 'Num_Ordre_Creation', referencedColumnName: 'Num_Ordre')]
-    private ?Ordre $ordreCreation = null;
 
     public function getOrdreCreation(): ?Ordre
     {
@@ -69,12 +116,9 @@ class Evenement
     public function setOrdreCreation(?Ordre $ordreCreation): self
     {
         $this->ordreCreation = $ordreCreation;
+
         return $this;
     }
-
-    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'evenements')]
-    #[ORM\JoinColumn(name: 'Num_Ordre_Debut_Evenement', referencedColumnName: 'Num_Ordre')]
-    private ?Ordre $ordreDebut = null;
 
     public function getOrdreDebut(): ?Ordre
     {
@@ -84,12 +128,9 @@ class Evenement
     public function setOrdreDebut(?Ordre $ordreDebut): self
     {
         $this->ordreDebut = $ordreDebut;
+
         return $this;
     }
-
-    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'evenements')]
-    #[ORM\JoinColumn(name: 'Num_Ordre_Fin_Evenement', referencedColumnName: 'Num_Ordre')]
-    private ?Ordre $ordreFin = null;
 
     public function getOrdreFin(): ?Ordre
     {
@@ -99,11 +140,9 @@ class Evenement
     public function setOrdreFin(?Ordre $ordreFin): self
     {
         $this->ordreFin = $ordreFin;
+
         return $this;
     }
-
-    #[ORM\Column(type: 'string', nullable: true)]
-    private ?string $Localisation = null;
 
     public function getLocalisation(): ?string
     {
@@ -113,11 +152,9 @@ class Evenement
     public function setLocalisation(?string $Localisation): self
     {
         $this->Localisation = $Localisation;
+
         return $this;
     }
-
-    #[ORM\Column(type: 'string', nullable: true)]
-    private ?string $Image = null;
 
     public function getImage(): ?string
     {
@@ -127,11 +164,9 @@ class Evenement
     public function setImage(?string $Image): self
     {
         $this->Image = $Image;
+
         return $this;
     }
-
-    #[ORM\Column(type: 'boolean', nullable: true)]
-    private ?bool $est_payant = null;
 
     public function isEst_payant(): ?bool
     {
@@ -141,11 +176,9 @@ class Evenement
     public function setEst_payant(?bool $est_payant): self
     {
         $this->est_payant = $est_payant;
+
         return $this;
     }
-
-    #[ORM\Column(type: 'decimal', nullable: true)]
-    private ?float $prix = null;
 
     public function getPrix(): ?float
     {
@@ -155,11 +188,9 @@ class Evenement
     public function setPrix(?float $prix): self
     {
         $this->prix = $prix;
+
         return $this;
     }
-
-    #[ORM\Column(type: 'integer', nullable: true)]
-    private ?int $nbMax = null;
 
     public function getNbMax(): ?int
     {
@@ -169,82 +200,89 @@ class Evenement
     public function setNbMax(?int $nbMax): self
     {
         $this->nbMax = $nbMax;
+
         return $this;
     }
-
-    #[ORM\OneToMany(targetEntity: ListeAttente::class, mappedBy: 'evenement')]
-    private Collection $listeAttentes;
 
     /**
      * @return Collection<int, ListeAttente>
      */
     public function getListeAttentes(): Collection
     {
-        if (!$this->listeAttentes instanceof Collection) {
-            $this->listeAttentes = new ArrayCollection();
-        }
         return $this->listeAttentes;
     }
 
     public function addListeAttente(ListeAttente $listeAttente): self
     {
-        if (!$this->getListeAttentes()->contains($listeAttente)) {
-            $this->getListeAttentes()->add($listeAttente);
+        if (!$this->listeAttentes->contains($listeAttente)) {
+            $this->listeAttentes->add($listeAttente);
+            $listeAttente->setEvenement($this);
         }
+
         return $this;
     }
 
     public function removeListeAttente(ListeAttente $listeAttente): self
     {
-        $this->getListeAttentes()->removeElement($listeAttente);
+        if ($this->listeAttentes->removeElement($listeAttente) && $listeAttente->getEvenement() === $this) {
+            $listeAttente->setEvenement(null);
+        }
+
         return $this;
     }
-
-    #[ORM\OneToMany(targetEntity: ParticipationEvenement::class, mappedBy: 'evenement')]
-    private Collection $participationEvenements;
 
     /**
      * @return Collection<int, ParticipationEvenement>
      */
     public function getParticipationEvenements(): Collection
     {
-        if (!$this->participationEvenements instanceof Collection) {
-            $this->participationEvenements = new ArrayCollection();
-        }
         return $this->participationEvenements;
     }
 
     public function addParticipationEvenement(ParticipationEvenement $participationEvenement): self
     {
-        if (!$this->getParticipationEvenements()->contains($participationEvenement)) {
-            $this->getParticipationEvenements()->add($participationEvenement);
+        if (!$this->participationEvenements->contains($participationEvenement)) {
+            $this->participationEvenements->add($participationEvenement);
+            $participationEvenement->setEvenement($this);
         }
+
         return $this;
     }
 
     public function removeParticipationEvenement(ParticipationEvenement $participationEvenement): self
     {
-        $this->getParticipationEvenements()->removeElement($participationEvenement);
+        if ($this->participationEvenements->removeElement($participationEvenement) && $participationEvenement->getEvenement() === $this) {
+            $participationEvenement->setEvenement(null);
+        }
+
         return $this;
     }
 
-    #[ORM\ManyToMany(targetEntity: Activite::class, inversedBy: 'evenements')]
-    #[ORM\JoinTable(
-        name: 'detail_evenement',
-        joinColumns: [
-            new ORM\JoinColumn(name: 'ID_Evenement', referencedColumnName: 'ID_Evenement')
-        ],
-        inverseJoinColumns: [
-            new ORM\JoinColumn(name: 'ID_Activite', referencedColumnName: 'ID_Activite')
-        ]
-    )]
-    private Collection $activites;
-
-    public function __construct()
+    /**
+     * @return Collection<int, DetailEvenement>
+     */
+    public function getDetails(): Collection
     {
-        $this->listeAttentes = new ArrayCollection();
-        $this->participationEvenements = new ArrayCollection();
-        $this->activites = new ArrayCollection();
+        return $this->details;
+    }
+
+    public function addDetail(DetailEvenement $detail): self
+    {
+        if (!$this->details->contains($detail)) {
+            $this->details->add($detail);
+            $detail->setEvenement($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDetail(DetailEvenement $detail): self
+    {
+        if ($this->details->removeElement($detail) && $detail->getEvenement() === $this) {
+            $detail->setEvenement(null);
+        }
+
+        return $this;
     }
 
     /**
@@ -252,23 +290,42 @@ class Evenement
      */
     public function getActivites(): Collection
     {
-        if (!$this->activites instanceof Collection) {
-            $this->activites = new ArrayCollection();
+        $activites = new ArrayCollection();
+
+        foreach ($this->details as $detail) {
+            $activite = $detail->getActivite();
+            if ($activite !== null && !$activites->contains($activite)) {
+                $activites->add($activite);
+            }
         }
-        return $this->activites;
+
+        return $activites;
     }
 
     public function addActivite(Activite $activite): self
     {
-        if (!$this->getActivites()->contains($activite)) {
-            $this->getActivites()->add($activite);
+        foreach ($this->details as $detail) {
+            if ($detail->getActivite() === $activite) {
+                return $this;
+            }
         }
+
+        $detail = new DetailEvenement();
+        $detail->setEvenement($this);
+        $detail->setActivite($activite);
+        $this->addDetail($detail);
+
         return $this;
     }
 
     public function removeActivite(Activite $activite): self
     {
-        $this->getActivites()->removeElement($activite);
+        foreach ($this->details as $detail) {
+            if ($detail->getActivite() === $activite) {
+                $this->removeDetail($detail);
+            }
+        }
+
         return $this;
     }
 
@@ -289,4 +346,76 @@ class Evenement
         return $this;
     }
 
+    #[Assert\Callback]
+    public function validatePrice(ExecutionContextInterface $context): void
+    {
+        if ($this->est_payant && ($this->prix === null || $this->prix <= 0)) {
+            $context->buildViolation("Le prix est obligatoire si l'evenement est payant.")
+                ->atPath('prix')
+                ->addViolation();
+        }
+    }
+
+    public function getRealDateDebut(): \DateTime
+    {
+        $ordre = $this->getOrdreDebut();
+
+        if ($ordre === null) {
+            return new \DateTime();
+        }
+
+        return (new \DateTime())
+            ->setDate($ordre->getAAAA(), $ordre->getMM(), $ordre->getJJ())
+            ->setTime($ordre->getHH(), $ordre->getMN(), $ordre->getSS());
+    }
+
+    public function getRealDateFin(): \DateTime
+    {
+        $ordre = $this->getOrdreFin();
+
+        if ($ordre === null) {
+            return new \DateTime();
+        }
+
+        return (new \DateTime())
+            ->setDate($ordre->getAAAA(), $ordre->getMM(), $ordre->getJJ())
+            ->setTime($ordre->getHH(), $ordre->getMN(), $ordre->getSS());
+    }
+
+    public function getBadgeLabel(): string
+    {
+        if ($this->prix == 0 || !$this->est_payant) {
+            return 'OFFERT';
+        }
+
+        if ($this->prix > 100) {
+            return 'PREMIUM';
+        }
+
+        return 'STANDARD';
+    }
+
+    public function getBadgeColor(): string
+    {
+        if ($this->getBadgeLabel() === 'OFFERT') {
+            return '#dcfce7';
+        }
+
+        if ($this->getBadgeLabel() === 'PREMIUM') {
+            return '#fef3c7';
+        }
+
+        return '#f1f5f9';
+    }
+
+    public function getDurationHours(): int
+    {
+        if ($this->ordreDebut === null || $this->ordreFin === null) {
+            return 0;
+        }
+
+        $diff = $this->getRealDateDebut()->diff($this->getRealDateFin());
+
+        return ($diff->days * 24) + $diff->h;
+    }
 }

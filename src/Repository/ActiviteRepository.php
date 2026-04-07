@@ -31,13 +31,13 @@ class ActiviteRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-//    public function findOneBySomeField($value): ?Activite
-//    {
-//        return $this->createQueryBuilder('a')
-//            ->andWhere('a.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    public function getNextId(): int
+    {
+        $maxId = $this->createQueryBuilder('a')
+            ->select('MAX(a.ID_Activite)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return ($maxId ?: 0) + 1;
+    }
 }

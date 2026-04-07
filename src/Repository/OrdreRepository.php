@@ -31,13 +31,13 @@ class OrdreRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-//    public function findOneBySomeField($value): ?Ordre
-//    {
-//        return $this->createQueryBuilder('o')
-//            ->andWhere('o.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    public function getNextId(): int
+    {
+        $maxId = $this->createQueryBuilder('o')
+            ->select('MAX(o.Num_Ordre)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return ($maxId ?: 0) + 1;
+    }
 }

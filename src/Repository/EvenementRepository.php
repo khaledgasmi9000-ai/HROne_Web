@@ -31,13 +31,46 @@ class EvenementRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-//    public function findOneBySomeField($value): ?Evenement
-//    {
-//        return $this->createQueryBuilder('e')
-//            ->andWhere('e.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    public function getNextId(): int
+    {
+        $maxId = $this->createQueryBuilder('e')
+            ->select('MAX(e.ID_Evenement)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return ($maxId ?: 0) + 1;
+    }
+
+    /**
+     * RECHERCHE & TRI : Méthode dynamique pour le Front-End
+     */
+    public function findBySearchAndSort(?string $search, ?string $sort): array
+    {
+        $qb = $this->createQueryBuilder('e');
+
+        // 1. Recherche par mot-clé (Titre UNIQUEMENT)
+        if ($search) {
+            $qb->andWhere('e.Titre LIKE :query')
+               ->setParameter('query', '%' . $search . '%');
+        }
+
+        // 2. Logique de Tri
+        switch ($sort) {
+            case 'price_asc':
+                $qb->orderBy('e.prix', 'ASC');
+                break;
+            case 'price_desc':
+                $qb->orderBy('e.prix', 'DESC');
+                break;
+            case 'name_asc':
+                $qb->orderBy('e.Titre', 'ASC');
+                break;
+            default:
+                // Par défaut, on trie par ID décroissant (le plus récent en premier)
+                $qb->orderBy('e.ID_Evenement', 'DESC');
+                break;
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }

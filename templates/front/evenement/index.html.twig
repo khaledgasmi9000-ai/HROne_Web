@@ -1,0 +1,75 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}Espace Événements - HR One{% endblock %}
+
+{% block body %}
+    <h1>🎉 Événements pour vous</h1>
+    <p>Découvrez tous les événements et participez à la vie de l'entreprise.</p>
+
+    {# SECTION RECHERCHE ET TRI (AUTOMATISÉ) #}
+    <div class="filter-controls" style="background: #fff; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin: 1.5rem 0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+        <form action="{{ path('app_front_evenement_index') }}" method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+            
+            {# RECHERCHE #}
+            <div style="flex: 2; min-width: 250px; display: flex; gap: 0.5rem;">
+                <input type="text" name="search" value="{{ search }}" placeholder="Rechercher par nom..." 
+                       style="flex: 1; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem;">
+                <button type="submit" style="background: #2563eb; color: #fff; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                    🔍
+                </button>
+            </div>
+
+            {# TRI AUTOMATIQUE (onchange) #}
+            <div style="flex: 1; min-width: 200px;">
+                <select name="sort" onchange="this.form.submit()" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; background: #fff; cursor: pointer;">
+                    <option value="" {% if sort == '' %}selected{% endif %}>📅 Trier par : Par défaut</option>
+                    <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>💰 Prix : croissant</option>
+                    <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>💎 Prix : décroissant</option>
+                    <option value="name_asc" {% if sort == 'name_asc' %}selected{% endif %}>🔤 Nom : A-Z</option>
+                </select>
+            </div>
+
+            {# BOUTON RÉINITIALISER #}
+            {% if search or sort %}
+                <a href="{{ path('app_front_evenement_index') }}" style="color: #64748b; text-decoration: none; font-size: 0.9rem; font-weight: 600; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    ✖ Réinitialiser
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="events-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+        {% for ev in evenements %}
+            <div class="event-card" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                {% if ev.Image %}
+                    <img src="{{ ev.Image }}" alt="{{ ev.Titre }}" style="width: 100%; height: 180px; object-fit: cover;">
+                {% else %}
+                    <div style="width: 100%; height: 180px; background: #f8fafc; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 3rem;">📅</div>
+                {% endif %}
+
+                <div style="padding: 1.2rem;">
+                    <h3 style="margin: 0; font-size: 1.2rem; color: #0f172a;">{{ ev.Titre }}</h3>
+                    
+                    <p style="margin: 0.2rem 0; color: #64748b; font-size: 0.9rem;">📍 {{ ev.Localisation ?? 'Non spécifiée' }}</p>
+                    <p style="margin: 0.2rem 0; color: #94a3b8; font-size: 0.8rem;">⌛ Durée : {{ ev.getDurationHours() }}h</p>
+
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                        <span class="badge" style="background: {{ ev.getBadgeColor() }}; color: #1e293b; font-weight: 700;">
+                            {{ ev.getBadgeLabel() }} {{ ev.prix > 0 ? '(' ~ ev.prix ~ ' DT)' : '' }}
+                        </span>
+                        <span class="badge" style="background: #dbeafe; color: #1e40af;">{{ ev.activites|length }} activités</span>
+                    </div>
+
+                    <a href="{{ path('app_front_evenement_show', {id: ev.IDEvenement}) }}" 
+                       style="display: block; margin-top: 1.2rem; background: #2563eb; color: #fff; text-align: center; padding: 10px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                       Voir les détails
+                    </a>
+                </div>
+            </div>
+        {% else %}
+            <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                <p style="color: #64748b;">Aucun événement n'est disponible pour le moment.</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
