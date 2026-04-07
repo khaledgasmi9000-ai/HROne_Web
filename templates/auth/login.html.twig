@@ -93,7 +93,7 @@
               <div class="flash-success">{{ message }}</div>
             {% endfor %}
 
-            {{ form_start(form, {'attr': {'class': 'auth-form'}}) }}
+            {{ form_start(form, {'action': path('login'), 'attr': {'class': 'auth-form'}}) }}
               <div class="form-errors full">{{ form_errors(form) }}</div>
               <div class="field full">
                 <label>Email professionnel</label>
