@@ -78,14 +78,16 @@ class DemandeCongeRepository extends ServiceEntityRepository
 
         // $ordreFin = $em->getRepository(Ordre::class)
         //     ->find(Ordre::dateToNumOrdre(new \DateTime($end)));
-        echo "Start: $start, End: $end\n";
-        $ordreDebut = new Ordre();
-        $ordreDebut->setNum_Ordre(Ordre::dateToNumOrdre(new \DateTime($start)));
-        $ordreFin = new Ordre();
-        $ordreFin->setNum_Ordre(Ordre::dateToNumOrdre(new \DateTime($end)));
-        
-        echo "Ordre Debut Num: " . $ordreDebut->getNum_Ordre() . "\n";
-        echo "Ordre Fin Num: " . $ordreFin->getNum_Ordre() . "\n";
+
+        $numOrdreDebut = Ordre::dateToNumOrdre(new \DateTime($start));
+        $numOrdreFin   = Ordre::dateToNumOrdre(new \DateTime($end));
+
+
+        $ordreRepo = $em->getRepository(Ordre::class);
+
+        $ordreDebut = $ordreRepo->getOrCreateOrdre($numOrdreDebut);
+        $ordreFin   = $ordreRepo->getOrCreateOrdre($numOrdreFin);
+
         $conge = new DemandeConge();
         $conge->setEmployee($employee);
         $conge->setOrdreDebut($ordreDebut);
@@ -93,7 +95,6 @@ class DemandeCongeRepository extends ServiceEntityRepository
         $conge->setNbrJourDemande($nbrJours);
         $conge->setStatus(0);
 
-        dump($conge);
         $em->persist($conge);
         $em->flush();
 

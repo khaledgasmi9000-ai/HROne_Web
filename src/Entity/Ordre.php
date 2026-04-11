@@ -47,7 +47,6 @@ class Ordre
     }
 
     #[ORM\Id]
-    #[ORM\GeneratedValue]
     #[ORM\Column(name: 'Num_Ordre', type: 'integer')]
     private ?int $Num_Ordre = null;
 
@@ -59,6 +58,7 @@ class Ordre
     public function setNum_Ordre(int $Num_Ordre): self
     {
         $this->Num_Ordre = $Num_Ordre;
+
         return $this;
     }
 

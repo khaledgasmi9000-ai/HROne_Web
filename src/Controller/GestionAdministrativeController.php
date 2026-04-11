@@ -163,13 +163,13 @@ class GestionAdministrativeController extends AbstractController
         
         $allEmployees = array_map(function($emp) use ($employeeRepository) {
             return [
-                'id' => $emp['ID_Employe'],
-                'name' => $emp['Nom_Utilisateur'],
-                'salaire' => (int)$emp['SALAIRE'],
-                'heures' => (int)$emp['Nbr_Heure_De_Travail'],
-                'email' => $emp['Email'],
-                'soldeConge' => (int)$emp['Solde_Conge'],
-                'soldeRestant' => $this->CalculateSodeCongeRestant($employeeRepository ,$emp['Solde_Conge'], $emp['ID_Employe'])
+                'id' => $emp->getIDEmploye(),
+                'name' => $emp->getUtilisateur()->getNomUtilisateur(),
+                'salaire' => $emp->getSalaire(),
+                'heures' => $emp->getNbrHeureDeTravail(),
+                'email' => $emp->getUtilisateur()->getEmail(),
+                'soldeConge' => $emp->getSoldeConge(),
+                'soldeRestant' => $this->CalculateSodeCongeRestant($employeeRepository ,$emp->getSoldeConge(), $emp->getIdEmploye())
             ];
         }, $employeeRepository->findAllEmployees());
         

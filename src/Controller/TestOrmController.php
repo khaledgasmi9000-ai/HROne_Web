@@ -5,17 +5,15 @@ namespace App\Controller;
 use App\Entity\Utilisateur;
 use App\Entity\Profil;
 use App\Entity\Entreprise;
-use App\Entity\Ordre;
 use App\Repository\EmployeeRepository;
 use App\Repository\OutilsDeTravailRepository;
 use App\Repository\DemandeCongeRepository;
-use App\Repository\UtilisateurRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/testOrm')]
+//#[Route('/testOrm')]
 class TestOrmController extends AbstractController
 {
     // =========================
@@ -162,8 +160,6 @@ class TestOrmController extends AbstractController
             3
         );
 
-        dump($conge1);
-        dump($conge2);
         // 2. Update status
         $congeRepo->updateCongeStatus($conge1->getID_Demende(), 1);
         $congeRepo->updateCongeStatus($conge2->getID_Demende(), -1);
@@ -176,6 +172,20 @@ class TestOrmController extends AbstractController
     {
         $conges = $congeRepo->findAllConges();
 
-        return new JsonResponse($conges);
+        $data = array_map(function ($c) {
+
+            $dateDebut = \App\Entity\Ordre::numOrdreToDate($c['Num_Ordre_Debut_Conge']);
+            $dateFin   = \App\Entity\Ordre::numOrdreToDate($c['Num_Ordre_Fin_Conge']);
+
+            return [
+                ...$c, // keep existing fields
+
+                'DateDebut' => $dateDebut->format('Y-m-d H:i:s'),
+                'DateFin'   => $dateFin->format('Y-m-d H:i:s'),
+            ];
+
+        }, $conges);
+
+        return new JsonResponse($data);
     }
 }
