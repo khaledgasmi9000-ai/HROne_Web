@@ -41,14 +41,22 @@ body {
 }
 
 .logo {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
   border-radius: 10px;
-  display: grid;
-  place-items: center;
-  background: #fff;
-  color: #0f172a;
-  font-weight: 700;
+  overflow: hidden;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  display: block;
 }
 
 .brand-name {

@@ -21,21 +21,14 @@ class UtilisateurRepository extends ServiceEntityRepository
      */
     public function findDemoEmployees(): array
     {
-        $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative(
-            "SELECT u.ID_UTILISATEUR AS id, u.Nom_Utilisateur AS label, COALESCE(u.Email, '') AS email
-             FROM utilisateur u
-             LEFT JOIN employee e ON e.ID_UTILISATEUR = u.ID_UTILISATEUR
-             ORDER BY e.ID_Employe ASC"
-        );
+        $rows = $this->createQueryBuilder('u')
+            ->select('u.ID_UTILISATEUR AS id', 'u.Nom_Utilisateur AS label', 'u.Email AS email')
+            ->leftJoin('u.employees', 'e')
+            ->orderBy('e.ID_Employe', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
 
-        return array_map(
-            static fn (array $row): array => [
-                'id' => (int) $row['id'],
-                'label' => (string) $row['label'],
-                'email' => (string) $row['email'],
-            ],
-            $rows
-        );
+        return array_map([$this, 'mapEmployeeRow'], $rows);
     }
 
     public function emailExists(string $email): bool
@@ -46,26 +39,22 @@ class UtilisateurRepository extends ServiceEntityRepository
     /**
      * @return array{id: int, label: string, email: string}|null
      */
-   public function findEmployeeByEmail(string $email): ?array
-{
-    $row = $this->getEntityManager()->getConnection()->fetchAssociative(
-        "SELECT u.ID_UTILISATEUR AS id, u.Nom_Utilisateur AS label, COALESCE(u.Email, '') AS email
-         FROM utilisateur u
-         WHERE LOWER(COALESCE(u.Email, '')) = LOWER(:email)
-         LIMIT 1",
-        ['email' => $email]
-    );
+    public function findEmployeeByEmail(string $email): ?array
+    {
+        $row = $this->createQueryBuilder('u')
+            ->select('u.ID_UTILISATEUR AS id', 'u.Nom_Utilisateur AS label', 'u.Email AS email')
+            ->andWhere('LOWER(COALESCE(u.Email, \'\')) = :email')
+            ->setParameter('email', mb_strtolower($email))
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
 
-    if (!is_array($row)) {
-        return null;
+        if (!is_array($row)) {
+            return null;
+        }
+
+        return $this->mapEmployeeRow($row);
     }
-
-    return [
-        'id' => (int) $row['id'],
-        'label' => (string) $row['label'],
-        'email' => (string) $row['email'],
-    ];
-}
 
     /**
      * @param list<int> $participantIds
@@ -78,24 +67,34 @@ class UtilisateurRepository extends ServiceEntityRepository
             return [];
         }
 
-        $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative(
-            "SELECT u.ID_UTILISATEUR AS id, u.Nom_Utilisateur AS label, COALESCE(u.Email, '') AS email
-             FROM utilisateur u
-             WHERE u.ID_UTILISATEUR IN (:ids)",
-            ['ids' => array_map('intval', $participantIds)],
-            ['ids' => \Doctrine\DBAL\ArrayParameterType::INTEGER]
-        );
+        $rows = $this->createQueryBuilder('u')
+            ->select('u.ID_UTILISATEUR AS id', 'u.Nom_Utilisateur AS label', 'u.Email AS email')
+            ->andWhere('u.ID_UTILISATEUR IN (:ids)')
+            ->setParameter('ids', array_map('intval', $participantIds))
+            ->getQuery()
+            ->getArrayResult();
 
         $mapped = [];
 
         foreach ($rows as $row) {
-            $mapped[(int) $row['id']] = [
-                'id' => (int) $row['id'],
-                'label' => (string) $row['label'],
-                'email' => (string) $row['email'],
-            ];
+            $normalized = $this->mapEmployeeRow($row);
+            $mapped[$normalized['id']] = $normalized;
         }
 
         return $mapped;
+    }
+
+    /**
+     * @param array{id: mixed, label: mixed, email: mixed} $row
+     *
+     * @return array{id: int, label: string, email: string}
+     */
+    private function mapEmployeeRow(array $row): array
+    {
+        return [
+            'id' => (int) $row['id'],
+            'label' => (string) $row['label'],
+            'email' => (string) ($row['email'] ?? ''),
+        ];
     }
 }
