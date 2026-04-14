@@ -3,17 +3,22 @@
 namespace App\Controller;
 
 use App\Entity\Formation;
+use App\Entity\Certification;
 use App\Entity\ParticipationFormation;
 use App\Repository\CertificationRepository;
 use App\Repository\FormationRepository;
 use App\Repository\ParticipationFormationRepository;
 use App\Repository\UtilisateurRepository;
+use App\Service\CertificatePdfGenerator;
+use App\Service\FormationMailer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class FormationController extends AbstractController
@@ -88,7 +93,8 @@ final class FormationController extends AbstractController
         FormationRepository $formationRepository,
         ParticipationFormationRepository $participationFormationRepository,
         UtilisateurRepository $utilisateurRepository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        FormationMailer $formationMailer
     ): RedirectResponse
     {
         $formation = $formationRepository->find($id);
@@ -175,6 +181,16 @@ final class FormationController extends AbstractController
         $entityManager->persist($participation);
         $entityManager->flush();
         $request->getSession()->set('participant_email', $registrationIdentity['email']);
+
+        try {
+            $formationMailer->sendRegistrationConfirmation(
+                $registrationIdentity['email'],
+                trim($registrationIdentity['prenom'] . ' ' . $registrationIdentity['nom']),
+                $formation
+            );
+        } catch (\Throwable) {
+            // Keep registration successful even if email delivery is not configured yet.
+        }
 
 
         $this->addFlash('success', 'Inscription enregistree avec succes.');
@@ -329,6 +345,7 @@ final class FormationController extends AbstractController
             return [
                 'participant' => $participant,
                 'participation' => $participation,
+                'certificate_path' => $participation->getCertificat(),
             ];
         }, $participations);
 
@@ -336,6 +353,107 @@ final class FormationController extends AbstractController
             'formation' => $this->mapFormation($formation),
             'participants' => $rows,
         ]);
+    }
+
+    #[Route('/rh/formations/{formationId}/participants/{participantId}/{order}/acheve', name: 'app_admin_formation_participant_complete', methods: ['POST'], requirements: ['formationId' => '\d+', 'participantId' => '\d+', 'order' => '\d+'])]
+    public function adminCompleteParticipant(
+        int $formationId,
+        int $participantId,
+        int $order,
+        FormationRepository $formationRepository,
+        ParticipationFormationRepository $participationFormationRepository,
+        UtilisateurRepository $utilisateurRepository,
+        CertificationRepository $certificationRepository,
+        CertificatePdfGenerator $certificatePdfGenerator,
+        FormationMailer $formationMailer,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $formation = $formationRepository->find($formationId);
+
+        if (!$formation instanceof Formation) {
+            throw $this->createNotFoundException('Formation introuvable.');
+        }
+
+        $participation = $participationFormationRepository->findOneBy([
+            'ID_Formation' => $formationId,
+            'ID_Participant' => $participantId,
+            'Num_Ordre_Participation' => $order,
+        ]);
+
+        if (!$participation instanceof ParticipationFormation) {
+            throw $this->createNotFoundException('Participation introuvable.');
+        }
+
+        $participant = $utilisateurRepository->findEmployeesByIds([$participantId])[$participantId] ?? null;
+
+        if (!is_array($participant)) {
+            throw $this->createNotFoundException('Participant introuvable.');
+        }
+
+        $certificateReference = sprintf('CERT-%04d-%04d-%d', $formationId, $participantId, $order);
+        $pdfContent = $certificatePdfGenerator->generate($formation, $participant, $certificateReference);
+        $filename = sprintf('certificat-formation-%d-participant-%d.pdf', $formationId, $participantId);
+        $relativePath = $this->storeCertificateFile($filename, $pdfContent);
+
+        $participation->setStatut('acheve');
+        $participation->setCertificat($relativePath);
+
+        $certification = $certificationRepository->findOneByFormationAndParticipant($formationId, $participantId) ?? (new Certification())
+            ->setID_Certif($certificationRepository->getNextId())
+            ->setID_Formation($formationId)
+            ->setID_Participant($participantId);
+
+        $certification
+            ->setDescription_Certif(sprintf('Certificat genere pour %s', $participant['label']))
+            ->setFichier_PDF($pdfContent);
+
+        $entityManager->persist($certification);
+        $entityManager->flush();
+
+        if ($participant['email'] !== '') {
+            try {
+                $formationMailer->sendCertificateEmail(
+                    $participant['email'],
+                    $participant['label'],
+                    $formation,
+                    $pdfContent,
+                    $filename
+                );
+            } catch (\Throwable) {
+                // Keep certificate generation available even if the email cannot be sent.
+            }
+        }
+
+        return $this->buildPdfResponse($pdfContent, $filename);
+    }
+
+    #[Route('/rh/formations/{formationId}/participants/{participantId}/{order}/certificat', name: 'app_admin_formation_participant_certificate', methods: ['GET'], requirements: ['formationId' => '\d+', 'participantId' => '\d+', 'order' => '\d+'])]
+    public function adminParticipantCertificate(
+        int $formationId,
+        int $participantId,
+        int $order,
+        ParticipationFormationRepository $participationFormationRepository
+    ): Response {
+        $participation = $participationFormationRepository->findOneBy([
+            'ID_Formation' => $formationId,
+            'ID_Participant' => $participantId,
+            'Num_Ordre_Participation' => $order,
+        ]);
+
+        if (!$participation instanceof ParticipationFormation || $participation->getCertificat() === null) {
+            throw $this->createNotFoundException('Certificat introuvable.');
+        }
+
+        $absolutePath = dirname(__DIR__, 2) . '/public' . $participation->getCertificat();
+
+        if (!is_file($absolutePath)) {
+            throw $this->createNotFoundException('Fichier certificat introuvable.');
+        }
+
+        $response = new BinaryFileResponse($absolutePath);
+        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_INLINE, basename($absolutePath));
+
+        return $response;
     }
 
     #[Route('/rh/formations/new', name: 'app_admin_formation_new', methods: ['GET', 'POST'])]
@@ -861,10 +979,30 @@ final class FormationController extends AbstractController
             'modules' => $modules,
         ];
     }
+
+    private function storeCertificateFile(string $filename, string $pdfContent): string
+    {
+        $directory = dirname(__DIR__, 2) . '/public/uploads/certificates';
+
+        if (!is_dir($directory)) {
+            mkdir($directory, 0777, true);
+        }
+
+        $safeFilename = preg_replace('/[^A-Za-z0-9._-]/', '-', $filename) ?: ('certificat-' . uniqid() . '.pdf');
+        file_put_contents($directory . '/' . $safeFilename, $pdfContent);
+
+        return '/uploads/certificates/' . $safeFilename;
+    }
+
+    private function buildPdfResponse(string $pdfContent, string $filename): Response
+    {
+        $response = new Response($pdfContent);
+        $response->headers->set('Content-Type', 'application/pdf');
+        $response->headers->set('Content-Disposition', sprintf('inline; filename="%s"', $filename));
+
+        return $response;
+    }
 }
-
-
-
 
 
 

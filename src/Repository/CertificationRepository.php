@@ -25,4 +25,26 @@ class CertificationRepository extends ServiceEntityRepository
             ->getQuery()
             ->execute();
     }
+
+    public function findOneByFormationAndParticipant(int $formationId, int $participantId): ?Certification
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.ID_Formation = :formationId')
+            ->andWhere('c.ID_Participant = :participantId')
+            ->setParameter('formationId', $formationId)
+            ->setParameter('participantId', $participantId)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function getNextId(): int
+    {
+        $max = $this->createQueryBuilder('c')
+            ->select('MAX(c.ID_Certif)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return ((int) $max) + 1;
+    }
 }

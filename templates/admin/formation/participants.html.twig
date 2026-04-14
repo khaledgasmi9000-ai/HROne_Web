@@ -46,6 +46,7 @@
                     <th>Email</th>
                     <th>Statut</th>
                     <th>Ordre</th>
+                    <th>Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -56,10 +57,37 @@
                         <td>{{ row.participant.email }}</td>
                         <td>{{ row.participation.statut }}</td>
                         <td>{{ row.participation.numOrdreParticipation }}</td>
+                        <td class="actions-cell">
+                            {% if row.participation.statut != 'acheve' %}
+                                <form method="post"
+                                      action="{{ path('app_admin_formation_participant_complete', {
+                                          formationId: formation.id,
+                                          participantId: row.participant.id,
+                                          order: row.participation.numOrdreParticipation
+                                      }) }}"
+                                      target="_blank">
+                                    <button type="submit" class="primary-button small-action">Marquer acheve</button>
+                                </form>
+                            {% else %}
+                                <span class="status-pill status-open">Acheve</span>
+                            {% endif %}
+
+                            {% if row.certificate_path %}
+                                <a class="secondary-button small-action"
+                                   target="_blank"
+                                   href="{{ path('app_admin_formation_participant_certificate', {
+                                       formationId: formation.id,
+                                       participantId: row.participant.id,
+                                       order: row.participation.numOrdreParticipation
+                                   }) }}">
+                                    Voir certificat
+                                </a>
+                            {% endif %}
+                        </td>
                     </tr>
                 {% else %}
                     <tr>
-                        <td colspan="5" class="empty-row">Aucun participant n est encore inscrit a cette formation.</td>
+                        <td colspan="6" class="empty-row">Aucun participant n est encore inscrit a cette formation.</td>
                     </tr>
                 {% endfor %}
                 </tbody>

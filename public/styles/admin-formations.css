@@ -254,6 +254,17 @@ tbody td p {
   display: inline;
 }
 
+.actions-cell {
+  white-space: nowrap;
+}
+
+.small-action {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  margin-right: 8px;
+}
+
 .danger-action {
   border: 0;
   background: transparent;
