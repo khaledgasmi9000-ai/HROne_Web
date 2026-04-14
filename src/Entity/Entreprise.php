@@ -14,7 +14,7 @@ class Entreprise
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name : "ID_Entreprise",type: 'integer')]
     private ?int $ID_Entreprise = null;
 
     public function getID_Entreprise(): ?int
@@ -56,7 +56,7 @@ class Entreprise
         return $this;
     }
 
-    //#[ORM\OneToMany(targetEntity: Utilisateur::class, mappedBy: 'entreprise')]
+    #[ORM\OneToMany(targetEntity: Utilisateur::class, mappedBy: 'entreprise')]
     private Collection $utilisateurs;
 
     public function __construct()

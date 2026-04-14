@@ -65,51 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const exe  = document.getElementById("toolExe").value.trim();
         const hash = document.getElementById("toolHash").value.trim();
 
-        // =========================
-        // VALIDATION
-        // =========================
-        function showError(msg) {
-            const errorDiv = document.getElementById("toolError");
-            errorDiv.textContent = msg;
-            errorDiv.classList.remove("hidden");
-        }
-
-        function clearError() {
-            const errorDiv = document.getElementById("toolError");
-            if (errorDiv) {
-                errorDiv.classList.add("hidden");
-            }
-        }
         
-        clearError();
-        // Name validation
-        if (!name) {
-            return showError("Le nom est requis.");
-        }
-
-        if (name.length < 3) {
-            return showError("Le nom doit contenir au moins 3 caractères.");
-        }
-
-        // EXE validation
-        if (!exe) {
-            return showError("L'identifiant (exe) est requis.");
-        }
-
-        if (!exe.toLowerCase().endsWith(".exe")) {
-            return showError("L'identifiant doit être un fichier .exe.");
-        }
-
-        // Hash validation (basic hex check)
-        const hashRegex = /^[a-fA-F0-9]{16,}$/;
-
-        if (!hash) {
-            return showError("Le hash est requis.");
-        }
-
-        if (!hashRegex.test(hash)) {
-            return showError("Le hash doit contenir uniquement des caractères hexadécimaux.");
-        }
 
         // =========================
         // SUBMIT
@@ -136,18 +92,28 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(async res => {
             const text = await res.text();
 
-            console.log("Response:", text);
-
-            if (!res.ok) {
-                throw new Error(text);
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch {
+                throw new Error("Erreur serveur");
             }
 
-            return text;
+            if (!res.ok) {
+                if (result.errors) {
+                    const messages = Object.values(result.errors).slice(0, 2).join("\n");
+                    throw new Error(messages);
+                }
+
+                throw new Error(result.error || "Erreur inconnue");
+            }
+
+            return result;
         })
         .then(() => window.location.reload())
         .catch(err => {
-            console.error("Tool submit error:", err);
-            alert("Erreur: " + err.message);
+            console.error(err);
+            showError(err.message);
         });
     });
 

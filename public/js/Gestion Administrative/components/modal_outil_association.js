@@ -84,13 +84,27 @@ window.saveOutilAssociation = async function() {
         window.currentEmployeeTools.employeeId
     );
 
-    await fetch(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ tools: selected })
-    });
+    try {
+        const res = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ tools: selected })
+        });
 
-    closeOutilAssociationModal();
+        const result = await res.json();
+
+        if (!res.ok || !result.success) {
+            throw new Error(result.error || "Erreur lors de l'enregistrement");
+        }
+
+        alert("Outils mis à jour avec succès");
+
+        closeOutilAssociationModal();
+
+    } catch (err) {
+        console.error(err);
+        showOutilError(err.message);
+    }
 };

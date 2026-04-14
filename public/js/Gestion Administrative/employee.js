@@ -6,11 +6,38 @@ window.rowActionsHandlers.employee = {
         window.openEmployeeEditModal(id);
     },
 
-    delete: function(id) {
-        console.log("Supprimer employee:", id);
-        if (confirm("Confirmer la suppression ?")) {
-            const url = window.deleteEmployeeUrlTemplate.replace('EMP_ID', id);
-            window.location.href = url;
+    delete: async function(id) {
+        if (!confirm("Confirmer la suppression ?")) return;
+
+        const url = window.deleteEmployeeUrlTemplate.replace('EMP_ID', id);
+
+        try {
+            const res = await fetch(url, {
+                method: "POST"
+            });
+
+            const text = await res.text();
+
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch {
+                console.error("Non-JSON:", text);
+                throw new Error("Erreur serveur");
+            }
+
+            if (!res.ok || !result.success) {
+                throw new Error(result.error || "Suppression échouée");
+            }
+
+            alert(result.message || "Suppression réussie");
+
+            // ✅ FORCE REDIRECT
+            window.location.href = "/Gestion_Administrative";
+
+        } catch (err) {
+            console.error(err);
+            alert(err.message);
         }
     },
 

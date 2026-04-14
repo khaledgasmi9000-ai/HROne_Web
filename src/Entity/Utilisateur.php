@@ -29,8 +29,8 @@ class Utilisateur
         return $this;
     }
 
-    // #[ORM\ManyToOne(targetEntity: Entreprise::class, inversedBy: 'utilisateurs')]
-    // #[ORM\JoinColumn(name: 'ID_Entreprise', referencedColumnName: 'ID_Entreprise')]
+    #[ORM\ManyToOne(targetEntity: Entreprise::class, inversedBy: 'utilisateurs')]
+    #[ORM\JoinColumn(name: 'ID_Entreprise', referencedColumnName: 'ID_Entreprise')]
     private ?Entreprise $entreprise = null;
 
     public function getEntreprise(): ?Entreprise
@@ -44,8 +44,8 @@ class Utilisateur
         return $this;
     }
 
-    //#[ORM\ManyToOne(targetEntity: Profil::class, inversedBy: 'utilisateurs')]
-    //#[ORM\JoinColumn(name: 'ID_Profil', referencedColumnName: 'ID_Profil')]
+    #[ORM\ManyToOne(targetEntity: Profil::class, inversedBy: 'utilisateurs')]
+    #[ORM\JoinColumn(name: 'ID_Profil', referencedColumnName: 'ID_Profil')]
     private ?Profil $profil = null;
 
     public function getProfil(): ?Profil

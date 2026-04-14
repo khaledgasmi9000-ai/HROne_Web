@@ -2,7 +2,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const modal = document.getElementById("employeeModal");
     const BtnCloseModal = document.getElementById("closeEmployeeModal");
+    const form = document.getElementById("employeeForm");
 
+    // =============================
+    // MODAL CONTROL
+    // =============================
     function openModal() {
         clearError();
         document.body.classList.add("modal-open");
@@ -14,65 +18,72 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.classList.add("hidden");
     }
 
-    if(BtnCloseModal){
+    if (BtnCloseModal) {
         BtnCloseModal.addEventListener("click", closeModal);
     }
 
-    // Expose globally (so row_actions can call it)
-    window.openEmployeeEditModal = function(id) {
+    // =============================
+    // LOAD EMPLOYEE (EDIT)
+    // =============================
+    window.openEmployeeEditModal = async function(id) {
+        try {
+            const url = window.getEmployeeUrl.replace('EMP_ID', id);
+            const res = await fetch(url);
 
-        const url = window.getEmployeeUrl.replace('EMP_ID', id);
+            const data = await res.json();
 
-        fetch(url)
-            .then(res => res.json())
-            .then(data => {
-                //console.log("Employee data fetched:", data);
-                document.getElementById("empName").value = data.Nom_Utilisateur || "";
-                document.getElementById("empEmail").value = data.Email || "";
-                document.getElementById("empPhone").value = data.Num_Tel || "";
-                document.getElementById("empCIN").value = data.CIN || "";
-                document.getElementById("empBirth").value = data.Date_Naissance || "";
-                document.getElementById("empGender").value = data.Gender || "";
-                document.getElementById("empSolde").value = data.Solde_Conge || "";
-                document.getElementById("empSalaire").value = data.SALAIRE || "";
-                document.getElementById("empHeures").value = data.Nbr_Heure_De_Travail || "";
+            document.getElementById("empName").value = data.name || "";
+            document.getElementById("empEmail").value = data.email || "";
+            document.getElementById("empPhone").value = data.phone || "";
+            document.getElementById("empCIN").value = data.cin || "";
+            document.getElementById("empBirth").value = data.birth || "";
+            document.getElementById("empGender").value = data.gender || "";
+            document.getElementById("empSolde").value = data.solde || "";
+            document.getElementById("empSalaire").value = data.salaire || "";
+            document.getElementById("empHeures").value = data.heures || "";
 
-                window.currentEmployeeId = id;
+            window.currentEmployeeId = id;
 
-                document.getElementById("modalTitle").innerText = "Modifier un employé";
+            document.getElementById("modalTitle").innerText = "Modifier un employé";
 
-                setReadOnly(true);
+            setReadOnly(true);
 
-                openModal();
-            });
+            openModal();
+
+        } catch (err) {
+            console.error("Load error:", err);
+            showError("Erreur chargement employé");
+        }
     };
 
+    // =============================
+    // ADD MODE
+    // =============================
     window.openEmployeeAddModal = function() {
 
         document.getElementById("modalTitle").innerText = "Ajouter un employé";
 
-        document.getElementById("empName").value = "";
-        document.getElementById("empEmail").value = "";
-        document.getElementById("empPhone").value = "";
-        document.getElementById("empCIN").value = "";
-        document.getElementById("empBirth").value = "";
-        document.getElementById("empGender").value = "";
-        document.getElementById("empSolde").value = "";
-        document.getElementById("empSalaire").value = "";
-        document.getElementById("empHeures").value = "";
+        [
+            "empName","empEmail","empPhone","empCIN",
+            "empBirth","empGender","empSolde",
+            "empSalaire","empHeures"
+        ].forEach(id => {
+            document.getElementById(id).value = "";
+        });
 
         window.currentEmployeeId = null;
 
         setReadOnly(false);
-        
         openModal();
     };
 
-
-    const form = document.getElementById("employeeForm");
-
+    // =============================
+    // SUBMIT
+    // =============================
     form.addEventListener("submit", async function(e) {
         e.preventDefault();
+
+        const isEditMode = !!window.currentEmployeeId;
 
         const data = {
             name: document.getElementById("empName").value.trim(),
@@ -81,111 +92,49 @@ document.addEventListener("DOMContentLoaded", () => {
             cin: document.getElementById("empCIN").value.trim(),
             birth: document.getElementById("empBirth").value,
             gender: document.getElementById("empGender").value,
-            solde: document.getElementById("empSolde").value,
-            salaire: document.getElementById("empSalaire").value,
-            heures: document.getElementById("empHeures").value,
+            solde: (document.getElementById("empSolde").value),
+            salaire:(document.getElementById("empSalaire").value),
+            heures: (document.getElementById("empHeures").value),
         };
-
-        const isEditMode = !!window.currentEmployeeId;
-
-        // =============================
-        // Controle Saisie (Frontend)
-        // =============================
 
         clearError();
 
-        // Name
-        if (!data.name) return showError("Le nom est requis.");
-
-        // Email
-        if (!data.email || !validateEmail(data.email)) {
-            return showError("Email invalide.");
-        }
-
-        // CIN + Phone (only add mode)
-        if (!isEditMode && !data.cin) return showError("CIN requis.");
-        if (!isEditMode && !data.phone) return showError("Téléphone requis.");
-
-        // ===== NUMERIC =====
-        if (data.salaire === "" || isNaN(data.salaire) || Number(data.salaire) < 0) {
-            return showError("Salaire invalide (>= 0).");
-        }
-
-        if (data.solde === "" || isNaN(data.solde) || Number(data.solde) < 0) {
-            return showError("Solde congé invalide (>= 0).");
-        }
-
-        if (data.heures === "" || isNaN(data.heures) || Number(data.heures) < 0) {
-            return showError("Nombre d'heures invalide (>= 0).");
-        }
-
-        // ===== DATE =====
-        if (!data.birth) return showError("Date de naissance requise.");
-
-        const birthDate = new Date(data.birth);
-        const today = new Date();
-        today.setHours(0,0,0,0);
-
-        if (isNaN(birthDate.getTime())) {
-            return showError("Date invalide.");
-        }
-
-        if (birthDate >= today) {
-            return showError("La date doit être dans le passé.");
-        }
-
         // =============================
-        // 2. BACKEND VALIDATION (EMAIL + CIN)
+        // SUBMIT REQUEST
         // =============================
-        try {
-            const checkResponse = await fetch(window.checkEmployeeUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    email: data.email,
-                    cin: data.cin,
-                    id: window.currentEmployeeId // 👈 important
-                })
-            });
-
-            const checkResult = await checkResponse.json();
-
-            // ❗ Only block if ADD mode OR field is editable
-            if (!isEditMode || !document.getElementById("empEmail").readOnly) {
-                if (checkResult.emailExists) {
-                    return showError("Email déjà utilisé");
-                }
-            }
-
-            if (!isEditMode || !document.getElementById("empCIN").readOnly) {
-                if (checkResult.cinExists) {
-                    return showError("CIN déjà utilisé");
-                }
-            }
-
-        } catch (err) {
-            console.error("Validation error:", err);
-            return showError("Erreur validation serveur");
-        }
-
-        // =============================
-        // 3. Submit
-        // =============================
-        let url = isEditMode
+        const url = isEditMode
             ? window.updateEmployeeUrl.replace('EMP_ID', window.currentEmployeeId)
             : window.createEmployeeUrl;
 
         try {
             const res = await fetch(url, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {"Content-Type": "application/json"},
                 body: JSON.stringify(data)
             });
 
-            const result = await res.json();
-            console.log("Submit response:", result);
+            let result;
+            const text = await res.text();
+
+            try {
+                result = JSON.parse(text);
+            } catch {
+                console.error("Non-JSON response:", text);
+                throw new Error("Erreur serveur (non JSON)");
+            }
+
             if (!res.ok) {
-                throw new Error(result.message || "Erreur serveur");
+                if (result.errors) {
+                    const allErrors = Object.values(result.errors);
+
+                    // show only first 2 errors
+                    const limitedErrors = allErrors.slice(0, 1);
+
+                    const messages = limitedErrors.join("\n");
+
+                    throw new Error(messages);
+                }
+                throw new Error(result.error || "Erreur serveur");
             }
 
             window.location.reload();
@@ -196,47 +145,39 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // =============================
+    // HELPERS
+    // =============================
     function validateEmail(email) {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
 
     function showError(msg) {
-        const errorDiv = document.getElementById("employeeError");
-        errorDiv.textContent = msg;
-        errorDiv.classList.remove("hidden");
-
-        errorDiv.scrollIntoView({ behavior: "smooth", block: "center" });
+        const el = document.getElementById("employeeError");
+        el.textContent = msg;
+        el.classList.remove("hidden");
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
     }
 
     function clearError() {
-        const errorDiv = document.getElementById("employeeError");
-        if (errorDiv) {
-            errorDiv.textContent = "";   // ✅ clear content
-            errorDiv.classList.add("hidden");
-        }
+        const el = document.getElementById("employeeError");
+        el.textContent = "";
+        el.classList.add("hidden");
     }
 });
 
+// =============================
+// READONLY CONTROL
+// =============================
 function setReadOnly(isReadOnly) {
-
-    const fields = [
-        "empPhone",
-        "empCIN",
-        "empBirth",
-        "empGender",
-        "empEmail"
-    ];
-
-    fields.forEach(id => {
+    ["empPhone","empCIN","empBirth","empGender","empEmail"].forEach(id => {
         const el = document.getElementById(id);
-
         if (!el) return;
 
         if (el.tagName === "SELECT") {
-            el.disabled = isReadOnly;   // 🔥 for select
+            el.disabled = isReadOnly;
         } else {
-            el.readOnly = isReadOnly;   // 🔥 for inputs
+            el.readOnly = isReadOnly;
         }
     });
 }
-

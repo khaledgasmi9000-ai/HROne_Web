@@ -14,7 +14,7 @@ class Profil
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name : "ID_Profil",type: 'integer')]
     private ?int $ID_Profil = null;
 
     public function getID_Profil(): ?int
@@ -42,7 +42,7 @@ class Profil
         return $this;
     }
 
-    //#[ORM\OneToMany(targetEntity: Utilisateur::class, mappedBy: 'profil')]
+    #[ORM\OneToMany(targetEntity: Utilisateur::class, mappedBy: 'profil')]
     private Collection $utilisateurs;
 
     public function __construct()

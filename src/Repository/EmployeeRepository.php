@@ -40,16 +40,19 @@ class EmployeeRepository extends ServiceEntityRepository
 
     public function getNumberofUsedConge(int $employeeId): int
     {
-        return (int) $this->createQueryBuilder('e')
+        $result = $this->getEntityManager()->createQueryBuilder()
             ->select('SUM(dc.Nbr_Jour_Demande)')
-            ->join('e.demandeConges', 'dc')
+            ->from(\App\Entity\DemandeConge::class, 'dc')
+            ->join('dc.employee', 'e')
             ->where('e.ID_Employe = :id')
             ->andWhere('dc.Status = 1')
-            ->andWhere('dc.ordreFin < :now')
+            ->andWhere('IDENTITY(dc.ordreFin) < :now')
             ->setParameter('id', $employeeId)
             ->setParameter('now', Ordre::GetNumOrdreNow())
             ->getQuery()
             ->getSingleScalarResult();
+
+        return (int) ($result ?? 0);
     }
 
     public function deleteEmployee(int $id): bool

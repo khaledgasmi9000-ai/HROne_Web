@@ -41,7 +41,7 @@ class UtilisateurRepository extends ServiceEntityRepository
     
     public function cinExistsForOther(string $cin, ?int $excludeUserId): bool
     {
-        $$qb = $this->createQueryBuilder('u')
+        $qb = $this->createQueryBuilder('u')
             ->select('COUNT(u.ID_UTILISATEUR)')
             ->where('u.CIN = :cin')
             ->setParameter('cin', $cin);
