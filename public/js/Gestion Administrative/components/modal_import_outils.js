@@ -111,8 +111,18 @@ document.addEventListener("DOMContentLoaded", () => {
             stepLoad.classList.add("hidden");
             stepResult.classList.remove("hidden");
 
-            resultMsg.textContent =
-                `${result.successCount}/${result.total} importés avec succès`;
+            let message = `${result.successCount}/${result.total} importés avec succès`;
+
+            if (result.errors && result.errors.length > 0) {
+                message += "<br><br><strong>Erreurs:</strong><br>" 
+                    + result.errors.slice(0, 5).join("<br>");
+
+                if (result.errors.length > 5) {
+                    message += `<br>... (${result.errors.length - 5} autres)`;
+                }
+            }
+
+            resultMsg.innerHTML = message;
 
             importCompleted = true;
 

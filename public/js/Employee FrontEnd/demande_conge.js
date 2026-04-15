@@ -26,38 +26,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function updateCalculation() {
-
-        clearError();
-
         const start = new Date(startInput.value);
-        const end   = new Date(endInput.value);
-
-        if (!startInput.value || !endInput.value) {
-            daysSpan.textContent = "0";
-            soldeSpan.textContent = initialSolde;
-            return;
-        }
-
-        if (end < start) {
-            showError("La date de fin doit être après la date de début.");
-            daysSpan.textContent = "0";
-            return;
-        }
-
+        const end = new Date(endInput.value);
+        
+        if(start == "") return;
+        if(end == "") return;
         const days = calculateDays(start, end);
-
-        daysSpan.textContent = days;
-
-        const remaining = initialSolde - days;
-        soldeSpan.textContent = remaining;
-
-        if (remaining < 0) {
-            showError("Solde insuffisant.");
+        
+        console.log(days);
+        if(isNaN(days)){
+            daysSpan.textContent = 0;
+        }else{
+            daysSpan.textContent = days;
         }
     }
 
     startInput.addEventListener("change", updateCalculation);
     endInput.addEventListener("change", updateCalculation);
+
 
     // =====================
     // SUBMIT
@@ -66,32 +52,11 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
 
         clearError();
-
-        if (!startInput.value || !endInput.value) {
-            showError("Veuillez remplir les deux dates.");
-            return;
-        }
-
-        const start = new Date(startInput.value);
-        const end   = new Date(endInput.value);
-
-        if (end < start) {
-            showError("Dates invalides.");
-            return;
-        }
-
-        const days = calculateDays(start, end);
-
-        if ((initialSolde - days) < 0) {
-            showError("Solde insuffisant.");
-            return;
-        }
-
+        
         const data = {
-            id_Employee: 14,
             start: startInput.value,
             end: endInput.value,
-            nbrJours: days
+            nbrJours: parseInt(daysSpan.textContent) || 0
         };
 
         console.log("Submitting demande:", data);
@@ -105,8 +70,24 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .then(async res => {
             const text = await res.text();
-            if (!res.ok) throw new Error(text);
-            return text;
+            console.log("RAW RESPONSE:", text);
+
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch (e) {
+                throw new Error("Réponse serveur invalide");
+            }
+            
+            if (!res.ok) {
+                if (result.errors) {
+                    const messages = Object.values(result.errors).slice(0, 2).join("\n");
+                    throw new Error(messages);
+                }
+                throw new Error(result.error || "Erreur serveur");
+            }
+
+            return result;
         })
         .then(() => {
             alert("Demande envoyée !");
@@ -114,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(err => {
             console.error(err);
-            showError("Erreur serveur.");
+            showError(err.message);
         });
 
     });

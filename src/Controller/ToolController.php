@@ -19,23 +19,29 @@ class ToolController extends AbstractController{
 
     // ========== Outil Controller ==========  //
     // Export Functions
+
+    private function formatTool($tool): array
+    {
+        return [
+            'Nom' => $tool->getNomOutil() ?? '',
+            'Executable' => $tool->getIdentifiantUniverselle() ?? '',
+            'Hash' => $tool->getHashApp() ?? '',
+        ];
+    }
+
     private function exportToolsCsv(array $tools): Response
     {
         $handle = fopen('php://temp', 'r+');
 
-        // Header
-        fputcsv($handle, [
-            'Nom',
-            'Executable',
-            'Hash'
-        ]);
+        if (empty($tools)) {
+            return new Response('Aucune donnée', 204);
+        }
+
+        $first = $this->formatTool($tools[0]);
+        fputcsv($handle, array_keys($first));
 
         foreach ($tools as $tool) {
-            fputcsv($handle, [
-                $tool['Nom_Outil'] ?? '',
-                $tool['Identifiant_Universelle'] ?? '',
-                $tool['Hash_App'] ?? ''
-            ]);
+            fputcsv($handle, array_values($this->formatTool($tool)));
         }
 
         rewind($handle);
@@ -53,17 +59,21 @@ class ToolController extends AbstractController{
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        $sheet->fromArray(['Nom', 'Executable', 'Hash'], null, 'A1');
+        if (empty($tools)) {
+            return new Response('Aucune donnée', 204);
+        }
+
+        $headers = array_keys($this->formatTool($tools[0]));
+        $sheet->fromArray($headers, null, 'A1');
 
         $row = 2;
 
         foreach ($tools as $tool) {
-            $sheet->fromArray([
-                $tool['Nom_Outil'] ?? '',
-                $tool['Identifiant_Universelle'] ?? '',
-                $tool['Hash_App'] ?? ''
-            ], null, 'A' . $row);
-
+            $sheet->fromArray(
+                array_values($this->formatTool($tool)),
+                null,
+                'A' . $row
+            );
             $row++;
         }
 
@@ -81,8 +91,10 @@ class ToolController extends AbstractController{
 
     private function exportToolsPdf(array $tools, Pdf $pdf): Response
     {
+        $formatted = array_map(fn($t) => $this->formatTool($t), $tools);
+
         $html = $this->renderView('Gestion Administrative/components/tools_pdf.html.twig', [
-            'tools' => $tools
+            'tools' => $formatted
         ]);
 
         $output = $pdf->getOutputFromHtml($html);
@@ -328,6 +340,7 @@ class ToolController extends AbstractController{
         $rowIndex = 0;
         $success = 0;
         $total = 0;
+        $errors = [];
 
         while (($row = fgetcsv($handle)) !== false) {
 
@@ -336,16 +349,42 @@ class ToolController extends AbstractController{
             // Skip header
             if ($rowIndex === 1) continue;
 
+            // Skip empty lines
+            if (count($row) < 3) {
+                $errors[] = "Ligne $rowIndex: colonnes insuffisantes";
+                continue;
+            }
+
             $total++;
 
-            [$name, $exe, $hash] = $row;
+            // Safe extraction + trim
+            $name = trim($row[0] ?? '');
+            $exe  = trim($row[1] ?? '');
+            $hash = trim($row[2] ?? '');
 
-            // 🔴 SAME VALIDATION AS MODAL
-            if (!$name || strlen($name) < 3) continue;
-            if (!$exe || !str_ends_with(strtolower($exe), '.exe')) continue;
-            if (!$hash || !preg_match('/^[a-fA-F0-9]{16,}$/', $hash)) continue;
+            // Validation
+            if (!$name || strlen($name) < 3) {
+                $errors[] = "Ligne $rowIndex: nom invalide";
+                continue;
+            }
+
+            if (!$exe || !str_ends_with(strtolower($exe), '.exe')) {
+                $errors[] = "Ligne $rowIndex: executable invalide";
+                continue;
+            }
+
+            if (!$hash || !preg_match('/^[a-fA-F0-9]{16,}$/', $hash)) {
+                $errors[] = "Ligne $rowIndex: hash invalide";
+                continue;
+            }
 
             try {
+                // Optional: prevent duplicates BEFORE DB
+                if ($repo->findOneBy(['Hash_App' => $hash])) {
+                    $errors[] = "Ligne $rowIndex: outil déjà existant (hash)";
+                    continue;
+                }
+
                 $repo->createTool([
                     'name' => $name,
                     'exe'  => $exe,
@@ -355,7 +394,7 @@ class ToolController extends AbstractController{
                 $success++;
 
             } catch (\Exception $e) {
-                // skip duplicates or DB errors
+                $errors[] = "Ligne $rowIndex: erreur DB";
                 continue;
             }
         }
@@ -364,7 +403,8 @@ class ToolController extends AbstractController{
 
         return $this->json([
             'successCount' => $success,
-            'total' => $total
+            'total' => $total,
+            'errors' => $errors
         ]);
     }
     // ========== End Outil Controller ==========  //

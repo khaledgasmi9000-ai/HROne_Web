@@ -26,7 +26,39 @@ class EmployeeController extends AbstractController{
 #pragma region Employee Controller
     // ========== Employee Controller ==========  //
 
+    
     // Export Functions 
+    
+    private function formatEmployee($emp): array
+    {
+        $user = $emp->getUtilisateur();
+
+        if (!$user) {
+            return [];
+        }
+
+        $genderRaw = strtolower($user->getGender() ?? '');
+
+        $gender = match ($genderRaw) {
+            'h', 'm' => 'Homme',
+            'f'      => 'Femme',
+            default  => ''
+        };
+
+        return [
+            'Nom' => $user->getNomUtilisateur() ?? '',
+            'Email' => $user->getEmail() ?? '',
+            'Téléphone' => $user->getNumTel() ?? '',
+            'CIN' => $user->getCIN() ?? '',
+            'Date Naissance' => $user->getDateNaissance()?->format('Y-m-d') ?? '',
+            'Genre' => $gender,
+            
+            'Solde Congé' => $emp->getSoldeConge() ?? 0,
+            'Salaire' => $emp->getSALAIRE() ?? 0,
+            'Heures' => $emp->getNbrHeureDeTravail() ?? 0,
+        ];
+    }
+
     private function exportEmployeeCsv(array $employees): Response
     {
         $handle = fopen('php://temp', 'r+');
@@ -46,23 +78,7 @@ class EmployeeController extends AbstractController{
 
         // ✅ Data rows
         foreach ($employees as $emp) {
-            $gender = match ($emp['Gender'] ?? '') {
-                    'H','M','h','m' => 'Homme',
-                    'F', 'f' => 'Femme',
-                    default => ''
-                };
-
-            fputcsv($handle, [
-                $emp['Nom_Utilisateur'] ?? '',
-                $emp['Email'] ?? '',
-                $emp['Num_Tel'] ?? '',
-                $emp['CIN'] ?? '',
-                $emp['Date_Naissance'] ?? '',
-                $gender,
-                $emp['Solde_Conge'] ?? '',
-                $emp['SALAIRE'] ?? '',
-                $emp['Nbr_Heure_De_Travail'] ?? ''
-            ]);
+            fputcsv($handle, $this->formatEmployee($emp));
         }
 
         rewind($handle);
@@ -94,23 +110,7 @@ class EmployeeController extends AbstractController{
 
         foreach ($employees as $emp) {
 
-            $gender = match ($emp['Gender'] ?? '') {
-                    'H','M','h','m' => 'Homme',
-                    'F', 'f' => 'Femme',
-                    default => ''
-                };
-
-            $sheet->fromArray([
-                $emp['Nom_Utilisateur'] ?? '',
-                $emp['Email'] ?? '',
-                $emp['Num_Tel'] ?? '',
-                $emp['CIN'] ?? '',
-                $emp['Date_Naissance'] ?? '',
-                $gender,
-                $emp['Solde_Conge'] ?? '',
-                $emp['SALAIRE'] ?? '',
-                $emp['Nbr_Heure_De_Travail'] ?? ''
-            ], null, 'A' . $row);
+            $sheet->fromArray(array_values($this->formatEmployee($emp)), null, 'A' . $row);
 
             $row++;
         }
@@ -130,9 +130,10 @@ class EmployeeController extends AbstractController{
     
     private function exportEmployeePdf(array $employees, Pdf $pdf): Response
     {
+        $formatted = array_map(fn($emp) => $this->formatEmployee($emp), $employees);
         // Render Twig view as HTML
         $html = $this->renderView('Gestion Administrative/components/employees_pdf.html.twig', [
-            'employees' => $employees
+            'employees' => $formatted
         ]);
 
         $output = $pdf->getOutputFromHtml($html);
@@ -489,6 +490,10 @@ class EmployeeController extends AbstractController{
         $format = $request->query->get('format', 'csv');
 
         $employees = $repo->findAllEmployees();
+
+        if (empty($employees)) {
+            return new Response('Aucune donnée à exporter', 204);
+        }
 
         return match ($format) {
             'csv'   => $this->exportEmployeeCsv($employees),

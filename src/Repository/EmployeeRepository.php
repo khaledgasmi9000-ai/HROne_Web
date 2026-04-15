@@ -45,10 +45,8 @@ class EmployeeRepository extends ServiceEntityRepository
             ->from(\App\Entity\DemandeConge::class, 'dc')
             ->join('dc.employee', 'e')
             ->where('e.ID_Employe = :id')
-            ->andWhere('dc.Status = 1')
-            ->andWhere('IDENTITY(dc.ordreFin) < :now')
+            ->andWhere('dc.Status != -1')
             ->setParameter('id', $employeeId)
-            ->setParameter('now', Ordre::GetNumOrdreNow())
             ->getQuery()
             ->getSingleScalarResult();
 

@@ -1,11 +1,11 @@
-<h2>Liste des employés</h2>
+<h2>Liste des employes</h2>
 
 <table border="1" cellpadding="6" cellspacing="0" width="100%">
     <thead>
         <tr>
             <th>Nom</th>
             <th>Email</th>
-            <th>Téléphone</th>
+            <th>Telephone</th>
             <th>CIN</th>
             <th>Date Naissance</th>
             <th>Genre</th>
@@ -17,19 +17,15 @@
     <tbody>
         {% for emp in employees %}
             <tr>
-                <td>{{ emp.Nom_Utilisateur }}</td>
+                <td>{{ emp.Nom }}</td>
                 <td>{{ emp.Email }}</td>
-                <td>{{ emp.Num_Tel }}</td>
+                <td>{{ emp['Téléphone'] }}</td>
                 <td>{{ emp.CIN }}</td>
-                <td>{{ emp.Date_Naissance }}</td>
-                <td>
-                    {% if emp.Gender == 'H' %}Homme
-                    {% elseif emp.Gender == 'F' %}Femme
-                    {% endif %}
-                </td>
-                <td>{{ emp.Solde_Conge }}</td>
-                <td>{{ emp.SALAIRE }}</td>
-                <td>{{ emp.Nbr_Heure_De_Travail }}</td>
+                <td>{{ emp['Date Naissance'] }}</td>
+                <td>{{ emp.Genre }}</td>
+                <td>{{ emp['Solde Congé'] }}</td>
+                <td>{{ emp.Salaire }}</td>
+                <td>{{ emp.Heures }}</td>
             </tr>
         {% endfor %}
     </tbody>
