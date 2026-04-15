@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HR One - Plateforme RH</title>
+  <link rel="stylesheet" href="{{ asset('styles.css') }}">
+</head>
+<body class="landing-page">
+  <header class="landing-topbar">
+    <div class="landing-topbar-inner">
+      <a class="landing-logo" href="{{ path('app_home') }}">
+        <span class="landing-logo-mark">
+          <img src="{{ asset('logo.png') }}" alt="HR One">
+        </span>
+        <span class="landing-logo-text">HR One</span>
+      </a>
+
+      <nav class="landing-nav">
+        <a class="landing-nav-link" href="#modules">Modules</a>
+        <a class="landing-nav-link" href="#roles">Espaces</a>
+        <a class="landing-nav-link" href="#why">Pourquoi HR One</a>
+        <a class="landing-nav-link" href="#contact">Contact</a>
+      </nav>
+
+      <div class="landing-actions">
+        <a class="landing-login" href="{{ path('app_login') }}">Connexion</a>
+        <a class="landing-demo" href="{{ path('app_register') }}">Inscription</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="landing-shell">
+    <main>
+      <section class="landing-hero">
+        <div class="landing-story">
+          <div class="hero-top">
+            <div class="hero-copy-block">
+              <span class="eyebrow">Plateforme RH complete</span>
+              <h1>Centralisez le recrutement, le suivi RH et l'experience candidat.</h1>
+              <p>
+                HR One reunit la gestion des utilisateurs, l'historique des actions, le recrutement,
+                les entretiens, les formations, les evenements et l'experience candidat dans une seule plateforme claire.
+              </p>
+              <div class="hero-actions">
+                <a class="btn btn-primary" href="{{ path('app_login') }}">Se connecter</a>
+                <a class="btn btn-secondary" href="{{ path('app_register') }}">Creer un compte candidat</a>
+                <a class="btn btn-secondary" href="{{ path('app_register_rh') }}">Creer un compte RH</a>
+              </div>
+              <div class="logo-strip">
+                <span class="logo-chip">Gestion RH</span>
+                <span class="logo-chip">Recrutement</span>
+                <span class="logo-chip">Suivi candidat</span>
+                <span class="logo-chip">Tracabilite</span>
+              </div>
+            </div>
+
+            <aside class="hero-side-card">
+              <span class="micro-pill hero-pill">Vue d'ensemble</span>
+              <h2>Une interface pour chaque profil.</h2>
+              <p>
+                L'espace RH/Admin pilote la plateforme, l'employe dispose de son espace dedie,
+                et le candidat navigue dans une interface simple avec une top navbar.
+              </p>
+              <div class="mini-stack">
+                <div class="mini-block">
+                  <strong>RH/Admin</strong>
+                  <span>Gestion des utilisateurs, historique, supervision et modules RH.</span>
+                </div>
+                <div class="mini-block">
+                  <strong>Candidat</strong>
+                  <span>Offres, formations, evenements, participations, conges et communaute.</span>
+                </div>
+                <div class="mini-block">
+                  <strong>Employe</strong>
+                  <span>Espace separe pour les usages internes employe.</span>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="trust-band" id="why">
+        <div class="trust-intro">
+          <span class="eyebrow eyebrow-light">Pourquoi HR One</span>
+          <h2>Une plateforme lisible, modulaire et prete pour la soutenance.</h2>
+          <p>
+            L'application montre une separation claire des roles, une vraie integration front/back
+            et des parcours differencies selon le type d'utilisateur.
+          </p>
+        </div>
+        <div class="trust-logos">
+          <div class="trust-logo">Authentification</div>
+          <div class="trust-logo">Profils</div>
+          <div class="trust-logo">Tableaux de bord</div>
+          <div class="trust-logo">Historique</div>
+          <div class="trust-logo">Candidature</div>
+          <div class="trust-logo">RH Ops</div>
+        </div>
+      </section>
+
+      <section class="landing-section" id="modules">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow eyebrow-light">Modules</span>
+              <h2>Les briques principales de la plateforme.</h2>
+            </div>
+            <p>Chaque module peut etre rattache a un role et a un dashboard coherent.</p>
+          </div>
+
+          <div class="features-grid">
+            <article class="feature-card">
+              <span class="feature-number">01</span>
+              <h3>Gestion des utilisateurs</h3>
+              <p>Liste, detail, filtrage, activation et desactivation des comptes.</p>
+            </article>
+            <article class="feature-card">
+              <span class="feature-number">02</span>
+              <h3>Historique des actions</h3>
+              <p>Trace des actions utilisateurs avec commentaire, type d'action et horodatage.</p>
+            </article>
+            <article class="feature-card">
+              <span class="feature-number">03</span>
+              <h3>Espace candidat</h3>
+              <p>Navigation par top navbar avec offres, evenements, formations et communaute.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="landing-section" id="roles">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow eyebrow-light">Espaces</span>
+              <h2>Des parcours differents selon le profil.</h2>
+            </div>
+            <p>Le profil utilisateur pilote la redirection et l'acces aux modules.</p>
+          </div>
+
+          <div class="steps-grid">
+            <article class="steps-card">
+              <span class="step-number">1</span>
+              <h3>Candidat</h3>
+              <p>Accede a un espace visuel simple avec la top navbar publique et des pages d'interface dediees.</p>
+            </article>
+            <article class="steps-card">
+              <span class="step-number">2</span>
+              <h3>RH/Admin</h3>
+              <p>Pilote la plateforme avec la sidebar HR One et les modules d'administration RH.</p>
+            </article>
+            <article class="steps-card">
+              <span class="step-number">3</span>
+              <h3>Employe</h3>
+              <p>Dispose d'un espace separe pour les evolutions futures du projet.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-panel">
+        <div class="cta-copy">
+          <span class="eyebrow eyebrow-light">Commencer</span>
+          <h2>Explorez HR One des maintenant.</h2>
+          <p>
+            Connectez-vous si vous avez deja un compte, ou testez directement les parcours
+            d'inscription candidat et RH.
+          </p>
+          <div class="cta-actions">
+            <a class="btn btn-primary" href="{{ path('app_login') }}">Connexion</a>
+            <a class="btn btn-light" href="{{ path('app_register') }}">Inscription candidat</a>
+            <a class="btn btn-light" href="{{ path('app_register_rh') }}">Inscription RH</a>
+          </div>
+        </div>
+
+        <div class="cta-list">
+          <div class="cta-list-item">
+            <strong>Frontend coherent</strong>
+            <span>Landing page, authentification, espace RH/Admin et espace candidat suivent la meme direction produit.</span>
+          </div>
+          <div class="cta-list-item">
+            <strong>Architecture claire</strong>
+            <span>Les roles et les redirections sont structures autour de l'attribut `profil`.</span>
+          </div>
+          <div class="cta-list-item">
+            <strong>Base de soutenance</strong>
+            <span>Le site met bien en valeur la separation entre interface publique et espaces connectes.</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="landing-footer" id="contact">
+    <div class="landing-footer-inner">
+      <div>
+        <strong>HR One</strong>
+        <div>Plateforme RH, recrutement et experience candidat.</div>
+      </div>
+      <div class="footer-links">
+        <a class="footer-link" href="{{ path('app_home') }}">Accueil</a>
+        <a class="footer-link" href="{{ path('app_login') }}">Connexion</a>
+        <a class="footer-link" href="{{ path('app_register') }}">Inscription candidat</a>
+        <a class="footer-link" href="{{ path('app_register_rh') }}">Inscription RH</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

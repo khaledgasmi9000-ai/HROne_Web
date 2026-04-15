@@ -14,7 +14,7 @@ class Entreprise
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'ID_Entreprise', type: 'integer')]
     private ?int $ID_Entreprise = null;
 
     public function getID_Entreprise(): ?int

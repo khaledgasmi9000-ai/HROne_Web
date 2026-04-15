@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}HR One{% endblock %}</title>
+        <link rel="stylesheet" href="{{ asset('styles/app.css') }}?v=20260415-2">
+    </head>
+    <body class="{% block body_class %}{% endblock %}">
+        {% set currentRoute = app.request.attributes.get('_route') %}
+        {% set user = app.user %}
+        {% set pageBody %}{% block body %}{% endblock %}{% endset %}
+
+        {% if user %}
+            <div class="layout">
+                <aside class="sidebar">
+                    <div class="brand">
+                        <div class="logo">
+                            <img src="{{ asset('logo.png') }}" alt="HR One">
+                        </div>
+                        <div>
+                            <div class="brand-name">HR One</div>
+                            <div class="brand-sub">
+                                {% if is_granted('ROLE_RH') %}
+                                    Espace RH
+                                {% elseif is_granted('ROLE_EMPLOYEE') %}
+                                    Espace Employe
+                                {% else %}
+                                    Espace Candidat
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <nav class="nav">
+                        {% if is_granted('ROLE_RH') %}
+                            <a class="nav-link {{ currentRoute starts with 'app_rh_user_' ? 'active' : '' }}" href="{{ path('app_rh_user_index') }}">Gestion des utilisateurs</a>
+                            <a class="nav-link {{ currentRoute == 'app_rh_history' ? 'active' : '' }}" href="{{ path('app_rh_history') }}">Historique des actions</a>
+                            <a class="nav-link {{ currentRoute == 'app_rh_module_placeholder' and app.request.attributes.get('slug') == 'activity-watch' ? 'active' : '' }}" href="{{ path('app_rh_module_placeholder', { slug: 'activity-watch' }) }}">Activity Watch</a>
+                            <a class="nav-link {{ currentRoute == 'app_rh_module_placeholder' and app.request.attributes.get('slug') == 'gestion-conges' ? 'active' : '' }}" href="{{ path('app_rh_module_placeholder', { slug: 'gestion-conges' }) }}">Gestion des conges</a>
+                            <a class="nav-link {{ currentRoute == 'app_rh_module_placeholder' and app.request.attributes.get('slug') == 'gestion-administrative' ? 'active' : '' }}" href="{{ path('app_rh_module_placeholder', { slug: 'gestion-administrative' }) }}">Gestion administrative</a>
+                            <a class="nav-link {{ currentRoute == 'app_rh_module_placeholder' and app.request.attributes.get('slug') == 'gestion-outils' ? 'active' : '' }}" href="{{ path('app_rh_module_placeholder', { slug: 'gestion-outils' }) }}">Gestion des outils</a>
+                            <a class="nav-link {{ currentRoute == 'app_rh_module_placeholder' and app.request.attributes.get('slug') == 'gestion-entretiens' ? 'active' : '' }}" href="{{ path('app_rh_module_placeholder', { slug: 'gestion-entretiens' }) }}">Gestion des entretiens</a>
+                            <a class="nav-link {{ currentRoute == 'app_rh_module_placeholder' and app.request.attributes.get('slug') == 'gestion-offres' ? 'active' : '' }}" href="{{ path('app_rh_module_placeholder', { slug: 'gestion-offres' }) }}">Gestion des offres d'emploi</a>
+                            <a class="nav-link {{ currentRoute == 'app_rh_module_placeholder' and app.request.attributes.get('slug') == 'gestion-evenements' ? 'active' : '' }}" href="{{ path('app_rh_module_placeholder', { slug: 'gestion-evenements' }) }}">Gestion des evenements</a>
+                            <a class="nav-link {{ currentRoute == 'app_rh_module_placeholder' and app.request.attributes.get('slug') == 'gestion-formations' ? 'active' : '' }}" href="{{ path('app_rh_module_placeholder', { slug: 'gestion-formations' }) }}">Gestion des formations</a>
+                        {% elseif is_granted('ROLE_EMPLOYEE') %}
+                            <a class="nav-link {{ currentRoute == 'app_employee_dashboard' ? 'active' : '' }}" href="{{ path('app_employee_dashboard') }}">Espace employe</a>
+                        {% elseif is_granted('ROLE_CANDIDAT') %}
+                            <a class="nav-link {{ currentRoute == 'app_candidate_dashboard' ? 'active' : '' }}" href="{{ path('app_candidate_dashboard') }}">Espace candidat</a>
+                        {% endif %}
+
+                        <a class="nav-link" href="{{ path('app_logout') }}">Deconnexion</a>
+                    </nav>
+                </aside>
+
+                <main class="content">
+                    {% for label, messages in app.flashes %}
+                        {% for message in messages %}
+                            <div class="flash flash-{{ label }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endfor %}
+
+                    {{ pageBody }}
+                </main>
+            </div>
+        {% else %}
+            <main class="auth-shell">
+                {% for label, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="flash flash-{{ label }}">{{ message }}</div>
+                    {% endfor %}
+                {% endfor %}
+
+                {{ pageBody }}
+            </main>
+        {% endif %}
+    </body>
+</html>

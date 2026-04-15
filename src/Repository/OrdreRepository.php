@@ -16,6 +16,16 @@ class OrdreRepository extends ServiceEntityRepository
         parent::__construct($registry, Ordre::class);
     }
 
+    public function getNextOrdreNumber(): int
+    {
+        $maxValue = $this->createQueryBuilder('o')
+            ->select('MAX(o.Num_Ordre)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return ((int) $maxValue) + 1;
+    }
+
 //    /**
 //     * @return Ordre[] Returns an array of Ordre objects
 //     */

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HR One - Inscription RH</title>
+  <link rel="stylesheet" href="{{ asset('styles.css') }}">
+</head>
+<body>
+  <div class="page">
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="{{ path('app_home') }}">
+          <div class="brand-logo">
+            <img src="{{ asset('logo.png') }}" alt="HR One">
+          </div>
+          <div>
+            <p class="brand-name">HR One</p>
+            <p class="brand-sub">HR administrator onboarding</p>
+          </div>
+        </a>
+        <div class="nav-actions">
+          <a class="nav-link" href="{{ path('app_login') }}">Retour connexion</a>
+          <a class="nav-cta" href="{{ path('app_register') }}">Version candidat</a>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="hero">
+          <div class="hero-inner">
+            <span class="eyebrow">Workspace RH</span>
+            <h1>Launch HR operations with <span class="hero-highlight">control.</span></h1>
+            <p class="hero-copy">
+              Le parcours RH melange image entreprise et clarte d execution : informations personnelles,
+              donnees entreprise et presentation serieuse.
+            </p>
+          </div>
+        </section>
+
+        <section class="form-side">
+          <div class="form-shell">
+            <div class="form-topbar">
+              <span class="micro-pill">Compte RH et entreprise</span>
+              <span class="mini-meta">Setup admin</span>
+            </div>
+
+            <div class="panel-head">
+              <h2>Creer un compte RH</h2>
+              <p>Commencez par les informations du responsable RH, puis ajoutez les donnees de l entreprise. L email est verifie cote serveur et doit correspondre a un domaine professionnel actif.</p>
+            </div>
+
+            {% for message in app.flashes('error') %}
+              <div class="flash-error">{{ message }}</div>
+            {% endfor %}
+            {% for message in app.flashes('success') %}
+              <div class="flash-success">{{ message }}</div>
+            {% endfor %}
+
+            {{ form_start(registrationRhForm, {'attr': {'class': 'auth-form grid-2'}}) }}
+              <div class="form-errors full">{{ form_errors(registrationRhForm) }}</div>
+
+              <p class="section-title full">Informations RH</p>
+
+              <div class="field">
+                {{ form_label(registrationRhForm.Nom_Utilisateur) }}
+                {{ form_widget(registrationRhForm.Nom_Utilisateur, {'attr': {'placeholder': 'Nom d utilisateur'}}) }}
+                {{ form_errors(registrationRhForm.Nom_Utilisateur) }}
+              </div>
+
+              <div class="field">
+                {{ form_label(registrationRhForm.plainPassword) }}
+                {{ form_widget(registrationRhForm.plainPassword, {'attr': {'placeholder': 'Mot de passe'}}) }}
+                {{ form_errors(registrationRhForm.plainPassword) }}
+              </div>
+
+              <div class="field">
+                {{ form_label(registrationRhForm.Email) }}
+                {{ form_widget(registrationRhForm.Email, {'attr': {'placeholder': 'email@entreprise.com'}}) }}
+                {{ form_errors(registrationRhForm.Email) }}
+              </div>
+
+              <div class="field">
+                {{ form_label(registrationRhForm.Adresse) }}
+                {{ form_widget(registrationRhForm.Adresse, {'attr': {'placeholder': 'Adresse'}}) }}
+                {{ form_errors(registrationRhForm.Adresse) }}
+              </div>
+
+              <div class="field">
+                {{ form_label(registrationRhForm.Num_Tel) }}
+                {{ form_widget(registrationRhForm.Num_Tel, {'attr': {'placeholder': '06 00 00 00 00'}}) }}
+                {{ form_errors(registrationRhForm.Num_Tel) }}
+              </div>
+
+              <div class="field">
+                {{ form_label(registrationRhForm.CIN) }}
+                {{ form_widget(registrationRhForm.CIN, {'attr': {'placeholder': 'CIN'}}) }}
+                {{ form_errors(registrationRhForm.CIN) }}
+              </div>
+
+              <div class="field">
+                {{ form_label(registrationRhForm.Date_Naissance) }}
+                {{ form_widget(registrationRhForm.Date_Naissance) }}
+                {{ form_errors(registrationRhForm.Date_Naissance) }}
+              </div>
+
+              <div class="field">
+                {{ form_label(registrationRhForm.Gender) }}
+                {{ form_widget(registrationRhForm.Gender) }}
+                {{ form_errors(registrationRhForm.Gender) }}
+              </div>
+
+              <p class="section-title full">Informations entreprise</p>
+
+              <div class="field">
+                {{ form_label(registrationRhForm.entreprise.Nom_Entreprise) }}
+                {{ form_widget(registrationRhForm.entreprise.Nom_Entreprise, {'attr': {'placeholder': 'Nom de l entreprise'}}) }}
+                {{ form_errors(registrationRhForm.entreprise.Nom_Entreprise) }}
+              </div>
+
+              <div class="field">
+                {{ form_label(registrationRhForm.entreprise.Reference) }}
+                {{ form_widget(registrationRhForm.entreprise.Reference, {'attr': {'placeholder': 'Reference'}}) }}
+                {{ form_errors(registrationRhForm.entreprise.Reference) }}
+              </div>
+              <div class="actions full">
+                {{ form_widget(registrationRhForm.submit) }}
+                <a class="btn btn-outline" href="{{ path('app_login') }}">Retour connexion</a>
+              </div>
+            {{ form_end(registrationRhForm) }}
+
+            <div class="trust-row">
+              <span class="trust-chip">B2B friendly</span>
+              <span class="trust-chip">Onboarding RH</span>
+              <span class="trust-chip">Future scalable</span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

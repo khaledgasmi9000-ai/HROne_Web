@@ -6,16 +6,21 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-
 use App\Repository\UtilisateurRepository;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
 #[ORM\Table(name: 'utilisateur')]
-class Utilisateur
+#[UniqueEntity(fields: ['Email'], message: 'Cet email est deja utilise.')]
+#[UniqueEntity(fields: ['Nom_Utilisateur'], message: 'Ce nom utilisateur est deja utilise.')]
+class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'ID_UTILISATEUR', type: 'integer')]
     private ?int $ID_UTILISATEUR = null;
 
     public function getID_UTILISATEUR(): ?int
@@ -60,6 +65,13 @@ class Utilisateur
     }
 
     #[ORM\Column(type: 'string', nullable: false)]
+    #[Assert\NotBlank(message: 'Le nom utilisateur est obligatoire.')]
+    #[Assert\Length(
+        min: 3,
+        max: 180,
+        minMessage: 'Le nom utilisateur doit contenir au moins {{ limit }} caracteres.',
+        maxMessage: 'Le nom utilisateur ne doit pas depasser {{ limit }} caracteres.'
+    )]
     private ?string $Nom_Utilisateur = null;
 
     public function getNom_Utilisateur(): ?string
@@ -88,6 +100,9 @@ class Utilisateur
     }
 
     #[ORM\Column(type: 'string', nullable: true)]
+    #[Assert\NotBlank(message: 'L email est obligatoire.')]
+    #[Assert\Email(message: 'Veuillez saisir une adresse email valide.')]
+    #[Assert\Length(max: 180, maxMessage: 'L email ne doit pas depasser {{ limit }} caracteres.')]
     private ?string $Email = null;
 
     public function getEmail(): ?string
@@ -102,6 +117,7 @@ class Utilisateur
     }
 
     #[ORM\Column(type: 'string', nullable: true)]
+    #[Assert\Length(max: 255, maxMessage: 'L adresse ne doit pas depasser {{ limit }} caracteres.')]
     private ?string $Adresse = null;
 
     public function getAdresse(): ?string
@@ -116,6 +132,10 @@ class Utilisateur
     }
 
     #[ORM\Column(type: 'string', nullable: true)]
+    #[Assert\Regex(
+        pattern: '/^[0-9+\s-]{8,20}$/',
+        message: 'Le numero de telephone doit contenir entre 8 et 20 caracteres numeriques.'
+    )]
     private ?string $Num_Tel = null;
 
     public function getNum_Tel(): ?string
@@ -130,6 +150,7 @@ class Utilisateur
     }
 
     #[ORM\Column(type: 'string', nullable: true)]
+    #[Assert\Length(max: 20, maxMessage: 'Le CIN ne doit pas depasser {{ limit }} caracteres.')]
     private ?string $CIN = null;
 
     public function getCIN(): ?string
@@ -159,6 +180,7 @@ class Utilisateur
     }
 
     #[ORM\Column(type: 'date', nullable: true)]
+    #[Assert\LessThanOrEqual('today', message: 'La date de naissance doit etre dans le passe.')]
     private ?\DateTimeInterface $Date_Naissance = null;
 
     public function getDate_Naissance(): ?\DateTimeInterface
@@ -173,6 +195,10 @@ class Utilisateur
     }
 
     #[ORM\Column(type: 'string', nullable: true)]
+    #[Assert\Choice(
+        choices: ['Homme', 'Femme', 'Autre'],
+        message: 'Le genre selectionne est invalide.'
+    )]
     private ?string $Gender = null;
 
     public function getGender(): ?string
@@ -186,8 +212,11 @@ class Utilisateur
         return $this;
     }
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    #[ORM\Column(name: 'firstLogin', type: 'integer', nullable: true)]
     private ?int $firstLogin = null;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $isActive = true;
 
     public function getFirstLogin(): ?int
     {
@@ -197,6 +226,18 @@ class Utilisateur
     public function setFirstLogin(?int $firstLogin): self
     {
         $this->firstLogin = $firstLogin;
+        return $this;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(bool $isActive): self
+    {
+        $this->isActive = $isActive;
+
         return $this;
     }
 
@@ -450,6 +491,31 @@ class Utilisateur
         return $this->ID_UTILISATEUR;
     }
 
+    public function getUserIdentifier(): string
+    {
+        return $this->Email ?: (string) $this->Nom_Utilisateur;
+    }
+
+    public function getRoles(): array
+    {
+        $profilId = $this->profil?->getID_Profil();
+
+        $roles = match ($profilId) {
+            2 => ['ROLE_ADMIN', 'ROLE_RH'],
+            1 => ['ROLE_CANDIDAT'],
+            3 => ['ROLE_EMPLOYEE'],
+            default => [],
+        };
+
+        $roles[] = 'ROLE_USER';
+
+        return array_values(array_unique($roles));
+    }
+
+    public function eraseCredentials(): void
+    {
+    }
+
     public function getNomUtilisateur(): ?string
     {
         return $this->Nom_Utilisateur;
@@ -472,6 +538,11 @@ class Utilisateur
         $this->Mot_Passe = $Mot_Passe;
 
         return $this;
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->Mot_Passe;
     }
 
     public function getNumTel(): ?string
@@ -540,6 +611,39 @@ class Utilisateur
         }
 
         return $this;
+    }
+
+    public function getProfileCompletionScore(): int
+    {
+        $fields = [
+            $this->getNomUtilisateur(),
+            $this->getEmail(),
+            $this->getNumTel(),
+            $this->getCIN(),
+            $this->getAdresse(),
+            $this->getDateNaissance(),
+            $this->getGender(),
+        ];
+
+        $filled = 0;
+
+        foreach ($fields as $field) {
+            if ($field instanceof \DateTimeInterface) {
+                ++$filled;
+                continue;
+            }
+
+            if (is_string($field) && trim($field) !== '') {
+                ++$filled;
+            }
+        }
+
+        return (int) round(($filled / count($fields)) * 100);
+    }
+
+    public function isProfileComplete(): bool
+    {
+        return $this->getProfileCompletionScore() >= 85;
     }
 
 }

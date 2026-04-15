@@ -1,0 +1,164 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des utilisateurs{% endblock %}
+
+{% block body %}
+    <section class="interface-shell">
+        <div class="section-header">
+            <div>
+                <h1>Gestion des utilisateurs</h1>
+                <p>Module RH/Admin avec recherche, filtrage par profil et statut actif ou inactif.</p>
+            </div>
+        </div>
+
+        <section class="users-filter-panel">
+            <form method="get" class="filters-bar">
+                <input type="text" name="q" value="{{ filters.q }}" placeholder="Rechercher par nom, email ou CIN">
+                <select name="profil">
+                    <option value="">Tous les profils</option>
+                    <option value="1" {{ filters.profil == '1' ? 'selected' : '' }}>Candidat</option>
+                    <option value="2" {{ filters.profil == '2' ? 'selected' : '' }}>RH/Admin</option>
+                    <option value="3" {{ filters.profil == '3' ? 'selected' : '' }}>Employe</option>
+                </select>
+                <select name="status">
+                    <option value="">Tous les statuts</option>
+                    <option value="active" {{ filters.status == 'active' ? 'selected' : '' }}>Actifs</option>
+                    <option value="inactive" {{ filters.status == 'inactive' ? 'selected' : '' }}>Inactifs</option>
+                </select>
+                <button class="btn btn-primary" type="submit">Filtrer</button>
+                <a class="btn btn-secondary" href="{{ path('app_rh_user_index') }}">Reinitialiser</a>
+            </form>
+        </section>
+
+        <div class="table-shell users-table-spacing">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom utilisateur</th>
+                        <th>Email</th>
+                        <th>Profil</th>
+                        <th>Statut</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for userItem in users %}
+                        <tr>
+                            <td>{{ userItem.IDUTILISATEUR }}</td>
+                            <td>
+                                <div class="user-cell">
+                                    <img
+                                        class="user-avatar-api"
+                                        src="https://api.dicebear.com/9.x/personas/svg?seed={{ (userItem.email ?: userItem.nomUtilisateur ?: userItem.IDUTILISATEUR)|url_encode }}"
+                                        alt="Avatar de {{ userItem.nomUtilisateur ?: 'Utilisateur' }}">
+                                    <div>
+                                        <strong>{{ userItem.nomUtilisateur }}</strong>
+                                        <small>#{{ userItem.IDUTILISATEUR }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ userItem.email ?: 'Non renseigne' }}</td>
+                            <td>
+                                {{ userItem.profil ? userItem.profil.nomProfil : 'Non renseigne' }}
+                            </td>
+                            <td>
+                                <span class="status-chip {{ userItem.active ? 'status-active' : 'status-inactive' }}">
+                                    {{ userItem.active ? 'Actif' : 'Inactif' }}
+                                </span>
+                            </td>
+                            <td>
+                                <a class="table-link" href="{{ path('app_rh_user_show', { id: userItem.IDUTILISATEUR }) }}">Consulter</a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6">Aucun utilisateur ne correspond aux filtres saisis.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <section class="users-bottom-stats-card">
+            <div class="users-bottom-stats-head">
+                <div class="users-bottom-stats-copy">
+                    <span class="users-bottom-stats-kicker">Resume</span>
+                    <h2>Statistiques utilisateurs</h2>
+                    <p>Un resume rapide de l etat global des comptes enregistres.</p>
+                </div>
+                <div class="users-bottom-stats-highlight">
+                    <span>Base totale</span>
+                    <strong>{{ stats.total }}</strong>
+                    <small>utilisateurs suivis</small>
+                </div>
+            </div>
+
+            <div class="users-bottom-stats-grid">
+                <article class="users-bottom-stat users-bottom-stat-primary">
+                    <span>Total utilisateurs</span>
+                    <strong>{{ stats.total }}</strong>
+                </article>
+                <article class="users-bottom-stat users-bottom-stat-success">
+                    <span>Comptes actifs</span>
+                    <strong>{{ stats.active }}</strong>
+                </article>
+                <article class="users-bottom-stat users-bottom-stat-danger">
+                    <span>Comptes inactifs</span>
+                    <strong>{{ stats.inactive }}</strong>
+                </article>
+                <article class="users-bottom-stat">
+                    <span>Candidats</span>
+                    <strong>{{ stats.candidats }}</strong>
+                </article>
+                <article class="users-bottom-stat">
+                    <span>RH/Admin</span>
+                    <strong>{{ stats.rh }}</strong>
+                </article>
+                <article class="users-bottom-stat">
+                    <span>Employes</span>
+                    <strong>{{ stats.employees }}</strong>
+                </article>
+            </div>
+        </section>
+
+        <section class="users-chart-grid">
+            <article class="users-chart-card">
+                <div class="users-chart-head">
+                    <span class="users-bottom-stats-kicker">Graphique</span>
+                    <h2>Repartition des profils</h2>
+                </div>
+                <div class="users-chart-canvas-wrap">
+                    <canvas id="user-role-chart"></canvas>
+                </div>
+            </article>
+            <article class="users-chart-card">
+                <div class="users-chart-head">
+                    <span class="users-bottom-stats-kicker">Graphique</span>
+                    <h2>Statut des comptes</h2>
+                </div>
+                <div class="users-chart-canvas-wrap">
+                    <canvas id="user-status-chart"></canvas>
+                </div>
+            </article>
+        </section>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+          (() => {
+            const roleCanvas = document.getElementById('user-role-chart');
+            const statusCanvas = document.getElementById('user-status-chart');
+            const roleChartConfig = {{ userRoleChart|json_encode(constant('JSON_UNESCAPED_UNICODE'))|raw }};
+            const statusChartConfig = {{ userStatusChart|json_encode(constant('JSON_UNESCAPED_UNICODE'))|raw }};
+
+            if (roleCanvas && window.Chart) {
+              new Chart(roleCanvas, roleChartConfig);
+            }
+
+            if (statusCanvas && window.Chart) {
+              new Chart(statusCanvas, statusChartConfig);
+            }
+          })();
+        </script>
+    </section>
+{% endblock %}
