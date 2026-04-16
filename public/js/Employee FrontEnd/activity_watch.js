@@ -34,13 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
             isConnected = true;
 
         } catch (e) {
-            console.log(e);
             statusDiv.classList.add('error');
             statusDiv.innerText = "ActivityWatch is not running. Please start it.";
-            // statusDiv.innerHTML = `
-            //     ActivityWatch is running but cannot be embedded.<br>
-            //     <a href="http://localhost:5600" target="_blank">Open ActivityWatch</a>
-            //     `;
 
             iframe.style.display = 'none';
             startBtn.disabled = true;
