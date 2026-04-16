@@ -160,12 +160,6 @@ class ToolController extends AbstractController{
         return $this->redirectToRoute('employee_outils');
     }
 
-    #[Route('/Gestion_Administrative/outils/ActivityWatch', name: 'activity_watch')]
-    public function activityWatch(): Response
-    {
-        return $this->render('Employee FrontEnd/activity_watch.html.twig');
-    }
-
     #[Route('/Gestion_Administrative/outils', name: 'employee_outils')]
     public function outils(Request $request ,OutilsDeTravailRepository $outilsRepository): Response
     {
