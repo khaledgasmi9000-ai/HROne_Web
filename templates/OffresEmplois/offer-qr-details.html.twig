@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Details offre - {{ offer.title }}</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: linear-gradient(160deg, #f2f7ff, #ffffff);
+        color: #0f172a;
+      }
+
+      .page {
+        max-width: 860px;
+        margin: 24px auto;
+        padding: 0 14px 28px;
+      }
+
+      .card {
+        background: #ffffff;
+        border: 1px solid #dce6f2;
+        border-radius: 16px;
+        box-shadow: 0 14px 34px -24px rgba(15, 23, 42, 0.6);
+        overflow: hidden;
+      }
+
+      .header {
+        padding: 18px 18px 16px;
+        background: linear-gradient(130deg, #0b4f8a, #0f766e);
+        color: #ffffff;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 1.35rem;
+      }
+
+      .header p {
+        margin: 6px 0 0;
+        color: #d8e8ff;
+        font-size: 0.95rem;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        padding: 16px;
+      }
+
+      .item {
+        border: 1px solid #e1eaf4;
+        border-radius: 10px;
+        background: #f8fbff;
+        padding: 10px;
+      }
+
+      .item .label {
+        display: block;
+        font-size: 0.75rem;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: #4f6480;
+        font-weight: 700;
+      }
+
+      .item .value {
+        margin-top: 5px;
+        font-size: 0.95rem;
+        color: #10243a;
+        font-weight: 600;
+      }
+
+      .description {
+        margin: 0 16px 16px;
+        border: 1px solid #e1eaf4;
+        border-radius: 10px;
+        background: #f8fbff;
+        padding: 12px;
+      }
+
+      .description .label {
+        display: block;
+        font-size: 0.75rem;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: #4f6480;
+        font-weight: 700;
+      }
+
+      .description p {
+        margin: 6px 0 0;
+        line-height: 1.5;
+        color: #1f2f46;
+      }
+
+      @media (max-width: 760px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <article class="card">
+        <header class="header">
+          <h1>{{ offer.title }}</h1>
+          <p>Details complets de l'offre d'emploi</p>
+        </header>
+
+        <section class="grid">
+          <div class="item">
+            <span class="label">Type de contrat</span>
+            <div class="value">{{ offer.contract }}</div>
+          </div>
+          <div class="item">
+            <span class="label">Lieu</span>
+            <div class="value">{{ offer.location }}</div>
+          </div>
+          <div class="item">
+            <span class="label">Type de travail</span>
+            <div class="value">{{ offer.workType }}</div>
+          </div>
+          <div class="item">
+            <span class="label">Experience</span>
+            <div class="value">{{ offer.experience }}</div>
+          </div>
+          <div class="item">
+            <span class="label">Salaire</span>
+            <div class="value">
+              {% if offer.minSalary is not null and offer.maxSalary is not null %}
+                {{ offer.minSalary }} - {{ offer.maxSalary }} DTN
+              {% else %}
+                Non precise
+              {% endif %}
+            </div>
+          </div>
+          <div class="item">
+            <span class="label">Date d'expiration</span>
+            <div class="value">{{ offer.expirationDate|default('Non precisee') }}</div>
+          </div>
+          <div class="item">
+            <span class="label">Statut</span>
+            <div class="value">{{ offer.status }}</div>
+          </div>
+          <div class="item">
+            <span class="label">Identifiant offre</span>
+            <div class="value">#{{ offer.id }}</div>
+          </div>
+        </section>
+
+        <section class="description">
+          <span class="label">Description</span>
+          <p>{{ offer.description ?: 'Aucune description disponible pour cette offre.' }}</p>
+        </section>
+      </article>
+    </main>
+  </body>
+</html>

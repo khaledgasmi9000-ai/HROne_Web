@@ -6,6 +6,8 @@ use DateTimeImmutable;
 use Throwable;
 use App\Repository\CondidatureRepository;
 use App\Repository\OffreRepository;
+use App\Service\CandidateNotificationService;
+use App\Service\ContractPdfService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use App\Repository\TypeBackgroundEtudeRepository;
@@ -94,7 +96,12 @@ class NavbarRHController extends AbstractController
     }
 
     #[Route('/rh/gestion-entretiens/api/candidatures/{id}/status', name: 'rh_entretiens_api_candidature_status', methods: ['PUT'])]
-    public function candidatureStatusApi(int $id, Request $request, CondidatureRepository $condidatureRepository): JsonResponse
+    public function candidatureStatusApi(
+        int $id,
+        Request $request,
+        CondidatureRepository $condidatureRepository,
+        CandidateNotificationService $candidateNotificationService
+    ): JsonResponse
     {
         try {
             $payload = json_decode($request->getContent(), true);
@@ -112,7 +119,30 @@ class NavbarRHController extends AbstractController
                 return $this->json(['message' => 'Candidature introuvable.'], Response::HTTP_NOT_FOUND);
             }
 
-            return $this->json(['candidate' => $candidate]);
+            $normalizedStatus = strtoupper(trim($status));
+            $notification = [
+                'sent' => false,
+                'message' => null,
+            ];
+
+            try {
+                if (in_array($normalizedStatus, ['ACCEPTED', 'ACCEPTEE', 'ACCEPTE'], true)) {
+                    $notification['sent'] = false;
+                    $notification['message'] = 'Candidature acceptee. La decision finale et le contrat seront geres apres lentretien.';
+                } elseif (in_array($normalizedStatus, ['REJECTED', 'REJETEE', 'REJETE'], true)) {
+                    $candidateNotificationService->sendRejectionEmail($candidate);
+                    $notification['sent'] = true;
+                    $notification['message'] = 'Email de rejet envoye.';
+                }
+            } catch (Throwable $mailException) {
+                $notification['message'] = 'Statut mis a jour, mais l email na pas pu etre envoye.';
+                $notification['details'] = $mailException->getMessage();
+            }
+
+            return $this->json([
+                'candidate' => $candidate,
+                'notification' => $notification,
+            ]);
         } catch (Throwable $exception) {
             return $this->json([
                 'message' => 'Erreur serveur lors de la mise a jour du statut.',
@@ -122,7 +152,12 @@ class NavbarRHController extends AbstractController
     }
 
     #[Route('/rh/gestion-entretiens/api/candidatures/{id}/entretien', name: 'rh_entretiens_api_schedule_interview', methods: ['POST'])]
-    public function scheduleInterviewApi(int $id, Request $request, CondidatureRepository $condidatureRepository): JsonResponse
+    public function scheduleInterviewApi(
+        int $id,
+        Request $request,
+        CondidatureRepository $condidatureRepository,
+        CandidateNotificationService $candidateNotificationService
+    ): JsonResponse
     {
         try {
             $payload = json_decode($request->getContent(), true);
@@ -143,6 +178,12 @@ class NavbarRHController extends AbstractController
             }
 
             $scheduledAt = new DateTimeImmutable($scheduledAtInput);
+            if ($scheduledAt <= new DateTimeImmutable('now')) {
+                return $this->json([
+                    'message' => 'La date de lentretien doit etre posterieure a la date et lheure actuelles.',
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
             $scheduled = $condidatureRepository->scheduleInterviewForRh($id, $scheduledAt, $location, $evaluation);
 
             if (!$scheduled) {
@@ -151,13 +192,105 @@ class NavbarRHController extends AbstractController
 
             $candidate = $condidatureRepository->fetchRhCandidateByCandidatureId($id);
 
+            $notification = [
+                'sent' => false,
+                'message' => null,
+            ];
+
+            if ($candidate !== null) {
+                try {
+                    $candidateNotificationService->sendInterviewEmail($candidate);
+                    $notification['sent'] = true;
+                    $notification['message'] = 'Email de convocation dentretien envoye.';
+                } catch (Throwable $mailException) {
+                    $notification['message'] = 'Entretien planifie, mais lemail de convocation na pas pu etre envoye.';
+                    $notification['details'] = $mailException->getMessage();
+                }
+            }
+
             return $this->json([
                 'scheduled' => true,
                 'candidate' => $candidate,
+                'notification' => $notification,
             ]);
         } catch (Throwable $exception) {
             return $this->json([
                 'message' => 'Erreur serveur lors de la planification de lentretien.',
+                'details' => $exception->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/rh/gestion-entretiens/api/candidatures/{id}/decision-finale', name: 'rh_entretiens_api_final_decision', methods: ['POST'])]
+    public function finalDecisionAfterInterviewApi(
+        int $id,
+        Request $request,
+        CondidatureRepository $condidatureRepository,
+        CandidateNotificationService $candidateNotificationService,
+        ContractPdfService $contractPdfService
+    ): JsonResponse
+    {
+        try {
+            $payload = json_decode($request->getContent(), true);
+            if (!is_array($payload)) {
+                return $this->json(['message' => 'Payload invalide.'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $decision = strtoupper(trim((string) ($payload['decision'] ?? '')));
+            if (!in_array($decision, ['ACCEPTED', 'REJECTED'], true)) {
+                return $this->json(['message' => 'La decision finale doit etre ACCEPTED ou REJECTED.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $current = $condidatureRepository->fetchRhCandidateByCandidatureId($id);
+            if ($current === null) {
+                return $this->json(['message' => 'Candidature introuvable.'], Response::HTTP_NOT_FOUND);
+            }
+
+            $interviewDateTimeIso = trim((string) ($current['interviewDateTimeIso'] ?? ''));
+            if ($interviewDateTimeIso === '') {
+                return $this->json(['message' => 'Aucun entretien planifie pour cette candidature.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $interviewDateTime = new DateTimeImmutable($interviewDateTimeIso);
+            if ($interviewDateTime > new DateTimeImmutable('now')) {
+                return $this->json([
+                    'message' => 'La decision finale est disponible uniquement apres la date et heure de lentretien.',
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $candidate = $condidatureRepository->updateStatusForRh($id, $decision);
+            if ($candidate === null) {
+                return $this->json(['message' => 'Candidature introuvable.'], Response::HTTP_NOT_FOUND);
+            }
+
+            $notification = [
+                'sent' => false,
+                'message' => null,
+            ];
+
+            try {
+                if ($decision === 'ACCEPTED') {
+                    $contractPath = $contractPdfService->generateContractPdf($candidate);
+                    $candidateNotificationService->sendAcceptanceEmail($candidate, $contractPath, '');
+                    $notification['sent'] = true;
+                    $notification['message'] = 'Decision finale enregistree. Email avec contrat envoye.';
+                } else {
+                    $candidateNotificationService->sendRejectionEmail($candidate);
+                    $notification['sent'] = true;
+                    $notification['message'] = 'Decision finale enregistree. Email de rejet envoye.';
+                }
+            } catch (Throwable $mailException) {
+                $notification['message'] = 'Decision finale enregistree, mais lemail na pas pu etre envoye.';
+                $notification['details'] = $mailException->getMessage();
+            }
+
+            return $this->json([
+                'candidate' => $candidate,
+                'notification' => $notification,
+            ]);
+        } catch (Throwable $exception) {
+            return $this->json([
+                'message' => 'Erreur serveur lors de la decision finale.',
                 'details' => $exception->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }

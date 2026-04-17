@@ -20,5 +20,14 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    App\Service\CandidateNotificationService:
+        arguments:
+            $fromEmail: '%env(string:MAILER_FROM_EMAIL)%'
+            $fromName: '%env(string:MAILER_FROM_NAME)%'
+
+    App\Service\ContractPdfService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

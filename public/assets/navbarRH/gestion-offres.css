@@ -316,6 +316,56 @@
 	margin-top: 4px;
 }
 
+.page-gestion-offres .delete-modal {
+	position: fixed;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	z-index: 140;
+	padding: 20px;
+}
+
+.page-gestion-offres .delete-modal[hidden] {
+	display: none;
+}
+
+.page-gestion-offres .delete-modal__backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(15, 23, 42, 0.45);
+}
+
+.page-gestion-offres .delete-modal__panel {
+	position: relative;
+	width: min(520px, 96vw);
+	background: #ffffff;
+	border: 1px solid #d9e4f3;
+	border-radius: 16px;
+	padding: 18px;
+	box-shadow: 0 20px 48px -26px rgba(15, 23, 42, 0.9);
+	display: grid;
+	gap: 12px;
+}
+
+.page-gestion-offres .delete-modal__header h2 {
+	margin: 0;
+	font-size: 1.06rem;
+	color: #0f172a;
+}
+
+.page-gestion-offres .delete-modal__text {
+	margin: 0;
+	color: #334155;
+	line-height: 1.45;
+	font-size: 0.9rem;
+}
+
+.page-gestion-offres .delete-modal__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+}
+
 @media (max-width: 1180px) {
 	.page-gestion-offres .grid {
 		grid-template-columns: 1fr;
@@ -351,5 +401,10 @@
 
 	.page-gestion-offres .stats {
 		grid-template-columns: 1fr;
+	}
+
+	.page-gestion-offres .delete-modal__actions {
+		flex-direction: column;
+		align-items: stretch;
 	}
 }

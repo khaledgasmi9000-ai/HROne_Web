@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Contrat de travail</title>
+    <style>
+        body { font-family: DejaVu Sans, Arial, sans-serif; color: #1f2937; font-size: 12px; }
+        .header { border-bottom: 2px solid #0b4f8a; padding-bottom: 8px; margin-bottom: 18px; }
+        .header h1 { margin: 0; font-size: 22px; color: #0b4f8a; }
+        .header p { margin: 4px 0 0; color: #4b5563; }
+        .section { margin-bottom: 14px; }
+        .section h2 { margin: 0 0 8px; font-size: 14px; color: #0f172a; }
+        .grid { width: 100%; border-collapse: collapse; }
+        .grid td { border: 1px solid #d1d5db; padding: 7px 8px; }
+        .grid td.label { width: 34%; background: #f3f4f6; font-weight: bold; }
+        .footer { margin-top: 22px; font-size: 11px; color: #6b7280; }
+        .signatures { margin-top: 32px; width: 100%; border-collapse: collapse; }
+        .signatures td { width: 50%; padding-top: 24px; vertical-align: top; }
+        .line { margin-top: 36px; border-top: 1px solid #9ca3af; width: 85%; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Contrat de Travail</h1>
+        <p>Document genere le {{ generatedAt|date('d/m/Y H:i') }}</p>
+    </div>
+
+    <div class="section">
+        <h2>Informations du candidat</h2>
+        <table class="grid">
+            <tr><td class="label">Nom</td><td>{{ candidateName }}</td></tr>
+            <tr><td class="label">Email</td><td>{{ candidateEmail|default('-') }}</td></tr>
+            <tr><td class="label">Poste</td><td>{{ offerTitle }}</td></tr>
+            <tr><td class="label">Type de contrat</td><td>{{ contractType|default('-') }}</td></tr>
+            <tr><td class="label">Type de travail</td><td>{{ workType|default('-') }}</td></tr>
+            <tr><td class="label">Localisation</td><td>{{ location|default('-') }}</td></tr>
+            <tr><td class="label">Experience</td><td>{{ experience|default('-') }}</td></tr>
+            <tr>
+                <td class="label">Salaire</td>
+                <td>
+                    {% if salaryMin is not null and salaryMax is not null %}
+                        {{ salaryMin }} - {{ salaryMax }} DTN
+                    {% else %}
+                        A definir
+                    {% endif %}
+                </td>
+            </tr>
+            <tr><td class="label">Date de prise de poste</td><td>{{ startDate|date('d/m/Y') }}</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Clauses principales</h2>
+        <p>Le present document formalise l'accord de principe entre HR-One et le candidat pour le poste mentionne ci-dessus, sous reserve de signature des deux parties et des formalites administratives internes.</p>
+    </div>
+
+    <table class="signatures">
+        <tr>
+            <td>
+                <strong>Signature RH</strong>
+                <div class="line"></div>
+            </td>
+            <td>
+                <strong>Signature du candidat</strong>
+                <div class="line"></div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="footer">
+        HR-One - Document contractuel interne.
+    </div>
+</body>
+</html>

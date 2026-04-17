@@ -415,6 +415,56 @@
   padding: 10px 14px;
 }
 
+.page-mes-candidatures .delete-modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 140;
+  padding: 20px;
+}
+
+.page-mes-candidatures .delete-modal[hidden] {
+  display: none;
+}
+
+.page-mes-candidatures .delete-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.46);
+}
+
+.page-mes-candidatures .delete-modal__panel {
+  position: relative;
+  width: min(540px, 96vw);
+  background: #ffffff;
+  border: 1px solid #d3e2f3;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 20px 48px -26px rgba(15, 23, 42, 0.9);
+  display: grid;
+  gap: 12px;
+}
+
+.page-mes-candidatures .delete-modal__header h2 {
+  margin: 0;
+  font-size: 1.06rem;
+  color: #0f172a;
+}
+
+.page-mes-candidatures .delete-modal__text {
+  margin: 0;
+  color: #374b66;
+  line-height: 1.45;
+  font-size: 0.9rem;
+}
+
+.page-mes-candidatures .delete-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 @media (max-width: 760px) {
   .page-mes-candidatures #editCandidaturePanel {
     padding: 12px;
@@ -426,5 +476,10 @@
 
   .page-mes-candidatures #editCandidaturePanel .edit-form__actions .btn {
     width: 100%;
+  }
+
+  .page-mes-candidatures .delete-modal__actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

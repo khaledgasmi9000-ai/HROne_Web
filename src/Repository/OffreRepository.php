@@ -500,11 +500,30 @@ class OffreRepository extends ServiceEntityRepository
             return (int) $existing;
         }
 
-        $nextOrdre = $connection->fetchOne('SELECT COALESCE(MAX(Num_Ordre), -1) + 1 FROM ordre');
-        $params['Num_Ordre'] = (int) $nextOrdre;
-        $connection->insert('ordre', $params);
+        $candidate = max(1, (int) $dateTime->format('U'));
+        $maxInt = 2147483647;
 
-        return $params['Num_Ordre'];
+        for ($offset = 0; $offset < 100000; $offset++) {
+            $numOrdre = $candidate + $offset;
+            if ($numOrdre > $maxInt) {
+                break;
+            }
+
+            $inserted = $connection->executeStatement(
+                'INSERT IGNORE INTO ordre (Num_Ordre, AAAA, MM, JJ, HH, MN, SS)
+                 VALUES (:Num_Ordre, :AAAA, :MM, :JJ, :HH, :MN, :SS)',
+                [
+                    'Num_Ordre' => $numOrdre,
+                    ...$params,
+                ]
+            );
+
+            if ($inserted > 0) {
+                return $numOrdre;
+            }
+        }
+
+        throw new \RuntimeException('Impossible de generer une cle Num_Ordre valide.');
     }
 
     private function syncOfferDetails(int $offerId, array $skills, array $languages, array $backgrounds): void

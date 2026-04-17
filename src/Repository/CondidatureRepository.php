@@ -35,9 +35,14 @@ class CondidatureRepository extends ServiceEntityRepository
                 u.Nom_Utilisateur,
                 u.Email,
                 o.Titre,
+                o.Work_Type,
+                o.Localisation,
+                o.Min_Salaire,
+                o.Max_Salaire,
+                tc.Description_Contrat,
                 o.Nbr_Annee_Experience,
                 tsc.Description_Status_Condidature,
-                GROUP_CONCAT(DISTINCT tc.Description_Competence ORDER BY tc.Description_Competence SEPARATOR ", ") AS Competences,
+                GROUP_CONCAT(DISTINCT tcomp.Description_Competence ORDER BY tcomp.Description_Competence SEPARATOR ", ") AS Competences,
                      MAX(ie.Num_Ordre_Entretien) AS Interview_Num_Ordre,
                      MAX(ie.Localisation) AS Interview_Localisation,
                      MAX(ie.Evaluation) AS Interview_Evaluation,
@@ -51,9 +56,10 @@ class CondidatureRepository extends ServiceEntityRepository
              INNER JOIN condidat cd ON cd.ID_Condidat = c.ID_Condidat
              INNER JOIN utilisateur u ON u.ID_UTILISATEUR = cd.ID_UTILISATEUR
              LEFT JOIN offre o ON o.ID_Offre = c.ID_Offre
+             LEFT JOIN type_contrat tc ON tc.Code_Type_Contrat = o.Code_Type_Contrat
              LEFT JOIN type_status_condidature tsc ON tsc.Code_Type_Status_Condidature = c.Code_Type_Status
              LEFT JOIN detail_offre_competence doc ON doc.ID_Offre = o.ID_Offre
-             LEFT JOIN type_competence tc ON tc.Code_Type_Competence = doc.Code_Type_Competence
+             LEFT JOIN type_competence tcomp ON tcomp.Code_Type_Competence = doc.Code_Type_Competence
                  LEFT JOIN (
                      SELECT e1.ID_Condidat, e1.Num_Ordre_Entretien, e1.Localisation, e1.Evaluation
                      FROM entretien e1
@@ -75,6 +81,11 @@ class CondidatureRepository extends ServiceEntityRepository
                 u.Nom_Utilisateur,
                 u.Email,
                 o.Titre,
+                o.Work_Type,
+                o.Localisation,
+                o.Min_Salaire,
+                o.Max_Salaire,
+                tc.Description_Contrat,
                 o.Nbr_Annee_Experience,
                 tsc.Description_Status_Condidature
              ORDER BY c.ID_Condidature DESC'
@@ -120,9 +131,14 @@ class CondidatureRepository extends ServiceEntityRepository
                 u.Nom_Utilisateur,
                 u.Email,
                 o.Titre,
+                o.Work_Type,
+                o.Localisation,
+                o.Min_Salaire,
+                o.Max_Salaire,
+                tc.Description_Contrat,
                 o.Nbr_Annee_Experience,
                 tsc.Description_Status_Condidature,
-                GROUP_CONCAT(DISTINCT tc.Description_Competence ORDER BY tc.Description_Competence SEPARATOR ", ") AS Competences,
+                GROUP_CONCAT(DISTINCT tcomp.Description_Competence ORDER BY tcomp.Description_Competence SEPARATOR ", ") AS Competences,
                      MAX(ie.Num_Ordre_Entretien) AS Interview_Num_Ordre,
                      MAX(ie.Localisation) AS Interview_Localisation,
                      MAX(ie.Evaluation) AS Interview_Evaluation,
@@ -136,9 +152,10 @@ class CondidatureRepository extends ServiceEntityRepository
              INNER JOIN condidat cd ON cd.ID_Condidat = c.ID_Condidat
              INNER JOIN utilisateur u ON u.ID_UTILISATEUR = cd.ID_UTILISATEUR
              LEFT JOIN offre o ON o.ID_Offre = c.ID_Offre
+             LEFT JOIN type_contrat tc ON tc.Code_Type_Contrat = o.Code_Type_Contrat
              LEFT JOIN type_status_condidature tsc ON tsc.Code_Type_Status_Condidature = c.Code_Type_Status
              LEFT JOIN detail_offre_competence doc ON doc.ID_Offre = o.ID_Offre
-             LEFT JOIN type_competence tc ON tc.Code_Type_Competence = doc.Code_Type_Competence
+             LEFT JOIN type_competence tcomp ON tcomp.Code_Type_Competence = doc.Code_Type_Competence
                  LEFT JOIN (
                      SELECT e1.ID_Condidat, e1.Num_Ordre_Entretien, e1.Localisation, e1.Evaluation
                      FROM entretien e1
@@ -161,6 +178,11 @@ class CondidatureRepository extends ServiceEntityRepository
                 u.Nom_Utilisateur,
                 u.Email,
                 o.Titre,
+                o.Work_Type,
+                o.Localisation,
+                o.Min_Salaire,
+                o.Max_Salaire,
+                tc.Description_Contrat,
                 o.Nbr_Annee_Experience,
                 tsc.Description_Status_Condidature',
             ['id' => $id]
@@ -258,8 +280,7 @@ class CondidatureRepository extends ServiceEntityRepository
             throw new RuntimeException('Impossible de determiner le RH pour planifier lentretien.');
         }
 
-        $numOrdre = (((int) $scheduledAt->format('U')) * 100000) + ($candidatureId % 100000);
-        $this->ensureOrdreExists($numOrdre, $scheduledAt);
+        $numOrdre = $this->ensureOrdreExists($scheduledAt);
 
         $candidateId = (int) $row['ID_Condidat'];
 
@@ -308,6 +329,11 @@ class CondidatureRepository extends ServiceEntityRepository
             'id' => (int) ($row['ID_Condidature'] ?? 0),
             'offerId' => (int) ($row['ID_Offre'] ?? 0),
             'offerTitle' => (string) ($row['Titre'] ?? '-'),
+            'workType' => (string) ($row['Work_Type'] ?? ''),
+            'location' => (string) ($row['Localisation'] ?? ''),
+            'contract' => (string) ($row['Description_Contrat'] ?? ''),
+            'minSalary' => isset($row['Min_Salaire']) ? (int) $row['Min_Salaire'] : null,
+            'maxSalary' => isset($row['Max_Salaire']) ? (int) $row['Max_Salaire'] : null,
             'name' => (string) ($row['Nom_Utilisateur'] ?? ''),
             'email' => (string) ($row['Email'] ?? ''),
             'experience' => ((string) ($row['Nbr_Annee_Experience'] ?? '') !== '')
@@ -353,21 +379,54 @@ class CondidatureRepository extends ServiceEntityRepository
         return (int) $rhId;
     }
 
-    private function ensureOrdreExists(int $numOrdre, DateTimeInterface $scheduledAt): void
+    private function ensureOrdreExists(DateTimeInterface $scheduledAt): int
     {
-        $this->getEntityManager()->getConnection()->executeStatement(
-            'INSERT IGNORE INTO ordre (Num_Ordre, AAAA, MM, JJ, HH, MN, SS)
-             VALUES (:numOrdre, :year, :month, :day, :hour, :minute, :second)',
-            [
-                'numOrdre' => $numOrdre,
-                'year' => (int) $scheduledAt->format('Y'),
-                'month' => (int) $scheduledAt->format('m'),
-                'day' => (int) $scheduledAt->format('d'),
-                'hour' => (int) $scheduledAt->format('H'),
-                'minute' => (int) $scheduledAt->format('i'),
-                'second' => (int) $scheduledAt->format('s'),
-            ]
+        $connection = $this->getEntityManager()->getConnection();
+        $params = [
+            'year' => (int) $scheduledAt->format('Y'),
+            'month' => (int) $scheduledAt->format('m'),
+            'day' => (int) $scheduledAt->format('d'),
+            'hour' => (int) $scheduledAt->format('H'),
+            'minute' => (int) $scheduledAt->format('i'),
+            'second' => (int) $scheduledAt->format('s'),
+        ];
+
+        $existing = $connection->fetchOne(
+            'SELECT Num_Ordre
+             FROM ordre
+             WHERE AAAA = :year AND MM = :month AND JJ = :day AND HH = :hour AND MN = :minute AND SS = :second
+             LIMIT 1',
+            $params
         );
+
+        if ($existing !== false && $existing !== null && $existing !== '') {
+            return (int) $existing;
+        }
+
+        $candidate = max(1, (int) $scheduledAt->format('U'));
+        $maxInt = 2147483647;
+
+        for ($offset = 0; $offset < 100000; $offset++) {
+            $numOrdre = $candidate + $offset;
+            if ($numOrdre > $maxInt) {
+                break;
+            }
+
+            $inserted = $connection->executeStatement(
+                'INSERT IGNORE INTO ordre (Num_Ordre, AAAA, MM, JJ, HH, MN, SS)
+                 VALUES (:numOrdre, :year, :month, :day, :hour, :minute, :second)',
+                [
+                    'numOrdre' => $numOrdre,
+                    ...$params,
+                ]
+            );
+
+            if ($inserted > 0) {
+                return $numOrdre;
+            }
+        }
+
+        throw new RuntimeException('Impossible de generer une cle Num_Ordre valide pour lentretien.');
     }
 
     /**

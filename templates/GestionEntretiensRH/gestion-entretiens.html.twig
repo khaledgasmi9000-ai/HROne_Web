@@ -152,6 +152,44 @@
         </div>
       </section>
     </div>
+
+    <div class="final-decision-modal" id="finalDecisionModal" hidden>
+      <div class="final-decision-modal__backdrop" data-close-final-decision-modal="true"></div>
+      <section class="final-decision-modal__panel" role="dialog" aria-modal="true" aria-labelledby="finalDecisionTitle">
+        <header class="final-decision-modal__header">
+          <div>
+            <h2 id="finalDecisionTitle">Decision finale apres entretien</h2>
+            <p class="muted" id="finalDecisionSubtitle">Confirmez la decision finale du candidat.</p>
+          </div>
+          <button class="btn btn-ghost" type="button" id="closeFinalDecisionBtn">Fermer</button>
+        </header>
+
+        <form id="finalDecisionForm" class="final-decision-form" novalidate>
+          <input type="hidden" id="finalDecisionCandidateId" />
+
+          <div class="field">
+            <label for="finalDecisionValue">Decision</label>
+            <select id="finalDecisionValue">
+              <option value="">Selectionner</option>
+              <option value="ACCEPTED">Accepter le candidat</option>
+              <option value="REJECTED">Rejeter le candidat</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="finalDecisionNote">Note RH (optionnelle)</label>
+            <textarea id="finalDecisionNote" rows="4" placeholder="Observations finales RH..."></textarea>
+          </div>
+
+          <small id="finalDecisionFeedback" class="muted" role="alert" aria-live="polite"></small>
+
+          <div class="interview-form__actions">
+            <button class="btn btn-primary" type="submit" id="saveFinalDecisionBtn">Valider la decision</button>
+            <button class="btn btn-ghost" type="button" id="cancelFinalDecisionBtn">Annuler</button>
+          </div>
+        </form>
+      </section>
+    </div>
   </main>
 
   <script>
@@ -160,6 +198,7 @@
     const detailsApiPattern = "{{ path('rh_entretiens_api_candidature_details', {id: '__ID__'}) }}";
     const statusApiPattern = "{{ path('rh_entretiens_api_candidature_status', {id: '__ID__'}) }}";
     const scheduleApiPattern = "{{ path('rh_entretiens_api_schedule_interview', {id: '__ID__'}) }}";
+    const finalDecisionApiPattern = "{{ path('rh_entretiens_api_final_decision', {id: '__ID__'}) }}";
 
     const offerFilter = document.getElementById("offerFilter");
     const statusFilter = document.getElementById("statusFilter");
@@ -196,6 +235,15 @@
     const detailsCv = document.getElementById("detailsCv");
     const detailsRecommendation = document.getElementById("detailsRecommendation");
     const detailsMotivation = document.getElementById("detailsMotivation");
+    const finalDecisionModal = document.getElementById("finalDecisionModal");
+    const closeFinalDecisionBtn = document.getElementById("closeFinalDecisionBtn");
+    const cancelFinalDecisionBtn = document.getElementById("cancelFinalDecisionBtn");
+    const finalDecisionForm = document.getElementById("finalDecisionForm");
+    const finalDecisionCandidateId = document.getElementById("finalDecisionCandidateId");
+    const finalDecisionValue = document.getElementById("finalDecisionValue");
+    const finalDecisionFeedback = document.getElementById("finalDecisionFeedback");
+    const finalDecisionSubtitle = document.getElementById("finalDecisionSubtitle");
+    const saveFinalDecisionBtn = document.getElementById("saveFinalDecisionBtn");
 
     const statusClassMap = {
       "En attente": "status-review",
@@ -235,6 +283,21 @@
 
       interviewFeedback.style.color = isSuccess ? "#0f7a45" : "#b42318";
       interviewFeedback.innerHTML = messages.map((message) => `- ${message}`).join("<br>");
+    };
+
+    const showFinalDecisionFeedback = (messages, isSuccess = false) => {
+      if (!finalDecisionFeedback) {
+        return;
+      }
+
+      if (!messages || messages.length === 0) {
+        finalDecisionFeedback.textContent = "";
+        finalDecisionFeedback.style.color = "";
+        return;
+      }
+
+      finalDecisionFeedback.style.color = isSuccess ? "#0f7a45" : "#b42318";
+      finalDecisionFeedback.innerHTML = messages.map((message) => `- ${message}`).join("<br>");
     };
 
     const safeText = (value) => {
@@ -280,6 +343,9 @@
           const selectedDate = new Date(value);
           if (Number.isNaN(selectedDate.getTime())) {
             return "Le format de date est invalide.";
+          }
+          if (selectedDate <= new Date()) {
+            return "La date de lentretien doit etre posterieure a la date et lheure actuelles.";
           }
           return null;
         },
@@ -365,6 +431,43 @@
       interviewPlanForm?.reset();
       showInterviewFeedback([]);
       clearFieldValidation();
+    };
+
+    const hasInterviewPassed = (candidate) => {
+      const interviewIso = (candidate?.interviewDateTimeIso || "").toString().trim();
+      if (!interviewIso) {
+        return false;
+      }
+      const interviewDate = new Date(interviewIso);
+      if (Number.isNaN(interviewDate.getTime())) {
+        return false;
+      }
+
+      return interviewDate <= new Date();
+    };
+
+    const openFinalDecisionModal = (candidate) => {
+      if (!candidate || !finalDecisionModal) {
+        return;
+      }
+
+      finalDecisionCandidateId.value = String(candidate.id || "");
+      finalDecisionValue.value = "";
+      if (finalDecisionSubtitle) {
+        finalDecisionSubtitle.textContent = `Candidat: ${candidate.name || "-"} | Offre: ${candidate.offerTitle || getOfferTitle(candidate.offerId)}`;
+      }
+      showFinalDecisionFeedback([]);
+      finalDecisionModal.hidden = false;
+    };
+
+    const closeFinalDecisionModal = () => {
+      if (!finalDecisionModal) {
+        return;
+      }
+
+      finalDecisionModal.hidden = true;
+      finalDecisionForm?.reset();
+      showFinalDecisionFeedback([]);
     };
 
     const getOfferTitle = (offerId) => {
@@ -529,6 +632,17 @@
             openInterviewModal(candidate);
           });
           actions.appendChild(scheduleBtn);
+
+          if (candidate.hasInterview && hasInterviewPassed(candidate)) {
+            const finalDecisionBtn = document.createElement("button");
+            finalDecisionBtn.type = "button";
+            finalDecisionBtn.className = "btn btn-primary";
+            finalDecisionBtn.textContent = "Decision finale";
+            finalDecisionBtn.addEventListener("click", () => {
+              openFinalDecisionModal(candidate);
+            });
+            actions.appendChild(finalDecisionBtn);
+          }
         }
 
         item.append(info, actions);
@@ -561,6 +675,14 @@
     candidatureDetailsModal?.addEventListener("click", (event) => {
       if (event.target instanceof HTMLElement && event.target.dataset.closeDetailsModal === "true") {
         closeDetailsModal();
+      }
+    });
+
+    closeFinalDecisionBtn?.addEventListener("click", closeFinalDecisionModal);
+    cancelFinalDecisionBtn?.addEventListener("click", closeFinalDecisionModal);
+    finalDecisionModal?.addEventListener("click", (event) => {
+      if (event.target instanceof HTMLElement && event.target.dataset.closeFinalDecisionModal === "true") {
+        closeFinalDecisionModal();
       }
     });
 
@@ -618,12 +740,64 @@
       }
     });
 
+    finalDecisionForm?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const candidateId = Number(finalDecisionCandidateId?.value || 0);
+      if (!candidateId) {
+        showFinalDecisionFeedback(["Candidature introuvable."]);
+        return;
+      }
+
+      const decision = (finalDecisionValue?.value || "").trim();
+      if (!decision) {
+        showFinalDecisionFeedback(["Selectionnez une decision finale."]);
+        return;
+      }
+
+      saveFinalDecisionBtn.disabled = true;
+      try {
+        const response = await fetch(finalDecisionApiPattern.replace("__ID__", String(candidateId)), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            decision,
+            note: (document.getElementById("finalDecisionNote")?.value || "").trim(),
+          }),
+        });
+
+        const data = await parseApiResponse(response);
+        const updated = data?.candidate;
+        if (updated && updated.id) {
+          const target = candidates.find((candidate) => candidate.id === updated.id);
+          if (target) {
+            Object.assign(target, updated);
+          }
+        }
+
+        showFinalDecisionFeedback([data?.notification?.message || "Decision finale enregistree."], true);
+        renderCandidates();
+        setTimeout(() => {
+          closeFinalDecisionModal();
+        }, 600);
+      } catch (error) {
+        showFinalDecisionFeedback((error?.message || "Impossible denregistrer la decision finale.").split("\n").filter(Boolean));
+      } finally {
+        saveFinalDecisionBtn.disabled = false;
+      }
+    });
+
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && interviewModal && !interviewModal.hidden) {
         closeInterviewModal();
       }
       if (event.key === "Escape" && candidatureDetailsModal && !candidatureDetailsModal.hidden) {
         closeDetailsModal();
+      }
+      if (event.key === "Escape" && finalDecisionModal && !finalDecisionModal.hidden) {
+        closeFinalDecisionModal();
       }
     });
 

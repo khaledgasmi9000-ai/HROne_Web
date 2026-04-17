@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Repository\CondidatRepository;
 use App\Repository\OffreRepository;
+use App\Service\ExternalJobBoardService;
+use App\Service\OfferQrCodeService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,10 +15,100 @@ use Symfony\Component\Routing\Attribute\Route;
 class TopnavbarController extends AbstractController
 {
     #[Route('/top/offres', name: 'topnav_offres')]
-    public function offres(OffreRepository $offreRepository): Response
+    public function offres(OffreRepository $offreRepository, ExternalJobBoardService $externalJobBoardService): Response
     {
+        $offers = $this->normalizeUtf8Recursive($offreRepository->fetchOffersForCandidate());
+        $externalOffers = $this->normalizeUtf8Recursive($externalJobBoardService->fetchExternalOffers());
+
         return $this->render('OffresEmplois/OffresEmplois.html.twig', [
-            'offers' => $offreRepository->fetchOffersForCandidate(),
+            'offers' => is_array($offers) ? $offers : [],
+            'externalOffers' => is_array($externalOffers) ? $externalOffers : [],
+        ]);
+    }
+
+    /**
+     * @param mixed $value
+     * @return mixed
+     */
+    private function normalizeUtf8Recursive(mixed $value): mixed
+    {
+        if (is_array($value)) {
+            foreach ($value as $key => $item) {
+                $value[$key] = $this->normalizeUtf8Recursive($item);
+            }
+
+            return $value;
+        }
+
+        if (!is_string($value)) {
+            return $value;
+        }
+
+        if (mb_check_encoding($value, 'UTF-8')) {
+            return $value;
+        }
+
+        $iconvNormalized = @iconv('UTF-8', 'UTF-8//IGNORE', $value);
+        if (is_string($iconvNormalized) && $iconvNormalized !== '') {
+            return $iconvNormalized;
+        }
+
+        $mbNormalized = @mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+        if (is_string($mbNormalized) && $mbNormalized !== '') {
+            return $mbNormalized;
+        }
+
+        return '';
+    }
+
+    #[Route('/top/offres/{id}/qr-code', name: 'topnav_offre_qr_code', methods: ['GET'])]
+    public function offerQrCode(int $id, OffreRepository $offreRepository, OfferQrCodeService $offerQrCodeService): Response
+    {
+        $offer = $offreRepository->fetchOfferForManagement($id);
+        if ($offer === null || ($offer['statusClass'] ?? '') !== 'status-live') {
+            throw $this->createNotFoundException('Offre introuvable.');
+        }
+
+        $title = trim((string) ($offer['title'] ?? ''));
+        $location = trim((string) ($offer['location'] ?? ''));
+        $contract = trim((string) ($offer['contract'] ?? ''));
+        $workType = trim((string) ($offer['workType'] ?? ''));
+        $experience = trim((string) ($offer['experience'] ?? ''));
+        $minSalary = $offer['minSalary'] ?? null;
+        $maxSalary = $offer['maxSalary'] ?? null;
+        $description = trim((string) ($offer['description'] ?? ''));
+
+        $qrText = implode("\n", [
+            'HR-ONE | FICHE OFFRE',
+            '----------------------',
+            'Title: ' . ($title !== '' ? $title : '-'),
+            'Location: ' . ($location !== '' ? $location : '-'),
+            'Contract: ' . ($contract !== '' ? $contract : '-'),
+            'Work Type: ' . ($workType !== '' ? $workType : '-'),
+            'Experience: ' . ($experience !== '' ? $experience : '-'),
+            'Min Salary: ' . ($minSalary !== null ? (string) $minSalary . ' DTN' : '-'),
+            'Max Salary: ' . ($maxSalary !== null ? (string) $maxSalary . ' DTN' : '-'),
+            'Description: ' . ($description !== '' ? $description : '-'),
+        ]);
+
+        $result = $offerQrCodeService->buildOfferDetailsQr($qrText);
+
+        return new Response($result->getString(), Response::HTTP_OK, [
+            'Content-Type' => $result->getMimeType(),
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
+    }
+
+    #[Route('/top/offres/{id}/qr-details', name: 'topnav_offre_qr_details', methods: ['GET'])]
+    public function offerQrDetails(int $id, OffreRepository $offreRepository): Response
+    {
+        $offer = $offreRepository->fetchOfferForManagement($id);
+        if ($offer === null || ($offer['statusClass'] ?? '') !== 'status-live') {
+            throw $this->createNotFoundException('Offre introuvable.');
+        }
+
+        return $this->render('OffresEmplois/offer-qr-details.html.twig', [
+            'offer' => $offer,
         ]);
     }
 

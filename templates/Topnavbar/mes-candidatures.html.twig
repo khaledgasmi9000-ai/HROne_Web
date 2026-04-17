@@ -134,6 +134,20 @@
       </div>
     </section>
 
+    <div class="delete-modal" id="deleteCandidatureModal" hidden>
+      <div class="delete-modal__backdrop" data-close-delete-modal="true"></div>
+      <section class="delete-modal__panel" role="dialog" aria-modal="true" aria-labelledby="deleteCandidatureTitle">
+        <header class="delete-modal__header">
+          <h2 id="deleteCandidatureTitle">Confirmer la suppression</h2>
+        </header>
+        <p class="delete-modal__text" id="deleteCandidatureText">Voulez-vous vraiment supprimer cette candidature ? Cette action est irreversible.</p>
+        <div class="delete-modal__actions">
+          <button class="btn btn--ghost" id="cancelDeleteCandidatureBtn" type="button">Annuler</button>
+          <button class="btn btn--danger" id="confirmDeleteCandidatureBtn" type="button">Supprimer definitivement</button>
+        </div>
+      </section>
+    </div>
+
     <script>
       const btnNouvelleCandidature = document.getElementById("btnNouvelleCandidature");
       const candidatureSearch = document.getElementById("candidatureSearch");
@@ -153,8 +167,13 @@
       const editFeedback = document.getElementById("editFeedback");
       const saveCandidatureBtn = document.getElementById("saveCandidatureBtn");
       const cancelCandidatureEditBtn = document.getElementById("cancelCandidatureEditBtn");
+      const deleteCandidatureModal = document.getElementById("deleteCandidatureModal");
+      const deleteCandidatureText = document.getElementById("deleteCandidatureText");
+      const cancelDeleteCandidatureBtn = document.getElementById("cancelDeleteCandidatureBtn");
+      const confirmDeleteCandidatureBtn = document.getElementById("confirmDeleteCandidatureBtn");
       const updateApiPattern = "{{ path('topnav_candidatures_api_update', {id: '__ID__'}) }}";
       const deleteApiPattern = "{{ path('topnav_candidatures_api_delete', {id: '__ID__'}) }}";
+      let pendingDeleteCandidatureId = null;
 
       const parseApiResponse = async (response) => {
         const rawText = await response.text();
@@ -264,6 +283,63 @@
         return errors;
       };
 
+      const openDeleteCandidatureModal = (card) => {
+        if (!card || !deleteCandidatureModal) {
+          return;
+        }
+
+        const id = Number(card.dataset.candidatureId || "0");
+        if (!id) {
+          return;
+        }
+
+        pendingDeleteCandidatureId = id;
+        const title = (card.dataset.offerTitle || "cette offre").trim();
+        if (deleteCandidatureText) {
+          deleteCandidatureText.textContent = `Voulez-vous vraiment supprimer votre candidature pour \"${title}\" ? Cette action est irreversible.`;
+        }
+        deleteCandidatureModal.hidden = false;
+      };
+
+      const closeDeleteCandidatureModal = () => {
+        if (!deleteCandidatureModal) {
+          return;
+        }
+        deleteCandidatureModal.hidden = true;
+        pendingDeleteCandidatureId = null;
+      };
+
+      const confirmDeleteCandidature = async () => {
+        if (!pendingDeleteCandidatureId) {
+          closeDeleteCandidatureModal();
+          return;
+        }
+
+        confirmDeleteCandidatureBtn.disabled = true;
+        try {
+          const response = await fetch(deleteApiPattern.replace("__ID__", String(pendingDeleteCandidatureId)), {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+          await parseApiResponse(response);
+
+          const card = grid?.querySelector(`.card[data-candidature-id="${pendingDeleteCandidatureId}"]`);
+          if (card) {
+            card.remove();
+          }
+
+          closeDeleteCandidatureModal();
+          setTimeout(() => window.location.reload(), 250);
+        } catch (error) {
+          closeDeleteCandidatureModal();
+          showEditFeedback((error?.message || "Suppression impossible.").split("\n").filter(Boolean));
+        } finally {
+          confirmDeleteCandidatureBtn.disabled = false;
+        }
+      };
+
       btnNouvelleCandidature.addEventListener("click", () => {
         window.location.href = btnNouvelleCandidature.dataset.href;
       });
@@ -278,33 +354,24 @@
       });
 
       grid.querySelectorAll(".btn-delete-candidature").forEach((button) => {
-        button.addEventListener("click", async () => {
-          const id = button.dataset.id;
-          if (!id) {
-            return;
-          }
-          if (!window.confirm("Confirmez-vous la suppression de cette candidature ?")) {
-            return;
-          }
-
-          try {
-            const response = await fetch(deleteApiPattern.replace("__ID__", String(id)), {
-              method: "DELETE",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            });
-            await parseApiResponse(response);
-
-            const card = button.closest(".card[data-candidature-id]");
-            if (card) {
-              card.remove();
-            }
-            setTimeout(() => window.location.reload(), 300);
-          } catch (error) {
-            alert(error?.message || "Suppression impossible.");
-          }
+        button.addEventListener("click", () => {
+          const card = button.closest(".card[data-candidature-id]");
+          openDeleteCandidatureModal(card);
         });
+      });
+
+      cancelDeleteCandidatureBtn?.addEventListener("click", closeDeleteCandidatureModal);
+      confirmDeleteCandidatureBtn?.addEventListener("click", confirmDeleteCandidature);
+      deleteCandidatureModal?.addEventListener("click", (event) => {
+        if (event.target instanceof HTMLElement && event.target.dataset.closeDeleteModal === "true") {
+          closeDeleteCandidatureModal();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && deleteCandidatureModal && !deleteCandidatureModal.hidden) {
+          closeDeleteCandidatureModal();
+        }
       });
 
       cancelCandidatureEditBtn?.addEventListener("click", () => {

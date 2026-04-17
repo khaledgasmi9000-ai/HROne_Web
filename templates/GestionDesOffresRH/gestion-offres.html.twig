@@ -176,12 +176,27 @@
           </div>
 
           <div class="form-actions">
-            <button class="btn btn-ghost" type="button">Enregistrer en brouillon</button>
             <button class="btn btn-primary" id="publishBtn" type="button">Publier l'offre</button>
           </div>
         </form>
       </div>
     </section>
+
+    <div class="delete-modal" id="deleteOfferModal" hidden>
+      <div class="delete-modal__backdrop" data-close-delete-modal="true"></div>
+      <section class="delete-modal__panel" role="dialog" aria-modal="true" aria-labelledby="deleteOfferModalTitle">
+        <header class="delete-modal__header">
+          <h2 id="deleteOfferModalTitle">Confirmer la suppression</h2>
+        </header>
+        <p class="delete-modal__text" id="deleteOfferModalText">
+          Voulez-vous vraiment supprimer cette offre ? Cette action est irreversible.
+        </p>
+        <div class="delete-modal__actions">
+          <button class="btn btn-ghost" type="button" id="cancelDeleteOfferBtn">Annuler</button>
+          <button class="btn btn-danger" type="button" id="confirmDeleteOfferBtn">Supprimer definitivement</button>
+        </div>
+      </section>
+    </div>
   </main>
 
   <script>
@@ -211,6 +226,10 @@
     const kpiApplicationsCount = document.getElementById("kpiApplicationsCount");
     const kpiDraftOffers = document.getElementById("kpiDraftOffers");
     const kpiMachineClock = document.getElementById("kpiMachineClock");
+    const deleteOfferModal = document.getElementById("deleteOfferModal");
+    const deleteOfferModalText = document.getElementById("deleteOfferModalText");
+    const cancelDeleteOfferBtn = document.getElementById("cancelDeleteOfferBtn");
+    const confirmDeleteOfferBtn = document.getElementById("confirmDeleteOfferBtn");
 
     const offersApiCreateUrl = "{{ path('rh_offres_api_create') }}";
     const offersApiGetUrlPattern = "{{ path('rh_offres_api_get', {id: '__ID__'}) }}";
@@ -219,6 +238,7 @@
 
     let offers = {{ offres|default([])|json_encode(constant('JSON_UNESCAPED_UNICODE'))|raw }};
     let editingOfferId = null;
+    let offerPendingDeletion = null;
 
     const attachFilter = (input, list) => {
       if (!input || !list) {
@@ -476,26 +496,8 @@
         deleteBtn.type = "button";
         deleteBtn.className = "btn btn-small btn-danger";
         deleteBtn.textContent = "Supprimer";
-        deleteBtn.addEventListener("click", async () => {
-          if (!window.confirm("Confirmez-vous la suppression de cette offre ?")) {
-            return;
-          }
-
-          try {
-            const response = await fetch(getApiUrlById(offersApiDeleteUrlPattern, offer.id), {
-              method: "DELETE",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            });
-
-            await parseApiResponse(response);
-            offers = offers.filter((entry) => entry.id !== offer.id);
-            renderOffers();
-            showFeedback(["Offre supprimee avec succes."], "success");
-          } catch (error) {
-            showFeedback([(error?.message || "Suppression impossible.").replace(/\n/g, " ")]);
-          }
+        deleteBtn.addEventListener("click", () => {
+          openDeleteOfferModal(offer);
         });
 
         actions.append(status, editBtn, deleteBtn);
@@ -535,6 +537,52 @@
       kpiMachineClock.textContent = `${datePart} ${timePart}`;
     };
 
+    const openDeleteOfferModal = (offer) => {
+      if (!offer || !deleteOfferModal || !deleteOfferModalText) {
+        return;
+      }
+
+      offerPendingDeletion = offer;
+      const title = (offer.title || "offre").toString().trim();
+      deleteOfferModalText.textContent = `Voulez-vous vraiment supprimer l'offre \"${title}\" ? Cette action est irreversible.`;
+      deleteOfferModal.hidden = false;
+    };
+
+    const closeDeleteOfferModal = () => {
+      if (!deleteOfferModal) {
+        return;
+      }
+      deleteOfferModal.hidden = true;
+      offerPendingDeletion = null;
+    };
+
+    const executeDeleteOffer = async () => {
+      if (!offerPendingDeletion) {
+        closeDeleteOfferModal();
+        return;
+      }
+
+      confirmDeleteOfferBtn.disabled = true;
+      try {
+        const response = await fetch(getApiUrlById(offersApiDeleteUrlPattern, offerPendingDeletion.id), {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        await parseApiResponse(response);
+        offers = offers.filter((entry) => entry.id !== offerPendingDeletion.id);
+        renderOffers();
+        showFeedback(["Offre supprimee avec succes."], "success");
+        closeDeleteOfferModal();
+      } catch (error) {
+        showFeedback([(error?.message || "Suppression impossible.").replace(/\n/g, " ")]);
+      } finally {
+        confirmDeleteOfferBtn.disabled = false;
+      }
+    };
+
     if (offerSearch) {
       offerSearch.addEventListener("input", () => {
         const query = offerSearch.value.trim().toLowerCase();
@@ -544,6 +592,20 @@
         });
       });
     }
+
+    cancelDeleteOfferBtn?.addEventListener("click", closeDeleteOfferModal);
+    confirmDeleteOfferBtn?.addEventListener("click", executeDeleteOffer);
+    deleteOfferModal?.addEventListener("click", (event) => {
+      if (event.target instanceof HTMLElement && event.target.dataset.closeDeleteModal === "true") {
+        closeDeleteOfferModal();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && deleteOfferModal && !deleteOfferModal.hidden) {
+        closeDeleteOfferModal();
+      }
+    });
 
     publishBtn?.addEventListener("click", async () => {
       const formData = collectFormData();
