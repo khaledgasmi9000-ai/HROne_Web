@@ -1,0 +1,149 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}HR One - {{ formation.title }}{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/formations.css">
+{% endblock %}
+
+{% block body %}
+    <section class="detail-shell detail-shell-pro">
+        <a class="back-link" href="{{ path('app_formation_index') }}">Retour au catalogue</a>
+
+        {% for message in app.flashes('success') %}
+            <div class="flash-success">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="flash-error">{{ message }}</div>
+        {% endfor %}
+
+        <div class="detail-banner">
+            {% if formation.image %}
+                <img src="{{ formation.image }}" alt="{{ formation.title }}" onerror="this.hidden=true; this.nextElementSibling.hidden=false;">
+                <div class="detail-image-fallback" hidden>
+                    <span>Formation</span>
+                </div>
+            {% else %}
+                <div class="detail-image-fallback">
+                    <span>Formation</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="detail-content">
+            <div class="detail-heading">
+                <div class="detail-heading-main">
+                    <p class="eyebrow">Fiche formation</p>
+                    <h1>{{ formation.title }}</h1>
+                    <p class="hero-copy">{{ formation.description ?: 'Aucune description disponible pour cette formation.' }}</p>
+                </div>
+
+                <div class="detail-badges detail-badges-compact">
+                    <div class="info-chip info-chip-mode">
+                        <span class="info-chip-icon">M</span>
+                        <div>
+                            <small>Mode</small>
+                            <strong>{{ formation.mode_label }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="info-chip info-chip-level">
+                        <span class="info-chip-icon">N</span>
+                        <div>
+                            <small>Niveau</small>
+                            <strong>{{ formation.level }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="info-chip {% if formation.is_available %}info-chip-available{% else %}info-chip-full{% endif %}">
+                        <span class="info-chip-icon">D</span>
+                        <div>
+                            <small>Disponibilite</small>
+                            <strong>{{ formation.status_label }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <section class="detail-card detail-card-primary detail-card-info-strip">
+                <h2>Informations de la formation</h2>
+                <div class="info-grid info-grid-strip">
+                    <div class="info-box">
+                        <span class="info-label">Date de debut</span>
+                        <strong>{{ formation.date_start }}</strong>
+                    </div>
+                    <div class="info-box">
+                        <span class="info-label">Date de fin</span>
+                        <strong>{{ formation.date_end }}</strong>
+                    </div>
+                    <div class="info-box">
+                        <span class="info-label">Capacite</span>
+                        <strong>{{ formation.occupancy_label }}</strong>
+                    </div>
+                </div>
+            </section>
+
+            <article class="detail-card detail-card-secondary detail-card-modules">
+                <div class="detail-card-head">
+                    <h2>Programme / modules</h2>
+                    <a class="text-link" href="{{ path('app_my_participations', {employee: selected_participant_id}) }}">Voir mes participations</a>
+                </div>
+
+                <div class="enroll-panel">
+                    {% if active_participation %}
+                        <div class="enroll-state enroll-state-active">
+                            <strong>Employe deja inscrit</strong>
+                            <p>Le profil selectionne est deja reserve sur cette formation.</p>
+                        </div>
+                        <form method="post" action="{{ path('app_formation_cancel', {id: formation.id}) }}">
+                            <input type="hidden" name="participant_id" value="{{ selected_participant_id }}">
+                            <button type="submit" class="secondary-cta">Annuler l'inscription</button>
+                        </form>
+                    {% else %}
+                        <div class="enroll-state">
+                            <strong>Inscription employe</strong>
+                            <p>
+                                {% if formation.is_available %}
+                                    Le profil selectionne peut s'inscrire maintenant.
+                                {% else %}
+                                    La formation est complete pour le moment.
+                                {% endif %}
+                            </p>
+                        </div>
+                        <form method="post" action="{{ path('app_formation_subscribe', {id: formation.id}) }}">
+                            <input type="hidden" name="participant_id" value="{{ selected_participant_id }}">
+                            <div class="participant-form-grid">
+                                <div class="participant-field">
+                                    <label for="prenom">Prenom</label>
+                                    <input id="prenom" name="prenom" type="text" value="" placeholder="Saisir votre prenom" required>
+                                </div>
+                                <div class="participant-field">
+                                    <label for="nom">Nom</label>
+                                    <input id="nom" name="nom" type="text" value="" placeholder="Saisir votre nom" required>
+                                </div>
+                                <div class="participant-field participant-field-wide">
+                                    <label for="email">Email</label>
+                                    <input id="email" name="email" type="email" value="" placeholder="Saisir votre email" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="primary-link" {% if not formation.is_available %}disabled{% endif %}>S'inscrire a cette formation</button>
+                        </form>
+                    {% endif %}
+                </div>
+
+                {% if formation.modules is not empty %}
+                    <div class="module-stack">
+                        {% for module in formation.modules %}
+                            <div class="module-item-pro">
+                                <span class="module-dot">{{ loop.index }}</span>
+                                <p>{{ module }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>Aucun module detaille n'a encore ete ajoute pour cette formation.</p>
+                {% endif %}
+            </article>
+        </div>
+    </section>
+{% endblock %}

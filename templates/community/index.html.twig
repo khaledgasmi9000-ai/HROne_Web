@@ -1,337 +1,744 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_front.html.twig' %}
+
+{% block title %}HR One - Communaute{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/formations.css?v=4">
+    <style>
+      .community-shell {
+        display: grid;
+        gap: 24px;
+      }
+
+      .community-layout {
+        display: grid;
+        grid-template-columns: minmax(280px, 360px) 1fr;
+        gap: 20px;
+      }
+
+      .community-side,
+      .community-feed {
+        display: grid;
+        gap: 16px;
+        align-content: start;
+      }
+
+      .community-form,
+      .community-stack {
+        display: grid;
+        gap: 10px;
+      }
+
+      .community-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .community-input,
+      .community-textarea,
+      .community-select {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 14px;
+        background: #fff;
+        font: inherit;
+      }
+
+      .community-textarea {
+        min-height: 95px;
+        resize: vertical;
+      }
+
+      .community-btn {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        border: 0;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+      }
+
+      .community-btn-primary {
+        background: #2563eb;
+        color: #fff;
+      }
+
+      .community-btn-muted {
+        background: #e2e8f0;
+        color: #0f172a;
+      }
+
+      .community-btn-success {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .community-btn-danger {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .community-btn-action {
+        gap: 8px;
+        border: 1px solid transparent;
+      }
+
+      .community-btn-action .btn-icon {
+        display: inline-flex;
+        width: 14px;
+        height: 14px;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .community-btn-action .btn-icon svg {
+        width: 14px;
+        height: 14px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .community-btn-like {
+        background: #dcfce7;
+        color: #166534;
+        border-color: #86efac;
+      }
+
+      .community-btn-dislike {
+        background: #fee2e2;
+        color: #991b1b;
+        border-color: #fecaca;
+      }
+
+      .community-btn-favorite-active {
+        background: #fef3c7;
+        color: #92400e;
+        border-color: #fde68a;
+      }
+
+      .community-btn-favorite-inactive {
+        background: #dbeafe;
+        color: #1d4ed8;
+        border-color: #bfdbfe;
+      }
+
+      .community-btn-delete {
+        background: #fecaca;
+        color: #7f1d1d;
+        border-color: #fca5a5;
+      }
+
+      .community-btn-pin {
+        background: #ede9fe;
+        color: #5b21b6;
+        border-color: #ddd6fe;
+      }
+
+      .community-btn-pin-active {
+        background: #ddd6fe;
+        color: #4c1d95;
+        border-color: #c4b5fd;
+      }
+
+      .community-btn-hide {
+        background: #f1f5f9;
+        color: #334155;
+        border-color: #cbd5e1;
+      }
+
+      .community-btn-show {
+        background: #dcfce7;
+        color: #166534;
+        border-color: #86efac;
+      }
+
+      .community-summary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+        color: #1d4ed8;
+        cursor: pointer;
+      }
+
+      .community-flashes {
+        display: grid;
+        gap: 10px;
+      }
+
+      .community-post {
+        display: grid;
+        gap: 14px;
+      }
+
+      .community-post-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+      }
+
+      .community-post-head h3 {
+        margin: 0;
+      }
+
+      .community-meta {
+        margin-top: 4px;
+        color: #64748b;
+        font-size: 0.9rem;
+      }
+
+      .community-post-image {
+        width: 100%;
+        max-height: 360px;
+        object-fit: cover;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+      }
+
+      .community-comment-zone {
+        border-top: 1px solid #e2e8f0;
+        padding-top: 14px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .community-comment {
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 12px;
+        background: #f8fafc;
+        display: grid;
+        gap: 8px;
+      }
+
+      .community-comment-reply {
+        margin-left: 18px;
+      }
+
+      .community-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        color: #334155;
+        font-size: 0.82rem;
+        font-weight: 600;
+      }
+
+      .community-pill-pin {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .community-pill-favorite {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .community-pill-hidden {
+        background: #e2e8f0;
+        color: #475569;
+      }
+
+      .community-footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .community-footer small {
+        color: #64748b;
+      }
+
+      .community-pagination {
+        margin-top: 12px;
+        border: 1px solid #dbe2ee;
+        border-radius: 16px;
+        padding: 12px;
+        background: linear-gradient(135deg, #f8fbff 0%, #eef5ff 100%);
+      }
+
+      .community-pagination-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .community-pagination-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #334155;
+        font-size: 0.9rem;
+      }
+
+      .community-pagination-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: #1d4ed8;
+        box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.16);
+      }
+
+      .community-pagination-list {
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+      }
+
+      .community-page-link {
+        min-width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #bfdbfe;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #1e3a8a;
+        font-weight: 700;
+        text-decoration: none;
+        transition: transform .16s ease, box-shadow .16s ease, background .16s ease, color .16s ease, border-color .16s ease;
+      }
+
+      .community-page-link:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 16px rgba(30, 58, 138, 0.14);
+        border-color: #60a5fa;
+        background: #f8fbff;
+      }
+
+      .community-page-link-icon {
+        width: 40px;
+      }
+
+      .community-page-link-active {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: #ffffff;
+        border-color: #1d4ed8;
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
+      }
+
+      .community-page-link-disabled {
+        border-color: #cbd5e1;
+        color: #94a3b8;
+        background: #f1f5f9;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+
+      .community-page-link svg {
+        width: 15px;
+        height: 15px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .community-chat-list {
+        display: grid;
+        gap: 10px;
+        max-height: 420px;
+        overflow: auto;
+        padding-right: 4px;
+      }
+
+      .community-chat-item {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: #f8fafc;
+        display: grid;
+        gap: 8px;
+      }
+
+      .community-chat-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        color: #334155;
+        font-size: 0.86rem;
+      }
+
+      .community-chat-body {
+        margin: 0;
+        color: #0f172a;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .community-chat-delete {
+        justify-self: flex-end;
+      }
+
+      @media (max-width: 980px) {
+        .community-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .community-comment-reply {
+          margin-left: 0;
+        }
+      }
+    </style>
+{% endblock %}
 
 {% block body %}
-<style>
-  :root {
-    --bg: #f3f5f9;
-    --card: #ffffff;
-    --text: #0f172a;
-    --muted: #64748b;
-    --border: #e2e8f0;
-    --primary: #2563eb;
-    --green: #16a34a;
-    --red: #dc2626;
-  }
-  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; }
-  .page { max-width: 1240px; margin: 0 auto; padding: 16px; }
-  .header { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-  .topbar { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-  .navbar { background: #ffffff; border: 1px solid var(--border); border-radius: 999px; padding: 8px; margin-bottom: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
-  .navbar a { background: transparent; border: none; border-radius: 999px; padding: 8px 12px; color: #0f172a; text-decoration: none; }
-  .navbar a.active { background: var(--primary); color: #fff; }
-  .header small { color: #94a3b8; display: block; }
-  .layout { display: grid; grid-template-columns: 320px 1fr; gap: 14px; align-items: start; }
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 12px; box-shadow: 0 6px 20px rgba(15,23,42,.06); }
-  .muted { color: var(--muted); }
-  .stack { display: flex; flex-direction: column; gap: 8px; }
-  .inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  input, textarea, select { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; box-sizing: border-box; }
-  textarea { min-height: 90px; resize: vertical; }
-  .btn { border: none; border-radius: 10px; padding: 10px 12px; text-decoration: none; cursor: pointer; font-weight: 600; }
-  .btn.primary { background: var(--primary); color: #fff; }
-  .btn.gray { background: #e2e8f0; color: #0f172a; }
-  .btn.green { background: var(--green); color: #fff; }
-  .btn.red { background: var(--red); color: #fff; }
-  .actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .post { margin-bottom: 14px; }
-  .post h3 { margin: 0; font-size: 18px; }
-  .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 12px; background: #e2e8f0; }
-  .badge.pin { background: #f59e0b; color: #fff; }
-  .badge.hidden { background: #94a3b8; color: #fff; }
-  .metrics { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
-  .metric { background: #f8fafc; border: 1px solid var(--border); border-radius: 999px; padding: 6px 10px; font-size: 13px; }
-  .comment { border-top: 1px solid var(--border); padding-top: 8px; margin-top: 8px; }
-  .comment.reply { margin-left: 18px; border-left: 3px solid var(--border); padding-left: 10px; }
-  .flash { padding: 10px 12px; border-radius: 10px; margin-bottom: 10px; }
-  .flash.success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
-  .flash.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-  .flash.notice { background: #e0f2fe; color: #0c4a6e; border: 1px solid #7dd3fc; }
-  .top-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-  .top-nav a { background: #fff; border: 1px solid var(--border); border-radius: 999px; padding: 8px 12px; color: #0f172a; text-decoration: none; }
-  .top-nav a.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-  .footer { margin-top: 20px; background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 14px 16px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-  .footer small { color: #94a3b8; }
-  @media (max-width: 980px) {
-    .layout { grid-template-columns: 1fr; }
-  }
-</style>
-
-<div class="page">
-  <header class="topbar">
-    <div>
-      <strong>HR One</strong>
-      <small>Communaute & collaborateurs</small>
-    </div>
-    <div class="muted">Espace collaboratif</div>
-  </header>
-
-  <nav class="navbar">
-    <a href="#">Offres d emploi</a>
-    <a href="#">Formations</a>
-    <a href="#">Evenements</a>
-    <a href="#">Mes participations</a>
-    <a href="#">Demande de conge</a>
-    <a class="active" href="{{ path('community_index') }}">Communaute</a>
-  </nav>
-
-  <header class="header">
-    <div>
-      <strong>Tableau Communaute</strong>
-      <small>Navbar + feed + modules</small>
-    </div>
-    <div class="muted">HR One</div>
-  </header>
-
-  {% for type, messages in app.flashes %}
-    {% for message in messages %}
-      <div class="flash {{ type == 'error' ? 'error' : (type == 'success' ? 'success' : 'notice') }}">{{ message }}</div>
-    {% endfor %}
-  {% endfor %}
-
-  <div class="card">
-    <form method="get" action="{{ path('community_index') }}" class="inline">
-      <div style="flex:2; min-width:220px;">
-        <input name="q" value="{{ currentSearch }}" placeholder="Titre contient...">
-      </div>
-      <div style="flex:1; min-width:180px;">
-        <select name="tag">
-          <option value="">Tous les tags</option>
-          {% for t in tags %}
-            <option value="{{ t }}" {% if t == currentTag %}selected{% endif %}>{{ t }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div style="width:150px;">
-        <select name="comment_sort">
-          <option value="asc" {% if commentSort == 'asc' %}selected{% endif %}>Commentaires asc</option>
-          <option value="recent" {% if commentSort == 'recent' %}selected{% endif %}>Commentaires recents</option>
-          <option value="flagged" {% if commentSort == 'flagged' %}selected{% endif %}>Commentaires signales</option>
-        </select>
-      </div>
-      <div style="width:120px;">
-        <select name="per_page">
-          {% for n in [5,10,15,20] %}
-            <option value="{{ n }}" {% if perPage == n %}selected{% endif %}>{{ n }}/page</option>
-          {% endfor %}
-        </select>
-      </div>
-      <button class="btn primary" type="submit">Appliquer</button>
-      <span class="btn green">Like {{ totalLikes }}</span>
-      <span class="btn red">Dislike {{ totalDislikes }}</span>
-    </form>
-  </div>
-
-  <div class="layout">
-    <aside>
-      <div class="card">
-        <h4 style="margin:0 0 8px 0;">Meteo du jour (Tunis)</h4>
-        {% if weather.error %}
-          <div class="muted">{{ weather.error }}</div>
-        {% else %}
-          <div style="font-size:24px; font-weight:700;">{{ weather.temperature }} C</div>
-          <div class="muted">Vent {{ weather.windspeed }} km/h · code {{ weather.weathercode }}</div>
-          <div class="muted" style="margin-top:6px;">Mise a jour automatique cote serveur</div>
-        {% endif %}
-      </div>
-
-      <div class="card">
-        <h4 style="margin:0 0 8px 0;">Chatbot IA</h4>
-        <form method="get" action="{{ path('community_index') }}" class="stack">
-          <input type="hidden" name="q" value="{{ currentSearch }}">
-          <input type="hidden" name="tag" value="{{ currentTag }}">
-          <input type="hidden" name="per_page" value="{{ perPage }}">
-          <input type="hidden" name="comment_sort" value="{{ commentSort }}">
-          <textarea name="bot_q" placeholder="Pose ta question...">{{ botQuestion }}</textarea>
-          <button class="btn primary" type="submit">Envoyer</button>
-        </form>
-        <div class="card" style="margin:10px 0 0 0; background:#f8fafc;">
-          {% if botAnswer %}
-            {{ botAnswer }}
-          {% else %}
-            <span class="muted">Pose une question pour obtenir une reponse.</span>
-          {% endif %}
+    <section class="hero-card hero-card-catalog">
+        <div class="hero-copy-block">
+            <p class="eyebrow">Module Communaute</p>
+            <h1>Espace collaboratif</h1>
+            <p class="hero-copy">
+                Partagez des publications et suivez les interactions.
+            </p>
+            <div class="hero-badges">
+                <span class="hero-badge">Fil d actualite</span>
+                <span class="hero-badge">Commentaires</span>
+                <span class="hero-badge">Moderation</span>
+            </div>
         </div>
-      </div>
-
-      <div class="card">
-        <h4 style="margin:0 0 8px 0;">Chat interne local</h4>
-        <div style="max-height:240px; overflow:auto; border:1px solid var(--border); border-radius:10px; padding:8px; background:#f8fafc;">
-          {% for m in chatMessages %}
-            <div style="margin-bottom:6px;">
-              <strong>{{ m.user|default('User') }}</strong>
-              <span class="muted">· {{ m.at|default('') }}</span>
-              <div>{{ m.text|default('') }}</div>
+        <div class="hero-stats hero-stats-catalog">
+            <div class="stat-box stat-box-catalog">
+                <small>Total</small>
+                <span>{{ totalPosts }}</span>
+                <p>posts</p>
             </div>
-          {% else %}
-            <div class="muted">Aucun message.</div>
-          {% endfor %}
+            <div class="stat-box stat-box-catalog">
+                <small>Likes</small>
+                <span>{{ totalLikes }}</span>
+                <p>votes positifs</p>
+            </div>
+            <div class="stat-box stat-box-catalog">
+                <small>Dislikes</small>
+                <span>{{ totalDislikes }}</span>
+                <p>votes negatifs</p>
+            </div>
         </div>
-        <form method="post" action="{{ path('community_chat_send') }}" class="stack" style="margin-top:8px;">
-          <input name="message" placeholder="Ecris un message...">
-          <button class="btn primary" type="submit">Envoyer</button>
-        </form>
-        <form method="post" action="{{ path('community_chat_clear') }}" style="margin-top:8px;">
-          <button class="btn gray" type="submit">Vider le chat</button>
-        </form>
-      </div>
-    </aside>
+    </section>
 
-    <main>
-      <div class="card">
-        <h3 style="margin:0 0 8px 0;">Creer une publication</h3>
-        <form method="post" action="{{ path('community_post_create') }}" enctype="multipart/form-data" class="stack">
-          <input name="title" placeholder="Titre du post">
-          <textarea name="description" placeholder="Ecris ton message..."></textarea>
-          <input name="image_url" placeholder="https://... (optionnel)">
-          <label class="muted">Image fichier (optionnel)</label>
-          <input name="image_file" type="file" accept="image/*">
-          <input name="tag" placeholder="#tag">
-          <input type="hidden" name="user_id" value="1">
-          <input type="hidden" name="is_active" value="1">
-          <button class="btn primary" type="submit">Publier</button>
-        </form>
-      </div>
-
-      {% for post in posts %}
-        <article class="card post">
-          <div class="inline" style="justify-content:space-between; align-items:flex-start;">
-            <div>
-              <h3>{{ post.title }}</h3>
-              <div class="meta">#{{ post.userId }} · {{ post.createdAt|date('d/m/Y H:i') }}</div>
-            </div>
-            <div class="inline">
-              {% if post.tag and post.tag|lower starts with 'pin' %}
-                <span class="badge pin">Epingle</span>
-              {% endif %}
-              {% if post.tag %}
-                <span class="badge">{{ post.tag }}</span>
-              {% endif %}
-            </div>
-          </div>
-
-          {% set rawImage = post.imageUrl %}
-          {% set uploadedImage = (rawImage and (rawImage starts with 'http://' or rawImage starts with 'https://')) ? null : (rawImage ? '/uploads/post_images/' ~ rawImage : null) %}
-          {% set displayImage = uploadedImage ?: rawImage %}
-          {% if displayImage %}
-            {% if uploadedImage %}
-              <img src="{{ uploadedImage|imagine_filter('thumb_300') }}" alt="" style="width:100%;border-radius:10px;max-height:360px;object-fit:cover;margin-top:8px;">
-            {% else %}
-              <img src="{{ displayImage }}" alt="" style="width:100%;border-radius:10px;max-height:360px;object-fit:cover;margin-top:8px;">
-            {% endif %}
-          {% endif %}
-
-          {% if post.description %}
-            <p>{{ post.description }}</p>
-          {% endif %}
-
-          <div class="metrics">
-            <span class="metric">Vues {{ viewsCounts[post.id]|default(0) }}</span>
-            <span class="metric">Partages {{ shareCounts[post.id]|default(0) }}</span>
-            <span class="metric">Sauvegardes {{ saveCounts[post.id]|default(0) }}</span>
-            <span class="metric">Engagement {{ engagementRates[post.id]|default(0) }}%</span>
-          </div>
-
-          <div class="actions">
-            <form method="post" action="{{ path('community_post_vote', {id: post.id, type: 'up'}) }}">
-              <button class="btn green" type="submit">Like {{ postVoteCounts[post.id].up|default(0) }}</button>
-            </form>
-            <form method="post" action="{{ path('community_post_vote', {id: post.id, type: 'down'}) }}">
-              <button class="btn red" type="submit">Dislike {{ postVoteCounts[post.id].down|default(0) }}</button>
-            </form>
-            <form method="post" action="{{ path('community_post_fav', {id: post.id}) }}">
-              <button class="btn gray" type="submit">{{ post.id in favorites ? 'Favori' : 'Ajouter favori' }}</button>
-            </form>
-            <form method="post" action="{{ path('community_post_delete', {id: post.id}) }}">
-              <button class="btn red" type="submit">Supprimer</button>
-            </form>
-          </div>
-
-          <details style="margin-top:10px;">
-            <summary>Modifier ce post</summary>
-            <form method="post" action="{{ path('community_post_update', {id: post.id}) }}" enctype="multipart/form-data" class="stack" style="margin-top:8px;">
-              <input name="title" value="{{ post.title }}">
-              <textarea name="description">{{ post.description }}</textarea>
-              <input name="image_url" value="{{ (post.imageUrl starts with 'http://' or post.imageUrl starts with 'https://') ? post.imageUrl : '' }}" placeholder="URL image externe (optionnel)">
-              <input name="image_file" type="file" accept="image/*">
-              <input name="tag" value="{{ post.tag }}">
-              <button class="btn primary" type="submit">Enregistrer</button>
-            </form>
-          </details>
-
-          <div class="comment">
-            <h4 style="margin:0 0 8px 0;">Commentaires ({{ commentCounts[post.id]|default(0) }})</h4>
-            {% for c in commentsByPost[post.id]|default([]) %}
-              <div class="comment {% if c.parentCommentId %}reply{% endif %}">
-                <p style="margin:0;">
-                  <strong>#{{ c.userId }}</strong>
-                  {% if c.id in pinned %}<span class="badge pin">Epingle</span>{% endif %}
-                  {% if not c.isActive %}<span class="badge hidden">Masque</span>{% endif %}
-                  {{ c.content }}
-                </p>
-                <div class="actions" style="margin-top:6px;">
-                  <form method="post" action="{{ path('community_comment_vote', {id: c.id, type: 'up'}) }}">
-                    <button class="btn green" type="submit">Like {{ voteCounts[c.id].up|default(0) }}</button>
-                  </form>
-                  <form method="post" action="{{ path('community_comment_vote', {id: c.id, type: 'down'}) }}">
-                    <button class="btn red" type="submit">Dislike {{ voteCounts[c.id].down|default(0) }}</button>
-                  </form>
-                  <form method="post" action="{{ path('community_comment_pin', {id: c.id}) }}">
-                    <button class="btn gray" type="submit">{{ c.id in pinned ? 'Desepingler' : 'Epingler' }}</button>
-                  </form>
-                  <form method="post" action="{{ path('community_comment_toggle', {id: c.id}) }}">
-                    <button class="btn gray" type="submit">{{ c.isActive ? 'Masquer' : 'Afficher' }}</button>
-                  </form>
-                  <form method="post" action="{{ path('community_comment_delete', {id: c.id}) }}">
-                    <button class="btn red" type="submit">Supprimer</button>
-                  </form>
-                </div>
-
-                <details style="margin-top:6px;">
-                  <summary>Modifier commentaire</summary>
-                  <form method="post" action="{{ path('community_comment_update', {id: c.id}) }}" class="stack" style="margin-top:6px;">
-                    <input name="content" value="{{ c.content }}">
-                    <button class="btn primary" type="submit">Enregistrer</button>
-                  </form>
-                </details>
-
-                <form method="post" action="{{ path('community_comment_create') }}" class="stack" style="margin-top:8px;">
-                  <input type="hidden" name="post_id" value="{{ post.id }}">
-                  <input type="hidden" name="parent_comment_id" value="{{ c.id }}">
-                  <input type="hidden" name="user_id" value="1">
-                  <input name="content" placeholder="Repondre...">
-                  <button class="btn primary" type="submit">Repondre</button>
-                </form>
-              </div>
-            {% else %}
-              <p class="muted">Aucun commentaire pour le moment.</p>
+    <div class="community-flashes">
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="{{ type == 'error' ? 'flash-error' : 'flash-success' }}">{{ message }}</div>
             {% endfor %}
-
-            <form method="post" action="{{ path('community_comment_create') }}" class="stack" style="margin-top:10px;">
-              <input type="hidden" name="post_id" value="{{ post.id }}">
-              <input type="hidden" name="user_id" value="1">
-              <input name="content" placeholder="Ajouter un commentaire...">
-              <button class="btn primary" type="submit">Commenter</button>
-            </form>
-          </div>
-        </article>
-      {% else %}
-        <div class="card muted">Aucun post disponible.</div>
-      {% endfor %}
-
-      {{ knp_pagination_render(pagination) }}
-    </main>
-  </div>
-
-  <footer class="footer">
-    <div>
-      <strong>Footer HR One</strong>
-      <small>Contact: support@hrone.tn</small>
+        {% endfor %}
     </div>
-    <div>
-      <small>Modules: Communaute, RH, Conges, Evenements</small><br>
-      <small>&copy; {{ 'now'|date('Y') }} HR One</small>
-    </div>
-  </footer>
-</div>
+
+    <section class="catalog-shell community-shell">
+        <form method="get" action="{{ path('community_index') }}" class="filters-card filters-card-inline">
+            <div class="field-group field-group-wide">
+                <label for="q">Recherche</label>
+                <input id="q" type="text" name="q" value="{{ currentSearch }}" placeholder="Titre contient...">
+            </div>
+            <div class="field-group">
+                <label for="tag">Tag</label>
+                <select id="tag" name="tag">
+                    <option value="">Tous les tags</option>
+                    {% for t in tags %}
+                        <option value="{{ t }}" {% if t == currentTag %}selected{% endif %}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field-group">
+                <label for="per_page">Posts / page</label>
+                <select id="per_page" name="per_page">
+                    {% for n in [5,10,15,20] %}
+                        <option value="{{ n }}" {% if perPage == n %}selected{% endif %}>{{ n }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field-actions">
+                <button type="submit">Appliquer</button>
+                <a href="{{ path('community_index') }}">Reinitialiser</a>
+            </div>
+        </form>
+
+        <div class="community-layout">
+            <aside class="community-side">
+                <article class="detail-card">
+                    <h3>Meteo du jour (Tunis)</h3>
+                    {% if weather.error %}
+                        <p>{{ weather.error }}</p>
+                    {% else %}
+                        <p><strong>{{ weather.temperature }} C</strong></p>
+                        <p>Vent {{ weather.windspeed }} km/h - code {{ weather.weathercode }}</p>
+                    {% endif %}
+                </article>
+
+                <article class="detail-card">
+                    <h3>Chat interne</h3>
+                    <form method="post" action="{{ path('community_chat_send') }}" class="community-form" style="margin-bottom:10px;">
+                        <input class="community-input" name="content" maxlength="1200" placeholder="Ecrire un message interne...">
+                        <button class="community-btn community-btn-primary" type="submit">Envoyer</button>
+                    </form>
+
+                    <div class="community-chat-list">
+                        {% for msg in chatMessages %}
+                            {% set canDeleteChat = is_granted('ROLE_ADMIN') or msg.userId == currentUserId %}
+                            <div class="community-chat-item">
+                                <div class="community-chat-meta">
+                                    <strong>{{ msg.username }}</strong>
+                                    <span>{{ msg.createdAt|date('d/m/Y H:i') }}</span>
+                                </div>
+                                <p class="community-chat-body">{{ msg.content }}</p>
+                                {% if canDeleteChat %}
+                                    <form class="community-chat-delete" method="post" action="{{ path('community_chat_delete', {id: msg.id}) }}">
+                                        <button class="community-btn community-btn-action community-btn-delete" type="submit">
+                                            <span class="btn-icon" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M6 6l1 14h10l1-14"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
+                                            </span>
+                                            <span>Supprimer</span>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <p>Aucun message interne pour le moment.</p>
+                        {% endfor %}
+                    </div>
+                </article>
+            </aside>
+
+            <main class="community-feed">
+                <article class="detail-card detail-card-primary">
+                    <h3>Creer une publication</h3>
+                    <form method="post" action="{{ path('community_post_create') }}" enctype="multipart/form-data" class="community-form">
+                        <input class="community-input" name="title" placeholder="Titre du post">
+                        <textarea class="community-textarea" name="description" placeholder="Ecris ton message..."></textarea>
+                        <label for="image_file">Image depuis ordinateur (optionnel)</label>
+                        <input class="community-input" id="image_file" name="image_file" type="file" accept="image/*">
+                        <input class="community-input" name="tag" placeholder="#tag">
+                        <input type="hidden" name="is_active" value="1">
+                        <button class="community-btn community-btn-primary" type="submit">Publier</button>
+                    </form>
+                </article>
+
+                {% for post in posts %}
+                    {% set isFavorite = post.id in favorites %}
+                    {% set canEditPost = is_granted('ROLE_ADMIN') or post.userId == currentUserId %}
+                    <article class="detail-card community-post">
+                        <div class="community-post-head">
+                            <div>
+                                <h3>{{ post.title }}</h3>
+                                <div class="community-meta">#{{ post.userId }} - {{ post.createdAt|date('d/m/Y H:i') }}</div>
+                            </div>
+                            <div class="community-row">
+                                {% if post.tag and post.tag|lower starts with 'pin' %}
+                                    <span class="community-pill community-pill-pin">Epingle</span>
+                                {% endif %}
+                                {% if post.tag %}
+                                    <span class="community-pill">{{ post.tag }}</span>
+                                {% endif %}
+                                {% if isFavorite %}
+                                    <span class="community-pill community-pill-favorite">Favori</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if post.imageUrl %}
+                            {% if post.imageUrl starts with 'http://' or post.imageUrl starts with 'https://' %}
+                                <img class="community-post-image" src="{{ post.imageUrl }}" alt="">
+                            {% else %}
+                                <img class="community-post-image" src="{{ asset('uploads/post_images/' ~ post.imageUrl) }}" alt="">
+                            {% endif %}
+                        {% endif %}
+
+                        {% if post.description %}
+                            <p>{{ post.description }}</p>
+                        {% endif %}
+
+                        <div class="community-row">
+                            <form method="post" action="{{ path('community_post_vote', {id: post.id, type: 'up'}) }}">
+                                <button class="community-btn community-btn-action community-btn-like" type="submit">
+                                    <span class="btn-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><path d="M12 19V5"></path><path d="M5 12l7-7 7 7"></path></svg>
+                                    </span>
+                                    <span>Like {{ postVoteCounts[post.id].up|default(0) }}</span>
+                                </button>
+                            </form>
+                            <form method="post" action="{{ path('community_post_vote', {id: post.id, type: 'down'}) }}">
+                                <button class="community-btn community-btn-action community-btn-dislike" type="submit">
+                                    <span class="btn-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><path d="M12 5v14"></path><path d="m5 12 7 7 7-7"></path></svg>
+                                    </span>
+                                    <span>Dislike {{ postVoteCounts[post.id].down|default(0) }}</span>
+                                </button>
+                            </form>
+                            <form method="post" action="{{ path('community_post_fav', {id: post.id}) }}">
+                                <button class="community-btn community-btn-action {{ isFavorite ? 'community-btn-favorite-active' : 'community-btn-favorite-inactive' }}" type="submit">
+                                    <span class="btn-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><path d="m12 3 2.9 5.9 6.6.9-4.8 4.6 1.2 6.5L12 18l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9Z"></path></svg>
+                                    </span>
+                                    <span>{{ isFavorite ? 'Retirer favori' : 'Ajouter favori' }}</span>
+                                </button>
+                            </form>
+                            {% if canEditPost %}
+                                <form method="post" action="{{ path('community_post_delete', {id: post.id}) }}">
+                                    <button class="community-btn community-btn-action community-btn-delete" type="submit">
+                                        <span class="btn-icon" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M6 6l1 14h10l1-14"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
+                                        </span>
+                                        <span>Supprimer</span>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+
+                        {% if canEditPost %}
+                            <details>
+                                <summary class="community-summary">
+                                    <span class="btn-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                                    </span>
+                                    <span>Modifier ce post</span>
+                                </summary>
+                                <form method="post" action="{{ path('community_post_update', {id: post.id}) }}" enctype="multipart/form-data" class="community-form" style="margin-top:10px;">
+                                    <input class="community-input" name="title" value="{{ post.title }}">
+                                    <textarea class="community-textarea" name="description">{{ post.description }}</textarea>
+                                    <label>Nouvelle image depuis ordinateur (laisser vide pour garder l image actuelle)</label>
+                                    <input class="community-input" name="image_file" type="file" accept="image/*">
+                                    <input class="community-input" name="tag" value="{{ post.tag }}">
+                                    <button class="community-btn community-btn-primary" type="submit">Enregistrer</button>
+                                </form>
+                            </details>
+                        {% endif %}
+
+                        <div class="community-comment-zone">
+                            <h4>Commentaires ({{ commentCounts[post.id]|default(0) }})</h4>
+                            {% for c in commentsByPost[post.id]|default([]) %}
+                                <div class="community-comment {% if c.parentCommentId %}community-comment-reply{% endif %}">
+                                    <p style="margin:0;">
+                                        <strong>#{{ c.userId }}</strong>
+                                        {% if c.id in pinned %}<span class="community-pill community-pill-pin">Epingle</span>{% endif %}
+                                        {% if not c.isActive %}<span class="community-pill community-pill-hidden">Masque</span>{% endif %}
+                                        {{ c.content }}
+                                    </p>
+                                    {% set isPinned = c.id in pinned %}
+                                    {% set canEditComment = is_granted('ROLE_ADMIN') or c.userId == currentUserId %}
+                                    <div class="community-row">
+                                        <form method="post" action="{{ path('community_comment_vote', {id: c.id, type: 'up'}) }}">
+                                            <button class="community-btn community-btn-action community-btn-like" type="submit">
+                                                <span class="btn-icon" aria-hidden="true">
+                                                    <svg viewBox="0 0 24 24"><path d="M12 19V5"></path><path d="M5 12l7-7 7 7"></path></svg>
+                                                </span>
+                                                <span>Like {{ voteCounts[c.id].up|default(0) }}</span>
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{{ path('community_comment_vote', {id: c.id, type: 'down'}) }}">
+                                            <button class="community-btn community-btn-action community-btn-dislike" type="submit">
+                                                <span class="btn-icon" aria-hidden="true">
+                                                    <svg viewBox="0 0 24 24"><path d="M12 5v14"></path><path d="m5 12 7 7 7-7"></path></svg>
+                                                </span>
+                                                <span>Dislike {{ voteCounts[c.id].down|default(0) }}</span>
+                                            </button>
+                                        </form>
+                                        {% if canEditComment %}
+                                            <form method="post" action="{{ path('community_comment_pin', {id: c.id}) }}">
+                                                <button class="community-btn community-btn-action {{ isPinned ? 'community-btn-pin-active' : 'community-btn-pin' }}" type="submit">
+                                                    <span class="btn-icon" aria-hidden="true">
+                                                        <svg viewBox="0 0 24 24"><path d="M6 3h12v12l-6-3-6 3V3Z"></path><path d="M12 15v6"></path></svg>
+                                                    </span>
+                                                    <span>{{ isPinned ? 'Desepingler' : 'Epingler' }}</span>
+                                                </button>
+                                            </form>
+                                            <form method="post" action="{{ path('community_comment_toggle', {id: c.id}) }}">
+                                                <button class="community-btn community-btn-action {{ c.isActive ? 'community-btn-hide' : 'community-btn-show' }}" type="submit">
+                                                    <span class="btn-icon" aria-hidden="true">
+                                                        {% if c.isActive %}
+                                                            <svg viewBox="0 0 24 24"><path d="M3 3l18 18"></path><path d="M10.5 10.5a2.1 2.1 0 0 0 3 3"></path><path d="M9 5.2A11.5 11.5 0 0 1 12 5c6 0 10 7 10 7a18.4 18.4 0 0 1-4 4.8"></path><path d="M6 6.5A18.8 18.8 0 0 0 2 12s4 7 10 7a10.9 10.9 0 0 0 3-.4"></path></svg>
+                                                        {% else %}
+                                                            <svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                        {% endif %}
+                                                    </span>
+                                                    <span>{{ c.isActive ? 'Masquer' : 'Afficher' }}</span>
+                                                </button>
+                                            </form>
+                                            <form method="post" action="{{ path('community_comment_delete', {id: c.id}) }}">
+                                                <button class="community-btn community-btn-action community-btn-delete" type="submit">
+                                                    <span class="btn-icon" aria-hidden="true">
+                                                        <svg viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M6 6l1 14h10l1-14"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
+                                                    </span>
+                                                    <span>Supprimer</span>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+
+                                    {% if canEditComment %}
+                                        <details>
+                                            <summary class="community-summary">
+                                                <span class="btn-icon" aria-hidden="true">
+                                                    <svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                                                </span>
+                                                <span>Modifier commentaire</span>
+                                            </summary>
+                                            <form method="post" action="{{ path('community_comment_update', {id: c.id}) }}" class="community-form" style="margin-top:8px;">
+                                                <input class="community-input" name="content" value="{{ c.content }}">
+                                                <button class="community-btn community-btn-primary" type="submit">Enregistrer</button>
+                                            </form>
+                                        </details>
+                                    {% endif %}
+
+                                    <form method="post" action="{{ path('community_comment_create') }}" class="community-form" style="margin-top:8px;">
+                                        <input type="hidden" name="post_id" value="{{ post.id }}">
+                                        <input type="hidden" name="parent_comment_id" value="{{ c.id }}">
+                                        <input class="community-input" name="content" placeholder="Repondre...">
+                                        <button class="community-btn community-btn-primary" type="submit">Repondre</button>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <p>Aucun commentaire pour le moment.</p>
+                            {% endfor %}
+
+                            <form method="post" action="{{ path('community_comment_create') }}" class="community-form">
+                                <input type="hidden" name="post_id" value="{{ post.id }}">
+                                <input class="community-input" name="content" placeholder="Ajouter un commentaire...">
+                                <button class="community-btn community-btn-primary" type="submit">Commenter</button>
+                            </form>
+                        </div>
+                    </article>
+                {% else %}
+                    <div class="empty-state">
+                        <h3>Aucun post disponible</h3>
+                        <p>Publie un premier message pour lancer la communaute.</p>
+                    </div>
+                {% endfor %}
+
+                <div class="community-pagination">
+                    {{ knp_pagination_render(pagination, 'community/_pagination_knp.html.twig') }}
+                </div>
+            </main>
+        </div>
+    </section>
+
+    <footer class="community-footer">
+        <div>
+            <strong>HR One</strong><br>
+            <small>Contact: support@hrone.tn</small>
+        </div>
+        <div>
+            <small>Modules: Communaute, RH, Conges, Formations</small><br>
+            <small>&copy; {{ 'now'|date('Y') }} HR One</small>
+        </div>
+    </footer>
 {% endblock %}

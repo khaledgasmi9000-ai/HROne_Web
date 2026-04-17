@@ -1,0 +1,192 @@
+{% extends 'base_back.html.twig' %}
+
+{% block title %}HR One - Dashboard{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/formations.css?v=4">
+    <style>
+      .dashboard-shell {
+        display: grid;
+        gap: 20px;
+      }
+
+      .dashboard-actions {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+
+      .dashboard-action-card {
+        border: 1px solid #dbe7fb;
+        border-radius: 18px;
+        padding: 18px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        display: grid;
+        gap: 10px;
+      }
+
+      .dashboard-action-card h3 {
+        margin: 0;
+        color: #0f172a;
+      }
+
+      .dashboard-action-card p {
+        margin: 0;
+        color: #475569;
+        line-height: 1.6;
+      }
+
+      .dashboard-action-card .card-link {
+        width: fit-content;
+      }
+
+      .dashboard-blocks {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .dashboard-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .dashboard-item {
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 12px 14px;
+        background: #f8fafc;
+      }
+
+      .dashboard-item strong {
+        color: #0f172a;
+      }
+
+      .dashboard-item small {
+        color: #64748b;
+      }
+
+      .dashboard-item p {
+        margin: 6px 0 0;
+        color: #475569;
+      }
+
+      @media (max-width: 980px) {
+        .dashboard-blocks {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <section class="hero-card hero-card-catalog">
+        <div class="hero-copy-block">
+            <p class="eyebrow">Tableau de bord</p>
+            <h1>Dashboard essentiel HR One</h1>
+            <p class="hero-copy">
+                Point central relie a Formation, Communaute et Gestion Utilisateurs avec la meme interface que vos modules.
+            </p>
+            <div class="hero-badges">
+                <span class="hero-badge">Session: {{ currentUser ? currentUser.userIdentifier : 'Invité' }}</span>
+                <span class="hero-badge">Template unifie</span>
+                <span class="hero-badge">Acces rapide modules</span>
+            </div>
+        </div>
+        <div class="hero-stats hero-stats-catalog">
+            <div class="stat-box stat-box-catalog">
+                <small>Formations</small>
+                <span>{{ stats.formations_total }}</span>
+                <p>{{ stats.formations_open }} ouvertes</p>
+            </div>
+            <div class="stat-box stat-box-catalog">
+                <small>Communaute</small>
+                <span>{{ stats.community_posts }}</span>
+                <p>{{ stats.community_comments }} commentaires</p>
+            </div>
+            <div class="stat-box stat-box-catalog">
+                <small>Utilisateurs</small>
+                <span>{{ stats.users_total }}</span>
+                <p>{{ stats.users_active }} actifs</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="catalog-shell dashboard-shell">
+        <article class="detail-card">
+            <h3>Actions rapides</h3>
+            <div class="dashboard-actions">
+                <div class="dashboard-action-card">
+                    <h3>Module Formation</h3>
+                    <p>Accede au catalogue, aux details des sessions et aux inscriptions.</p>
+                    <a class="card-link" href="{{ path('app_formation_index') }}">Ouvrir Formation</a>
+                </div>
+                <div class="dashboard-action-card">
+                    <h3>Module Communaute</h3>
+                    <p>Publie, commente et interagis dans la communaute interne.</p>
+                    <a class="card-link" href="{{ path('community_index') }}">Ouvrir Communaute</a>
+                </div>
+                <div class="dashboard-action-card">
+                    <h3>Mes participations</h3>
+                    <p>Consulte les formations auxquelles tu es deja inscrit.</p>
+                    <a class="card-link" href="{{ path('app_my_participations') }}">Voir participations</a>
+                </div>
+                {% if can_manage_users %}
+                    <div class="dashboard-action-card">
+                        <h3>Gestion utilisateurs</h3>
+                        <p>Administration RH: statut des comptes, profils, activation et controle des acces.</p>
+                        <a class="card-link" href="{{ path('app_user_module') }}">Ouvrir Utilisateurs</a>
+                    </div>
+                {% endif %}
+                {% if has_admin_formation and can_manage_users %}
+                    <div class="dashboard-action-card">
+                        <h3>Admin Formations</h3>
+                        <p>Pilote les formations, participants et certificats en backoffice.</p>
+                        <a class="card-link" href="{{ path('app_admin_formation_index') }}">Ouvrir Admin Formations</a>
+                    </div>
+                {% endif %}
+                <div class="dashboard-action-card">
+                    <h3>Deconnexion</h3>
+                    <p>Terminer la session courante de facon securisee.</p>
+                    <a class="card-link" href="{{ path('app_logout') }}">Se deconnecter</a>
+                </div>
+            </div>
+        </article>
+
+        <div class="dashboard-blocks">
+            <article class="detail-card">
+                <h3>Dernieres formations</h3>
+                <div class="dashboard-list">
+                    {% for formation in recent_formations %}
+                        <div class="dashboard-item">
+                            <strong>{{ formation.titre }}</strong><br>
+                            <small>{{ formation.mode == 'en_ligne' ? 'En ligne' : 'Presentiel' }} - {{ formation.date_debut }} -> {{ formation.date_fin }}</small>
+                            <p><a class="text-link" href="{{ path('app_formation_show', {id: formation.id}) }}">Voir la formation</a></p>
+                        </div>
+                    {% else %}
+                        <div class="dashboard-item">
+                            <p>Aucune formation recente disponible.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="detail-card">
+                <h3>Derniers posts Communaute</h3>
+                <div class="dashboard-list">
+                    {% for post in recent_posts %}
+                        <div class="dashboard-item">
+                            <strong>{{ post.title }}</strong><br>
+                            <small>Par {{ post.username }} - {{ post.created_at }}</small>
+                            <p><a class="text-link" href="{{ path('community_index') }}">Aller a la Communaute</a></p>
+                        </div>
+                    {% else %}
+                        <div class="dashboard-item">
+                            <p>Aucun post communautaire recent disponible.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </article>
+        </div>
+    </section>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'base_front.html.twig' %}
+{% block title %}HR One - Mes participations{% endblock %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/formations.css">
+{% endblock %}
+{% block body %}
+    <section class="detail-shell detail-shell-pro">
+        {% for message in app.flashes('success') %}
+            <div class="flash-success">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="flash-error">{{ message }}</div>
+        {% endfor %}
+
+        <section class="detail-card participation-shell">
+            <div class="detail-card-head">
+                <div>
+                    <p class="eyebrow">Espace employe</p>
+                    <h1>Mes participations</h1>
+                    <p>Consultez ici les formations auxquelles votre compte est inscrit.</p>
+                </div>
+                <a class="text-link" href="{{ path('app_formation_index') }}">Retour au catalogue</a>
+            </div>
+
+            {# Message selon résultat #}
+            {% if email is defined and email != '' %}
+                {% if selected_employee %}
+                    <div class="flash-success" style="margin-bottom:1rem;">
+                        Participations de : <strong>{{ selected_employee.label }}</strong> — {{ selected_employee.email }}
+                    </div>
+                {% else %}
+                    <div class="flash-error" style="margin-bottom:1rem;">
+                        Aucun compte trouve pour cet email.
+                    </div>
+                {% endif %}
+            {% endif %}
+
+            {# Liste des participations #}
+            <div class="participation-list">
+                {% for row in participations %}
+                    <article class="participation-card">
+                        <div class="participation-content">
+                            <p class="participation-status">{{ row.participation.statut ?: 'inscrit' }}</p>
+                            <h3>{{ row.formation.title }}</h3>
+                            <p>{{ row.formation.excerpt }}</p>
+                            <div class="participation-meta">
+                                <span>{{ row.formation.mode_label }}</span>
+                                <span>{{ row.formation.level }}</span>
+                                <span>{{ row.formation.date_start }} - {{ row.formation.date_end }}</span>
+                                <span>{{ row.formation.occupancy_label }}</span>
+                            </div>
+                        </div>
+                        <div class="participation-actions">
+                            <a class="text-link" href="{{ path('app_formation_show', {id: row.formation.id}) }}">Voir la fiche</a>
+                            {% if row.participation.statut == 'inscrit' %}
+                                <form method="post" action="{{ path('app_formation_cancel', {id: row.formation.id}) }}">
+                                    <input type="hidden" name="participant_id" value="{{ selected_participant_id }}">
+                                    <button type="submit" class="secondary-cta">Annuler</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </article>
+                {% else %}
+                    <div class="empty-state">
+                        {% if email is defined and email != '' and selected_employee %}
+                            <h3>Aucune participation pour le moment</h3>
+                            <p>Choisissez une formation dans le catalogue puis lancez une inscription.</p>
+                        {% elseif email is not defined or email == '' %}
+                            <h3>Saisissez votre email</h3>
+                            <p>Entrez votre email ci-dessus pour consulter vos formations inscrites.</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+        </section>
+    </section>
+{% endblock %}

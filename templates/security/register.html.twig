@@ -1,0 +1,180 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}HR One - Inscription{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/formations.css?v=4">
+    <style>
+      .register-shell {
+        max-width: 980px;
+        margin: 0 auto;
+      }
+
+      .register-card {
+        display: grid;
+        gap: 14px;
+      }
+
+      .register-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .register-field-wide {
+        grid-column: 1 / -1;
+      }
+
+      .register-card label {
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .register-card input {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 14px;
+        background: #fff;
+      }
+
+      .register-card select {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 14px;
+        background: #fff;
+      }
+
+      .register-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .register-link {
+        color: #2563eb;
+        text-decoration: none;
+        font-weight: 700;
+      }
+
+      @media (max-width: 900px) {
+        .register-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <section class="hero-card hero-card-catalog">
+        <div class="hero-copy-block">
+            <p class="eyebrow">Module Utilisateur</p>
+            <h1>Inscription</h1>
+            <p class="hero-copy">Cree ton compte utilisateur pour tester les modules et gerer ta session propre.</p>
+        </div>
+        <div class="hero-stats hero-stats-catalog">
+            <div class="stat-box stat-box-catalog">
+                <small>Etape 1</small>
+                <span>Email</span>
+                <p>identifiant unique</p>
+            </div>
+            <div class="stat-box stat-box-catalog">
+                <small>Etape 2</small>
+                <span>Mot de passe</span>
+                <p>minimum 6 caracteres</p>
+            </div>
+            <div class="stat-box stat-box-catalog">
+                <small>Etape 3</small>
+                <span>Connexion</span>
+                <p>acces a ton espace</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="catalog-shell register-shell">
+        <article class="detail-card register-card">
+            {% for error in errors %}
+                <div class="flash-error">{{ error }}</div>
+            {% endfor %}
+
+            <form method="post" class="register-card">
+                <div class="register-grid">
+                    <div>
+                        <label for="id_entreprise">ID_Entreprise</label>
+                        <input id="id_entreprise" name="id_entreprise" type="number" value="{{ id_entreprise }}">
+                    </div>
+                    <div>
+                        <label for="id_profil">ID_Profil</label>
+                        <input id="id_profil" name="id_profil" type="number" value="{{ id_profil|default(3) }}">
+                    </div>
+
+                    <div>
+                        <label for="nom_utilisateur">Nom_Utilisateur</label>
+                        <input id="nom_utilisateur" name="nom_utilisateur" type="text" value="{{ nom_utilisateur }}" required>
+                    </div>
+                    <div>
+                        <label for="email">Email</label>
+                        <input id="email" name="email" type="email" value="{{ email }}">
+                    </div>
+
+                    <div>
+                        <label for="password">Mot_Passe</label>
+                        <input id="password" name="password" type="password" required>
+                    </div>
+                    <div>
+                        <label for="password_confirm">Confirmer Mot_Passe</label>
+                        <input id="password_confirm" name="password_confirm" type="password" required>
+                    </div>
+
+                    <div class="register-field-wide">
+                        <label for="adresse">Adresse</label>
+                        <input id="adresse" name="adresse" type="text" value="{{ adresse }}">
+                    </div>
+
+                    <div>
+                        <label for="num_tel">Num_Tel</label>
+                        <input id="num_tel" name="num_tel" type="text" value="{{ num_tel }}">
+                    </div>
+                    <div>
+                        <label for="cin">CIN</label>
+                        <input id="cin" name="cin" type="text" value="{{ cin }}">
+                    </div>
+
+                    <div>
+                        <label for="num_ordre_sign_in">Num_Ordre_Sign_In</label>
+                        <input id="num_ordre_sign_in" name="num_ordre_sign_in" type="number" value="{{ num_ordre_sign_in }}">
+                    </div>
+                    <div>
+                        <label for="date_naissance">Date_Naissance</label>
+                        <input id="date_naissance" name="date_naissance" type="date" value="{{ date_naissance }}">
+                    </div>
+
+                    <div>
+                        <label for="gender">Gender</label>
+                        <select id="gender" name="gender">
+                            <option value="" {% if gender is empty %}selected{% endif %}>--</option>
+                            <option value="F" {% if gender == 'F' %}selected{% endif %}>F</option>
+                            <option value="M" {% if gender == 'M' %}selected{% endif %}>M</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="first_login">first_login</label>
+                        <input id="first_login" name="first_login" type="number" value="{{ first_login|default(0) }}">
+                    </div>
+
+                    <div>
+                        <label for="firstLogin">firstLogin</label>
+                        <input id="firstLogin" name="firstLogin" type="number" value="{{ firstLogin|default(0) }}">
+                    </div>
+                </div>
+
+                <div class="register-actions">
+                    <button class="primary-link" type="submit">Creer mon compte</button>
+                    <a class="register-link" href="{{ path('app_login') }}">J ai deja un compte</a>
+                </div>
+            </form>
+        </article>
+    </section>
+{% endblock %}

@@ -1,0 +1,209 @@
+{% extends 'base_back.html.twig' %}
+
+{% block title %}HR One - Gestion Utilisateurs{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/formations.css?v=4">
+    <link rel="stylesheet" href="/styles/user-management-pro.css?v=2">
+{% endblock %}
+
+{% block body %}
+    <section class="hero-card hero-card-catalog">
+        <div class="hero-copy-block">
+            <p class="eyebrow">Module Utilisateur</p>
+            <h1>Gestion des utilisateurs</h1>
+            <p class="hero-copy">Recherche, filtres, statut actif/inactif et administration des comptes dans la meme interface que Formation et Communaute.</p>
+        </div>
+        <div class="hero-stats hero-stats-catalog">
+            <div class="stat-box stat-box-catalog">
+                <small>Total</small>
+                <span>{{ stats.total }}</span>
+                <p>utilisateurs</p>
+            </div>
+            <div class="stat-box stat-box-catalog">
+                <small>Actifs</small>
+                <span>{{ stats.active }}</span>
+                <p>comptes</p>
+            </div>
+            <div class="stat-box stat-box-catalog">
+                <small>Inactifs</small>
+                <span>{{ stats.inactive }}</span>
+                <p>comptes</p>
+            </div>
+            <div class="stat-box stat-box-catalog">
+                <small>RH/Admin</small>
+                <span>{{ stats.rh }}</span>
+                <p>gestionnaires</p>
+            </div>
+        </div>
+    </section>
+
+    {% for message in app.flashes('success') %}
+        <div class="flash-success">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="flash-error">{{ message }}</div>
+    {% endfor %}
+
+    <section class="catalog-shell user-shell-pro">
+        <article class="user-surface">
+            <div class="user-surface-head">
+                <h3 class="user-surface-title">Dashboard statistiques utilisateurs</h3>
+                <p class="user-surface-subtitle">Vue globale des comptes et de la qualite des profils</p>
+            </div>
+
+            <div class="user-kpi-grid">
+                <div class="user-kpi-card">
+                    <small>Taux actif</small>
+                    <strong>{{ dashboardStats.activeRate }}%</strong>
+                    <p>{{ stats.active }} actifs sur {{ stats.total }}</p>
+                </div>
+                <div class="user-kpi-card">
+                    <small>Completude moyenne</small>
+                    <strong>{{ dashboardStats.averageCompletion }}%</strong>
+                    <p>Score moyen de remplissage du profil</p>
+                </div>
+                <div class="user-kpi-card">
+                    <small>Profils complets</small>
+                    <strong>{{ dashboardStats.complete }}</strong>
+                    <p>{{ dashboardStats.incomplete }} profils a completer</p>
+                </div>
+                <div class="user-kpi-card">
+                    <small>Repartition</small>
+                    <strong>{{ stats.candidats + stats.employees + stats.rh }}</strong>
+                    <p>Candidats, employes et RH</p>
+                </div>
+            </div>
+
+            <div class="user-distribution-grid">
+                <div class="user-distribution-row">
+                    <span>Admin</span>
+                    <div class="user-distribution-track"><span style="width: {{ stats.total > 0 ? (dashboardStats.roleDistribution.admin * 100 / stats.total)|round : 0 }}%"></span></div>
+                    <strong>{{ dashboardStats.roleDistribution.admin }}</strong>
+                </div>
+                <div class="user-distribution-row">
+                    <span>RH</span>
+                    <div class="user-distribution-track"><span style="width: {{ stats.total > 0 ? (dashboardStats.roleDistribution.rh * 100 / stats.total)|round : 0 }}%"></span></div>
+                    <strong>{{ dashboardStats.roleDistribution.rh }}</strong>
+                </div>
+                <div class="user-distribution-row">
+                    <span>Employes</span>
+                    <div class="user-distribution-track"><span style="width: {{ stats.total > 0 ? (dashboardStats.roleDistribution.employees * 100 / stats.total)|round : 0 }}%"></span></div>
+                    <strong>{{ dashboardStats.roleDistribution.employees }}</strong>
+                </div>
+                <div class="user-distribution-row">
+                    <span>Candidats</span>
+                    <div class="user-distribution-track"><span style="width: {{ stats.total > 0 ? (dashboardStats.roleDistribution.candidats * 100 / stats.total)|round : 0 }}%"></span></div>
+                    <strong>{{ dashboardStats.roleDistribution.candidats }}</strong>
+                </div>
+            </div>
+        </article>
+
+        <form method="get" class="user-surface user-filters-grid">
+            <div class="field-group field-group-wide">
+                <label for="q">Recherche</label>
+                <input id="q" type="text" name="q" value="{{ filters.q }}" placeholder="Nom, email ou CIN">
+            </div>
+            <div class="field-group">
+                <label for="profil">Profil</label>
+                <select id="profil" name="profil">
+                    <option value="" {{ filters.profil == '' ? 'selected' : '' }}>Tous</option>
+                    <option value="1" {{ filters.profil == '1' ? 'selected' : '' }}>Admin</option>
+                    <option value="2" {{ filters.profil == '2' ? 'selected' : '' }}>RH</option>
+                    <option value="3" {{ filters.profil == '3' ? 'selected' : '' }}>Employe</option>
+                    <option value="4" {{ filters.profil == '4' ? 'selected' : '' }}>Candidat</option>
+                </select>
+            </div>
+            <div class="field-group">
+                <label for="status">Statut</label>
+                <select id="status" name="status">
+                    <option value="" {{ filters.status == '' ? 'selected' : '' }}>Tous</option>
+                    <option value="active" {{ filters.status == 'active' ? 'selected' : '' }}>Actifs</option>
+                    <option value="inactive" {{ filters.status == 'inactive' ? 'selected' : '' }}>Inactifs</option>
+                </select>
+            </div>
+            <div class="field-group">
+                <label for="completion">Completude</label>
+                <select id="completion" name="completion">
+                    <option value="" {{ filters.completion == '' ? 'selected' : '' }}>Tous</option>
+                    <option value="complete" {{ filters.completion == 'complete' ? 'selected' : '' }}>Complet</option>
+                    <option value="incomplete" {{ filters.completion == 'incomplete' ? 'selected' : '' }}>A completer</option>
+                </select>
+            </div>
+            <div class="field-actions">
+                <button type="submit">Filtrer</button>
+                <a href="{{ path('app_user_module') }}">Reinitialiser</a>
+            </div>
+        </form>
+
+        <article class="user-surface">
+            <div class="user-surface-head">
+                <h3 class="user-surface-title">Liste des utilisateurs</h3>
+                <p class="user-surface-subtitle">{{ users|length }} resultat(s)</p>
+            </div>
+            <div class="user-table-wrap">
+                <table class="user-table-pro">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom_Utilisateur</th>
+                        <th>Email</th>
+                        <th>Profil</th>
+                        <th>Statut</th>
+                        <th>Completude</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for user in users %}
+                        {% set profilLabel = user.profil ? user.profil.nomProfil : 'Sans profil' %}
+                        {% set profileClass = 'profile-default' %}
+                        {% if user.profil %}
+                            {% set profileClass = user.profil.IDProfil == 1
+                                ? 'profile-admin'
+                                : (user.profil.IDProfil == 2
+                                ? 'profile-rh'
+                                : (user.profil.IDProfil == 3
+                                ? 'profile-employe'
+                                : (user.profil.IDProfil == 4 ? 'profile-candidat' : 'profile-default'))) %}
+                        {% endif %}
+                        <tr>
+                            <td data-label="ID">#{{ user.IDUTILISATEUR }}</td>
+                            <td data-label="Utilisateur">
+                                <div class="user-primary">
+                                    <strong>{{ user.nomUtilisateur ?? '-' }}</strong>
+                                    <small>{{ user.CIN ?? 'CIN non renseigne' }}</small>
+                                </div>
+                            </td>
+                            <td data-label="Email">{{ user.email ?? '-' }}</td>
+                            <td data-label="Profil">
+                                <span class="user-profile-pill {{ profileClass }}">{{ profilLabel }}</span>
+                            </td>
+                            <td data-label="Statut">
+                                <span class="status-chip {{ user.active ? 'status-active' : 'status-inactive' }}">
+                                    {{ user.active ? 'Actif' : 'Inactif' }}
+                                </span>
+                            </td>
+                            <td data-label="Completude" class="completion">
+                                <div class="completion-bar">
+                                    <span style="width: {{ user.profileCompletionScore }}%"></span>
+                                </div>
+                                <small>{{ user.profileCompletionScore }}%</small>
+                            </td>
+                            <td data-label="Action">
+                                <a class="user-open-link" href="{{ path('app_user_show', {id: user.IDUTILISATEUR}) }}">Consulter</a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7">
+                                <div class="user-empty">Aucun utilisateur trouve avec ces filtres.</div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </article>
+    </section>
+{% endblock %}

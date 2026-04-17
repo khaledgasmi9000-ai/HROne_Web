@@ -1,0 +1,127 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}HR One - Inscription RH{% endblock %}
+
+{% block body_class %}page-auth{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/auth-pro.css?v=2">
+{% endblock %}
+
+{% block body %}
+    <section class="auth-page">
+        <div class="auth-container auth-login-layout">
+            <aside class="auth-panel auth-brand">
+                <p class="auth-brand-tag">Module Utilisateur</p>
+                <h1>Inscription RH</h1>
+                <p class="auth-brand-copy">
+                    Creez un compte RH avec les informations entreprise pour acceder a la gestion utilisateurs et au pilotage administratif.
+                </p>
+                <ul class="auth-feature-list">
+                    <li>Profil RH (ID_Profil = 2) avec droits backoffice</li>
+                    <li>Email professionnel valide et controle</li>
+                    <li>Entreprise rattachee au compte des la creation</li>
+                </ul>
+                <div class="auth-brand-links">
+                    <a href="{{ path('app_login') }}">Connexion</a>
+                    <a href="{{ path('app_register_employee') }}">Inscription employe</a>
+                    <a href="{{ path('app_register') }}">Inscription candidat</a>
+                </div>
+            </aside>
+
+            <article class="auth-panel">
+                <header class="auth-panel-header">
+                    <p class="auth-eyebrow">Compte RH</p>
+                    <h2>Creation du compte RH</h2>
+                    <p class="auth-subtitle">Saisissez d abord les informations RH puis les donnees de l entreprise.</p>
+                    <div class="auth-chip-row">
+                        <span class="auth-chip">Role RH</span>
+                        <span class="auth-chip">Backoffice</span>
+                        <span class="auth-chip">Entreprise</span>
+                    </div>
+                </header>
+
+                <div class="auth-flash-list">
+                    {% for message in app.flashes('success') %}
+                        <div class="auth-flash success">{{ message }}</div>
+                    {% endfor %}
+                    {% for message in app.flashes('error') %}
+                        <div class="auth-flash error">{{ message }}</div>
+                    {% endfor %}
+                </div>
+
+                {{ form_start(registrationRhForm, {'attr': {'class': 'auth-form'}}) }}
+                    <div class="auth-errors">{{ form_errors(registrationRhForm) }}</div>
+                    <p class="auth-section-title">Informations RH</p>
+
+                    <div class="auth-grid">
+                        <div class="auth-field">
+                            <label for="{{ registrationRhForm.Nom_Utilisateur.vars.id }}">Nom_Utilisateur</label>
+                            {{ form_widget(registrationRhForm.Nom_Utilisateur, {'attr': {'placeholder': 'nom utilisateur'}}) }}
+                            <div class="auth-errors">{{ form_errors(registrationRhForm.Nom_Utilisateur) }}</div>
+                        </div>
+                        <div class="auth-field">
+                            <label for="{{ registrationRhForm.Email.vars.id }}">Email professionnel</label>
+                            {{ form_widget(registrationRhForm.Email, {'attr': {'placeholder': 'rh@entreprise.com'}}) }}
+                            <div class="auth-errors">{{ form_errors(registrationRhForm.Email) }}</div>
+                        </div>
+                        <div class="auth-field">
+                            <label for="{{ registrationRhForm.plainPassword.vars.id }}">Mot_Passe</label>
+                            {{ form_widget(registrationRhForm.plainPassword, {'attr': {'placeholder': 'minimum 6 caracteres'}}) }}
+                            <div class="auth-errors">{{ form_errors(registrationRhForm.plainPassword) }}</div>
+                        </div>
+                        <div class="auth-field">
+                            <label for="{{ registrationRhForm.Gender.vars.id }}">Gender</label>
+                            {{ form_widget(registrationRhForm.Gender) }}
+                            <div class="auth-errors">{{ form_errors(registrationRhForm.Gender) }}</div>
+                        </div>
+                        <div class="auth-field auth-col-span-two">
+                            <label for="{{ registrationRhForm.Adresse.vars.id }}">Adresse</label>
+                            {{ form_widget(registrationRhForm.Adresse, {'attr': {'placeholder': 'adresse'}}) }}
+                            <div class="auth-errors">{{ form_errors(registrationRhForm.Adresse) }}</div>
+                        </div>
+                        <div class="auth-field">
+                            <label for="{{ registrationRhForm.Num_Tel.vars.id }}">Num_Tel</label>
+                            {{ form_widget(registrationRhForm.Num_Tel, {'attr': {'placeholder': '00000000'}}) }}
+                            <div class="auth-errors">{{ form_errors(registrationRhForm.Num_Tel) }}</div>
+                        </div>
+                        <div class="auth-field">
+                            <label for="{{ registrationRhForm.CIN.vars.id }}">CIN</label>
+                            {{ form_widget(registrationRhForm.CIN, {'attr': {'placeholder': 'CIN'}}) }}
+                            <div class="auth-errors">{{ form_errors(registrationRhForm.CIN) }}</div>
+                        </div>
+                        <div class="auth-field">
+                            <label for="{{ registrationRhForm.Date_Naissance.vars.id }}">Date_Naissance</label>
+                            {{ form_widget(registrationRhForm.Date_Naissance) }}
+                            <div class="auth-errors">{{ form_errors(registrationRhForm.Date_Naissance) }}</div>
+                        </div>
+                    </div>
+
+                    <p class="auth-section-title">Informations Entreprise</p>
+                    <div class="auth-grid">
+                        <div class="auth-field">
+                            <label for="{{ registrationRhForm.entreprise.Nom_Entreprise.vars.id }}">Nom_Entreprise</label>
+                            {{ form_widget(registrationRhForm.entreprise.Nom_Entreprise, {'attr': {'placeholder': 'nom entreprise'}}) }}
+                            <div class="auth-errors">{{ form_errors(registrationRhForm.entreprise.Nom_Entreprise) }}</div>
+                        </div>
+                        <div class="auth-field">
+                            <label for="{{ registrationRhForm.entreprise.Reference.vars.id }}">Reference</label>
+                            {{ form_widget(registrationRhForm.entreprise.Reference, {'attr': {'placeholder': 'reference interne'}}) }}
+                            <div class="auth-errors">{{ form_errors(registrationRhForm.entreprise.Reference) }}</div>
+                        </div>
+                    </div>
+
+                    <div class="auth-action-row">
+                        {{ form_widget(registrationRhForm.submit, {'attr': {'class': 'auth-btn-primary'}}) }}
+                    </div>
+
+                    <div class="auth-link-list">
+                        <a href="{{ path('app_login') }}">Retour connexion</a>
+                        <a href="{{ path('app_register_employee') }}">Inscription employe</a>
+                        <a href="{{ path('app_register') }}">Inscription candidat</a>
+                    </div>
+                {{ form_end(registrationRhForm) }}
+            </article>
+        </div>
+    </section>
+{% endblock %}

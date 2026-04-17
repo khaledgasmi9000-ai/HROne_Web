@@ -1,0 +1,60 @@
+{% if pageCount > 1 %}
+    <nav class="community-pagination-nav" role="navigation" aria-label="Pagination des publications">
+        <div class="community-pagination-meta">
+            <span class="community-pagination-dot" aria-hidden="true"></span>
+            <span>Page {{ current }} sur {{ pageCount }}</span>
+        </div>
+
+        <ul class="community-pagination-list">
+            {% if first is defined and current != first %}
+                <li>
+                    <a class="community-page-link community-page-link-icon" href="{{ path(route, knp_pagination_query(query, first, options)) }}" aria-label="Premiere page">
+                        <svg viewBox="0 0 24 24"><path d="m18 6-6 6 6 6"></path><path d="m12 6-6 6 6 6"></path></svg>
+                    </a>
+                </li>
+            {% else %}
+                <li><span class="community-page-link community-page-link-icon community-page-link-disabled" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m18 6-6 6 6 6"></path><path d="m12 6-6 6 6 6"></path></svg></span></li>
+            {% endif %}
+
+            {% if previous is defined %}
+                <li>
+                    <a rel="prev" class="community-page-link community-page-link-icon" href="{{ path(route, knp_pagination_query(query, previous, options)) }}" aria-label="Page precedente">
+                        <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></svg>
+                    </a>
+                </li>
+            {% else %}
+                <li><span class="community-page-link community-page-link-icon community-page-link-disabled" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></svg></span></li>
+            {% endif %}
+
+            {% for page in pagesInRange %}
+                {% if page != current %}
+                    <li>
+                        <a class="community-page-link" href="{{ path(route, knp_pagination_query(query, page, options)) }}">{{ page }}</a>
+                    </li>
+                {% else %}
+                    <li><span class="community-page-link community-page-link-active">{{ page }}</span></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if next is defined %}
+                <li>
+                    <a rel="next" class="community-page-link community-page-link-icon" href="{{ path(route, knp_pagination_query(query, next, options)) }}" aria-label="Page suivante">
+                        <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg>
+                    </a>
+                </li>
+            {% else %}
+                <li><span class="community-page-link community-page-link-icon community-page-link-disabled" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg></span></li>
+            {% endif %}
+
+            {% if last is defined and current != last %}
+                <li>
+                    <a class="community-page-link community-page-link-icon" href="{{ path(route, knp_pagination_query(query, last, options)) }}" aria-label="Derniere page">
+                        <svg viewBox="0 0 24 24"><path d="m6 6 6 6-6 6"></path><path d="m12 6 6 6-6 6"></path></svg>
+                    </a>
+                </li>
+            {% else %}
+                <li><span class="community-page-link community-page-link-icon community-page-link-disabled" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m6 6 6 6-6 6"></path><path d="m12 6 6 6-6 6"></path></svg></span></li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}
