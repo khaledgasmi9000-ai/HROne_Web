@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     endBtn.addEventListener('click', async () => {
         await fetch(`/api/session/end`, { method: 'POST' });
         
-        
+
         startBtn.disabled = false;
         endBtn.disabled = true;
     });
@@ -74,9 +74,29 @@ document.addEventListener('DOMContentLoaded', () => {
         arrow.textContent = container.classList.contains('collapsed') ? '▶' : '▼';
     });
 
+    async function checkSessionState() {
+        try {
+            const res = await fetch('/api/session/status');
+            const data = await res.json();
+
+            if (data.active) {
+                startBtn.disabled = true;
+                endBtn.disabled = false;
+            } else {
+                startBtn.disabled = !isConnected;
+                endBtn.disabled = true;
+            }
+
+        } catch (e) {
+            console.error('Session state check failed');
+        }
+    }
+
     /* =========================
        INIT
     ========================= */
+
     checkActivityWatch();
+    checkSessionState();
 
 });

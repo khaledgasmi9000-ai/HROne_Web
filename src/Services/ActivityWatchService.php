@@ -45,24 +45,25 @@ class ActivityWatchService
                 $this->formatTime($start) . "/" . $this->formatTime($end)
             ],
             "query" => [
-                // 1. Get Buckets
                 "win_buckets = find_bucket('aw-watcher-window_');",
-                "afk_buckets = find_bucket('aw-watcher-afk_');",
-                
-                // 2. Get Events
+                // 2. Get events from both
                 "win_events = query_bucket(win_buckets);",
-                "afk_events = query_bucket(afk_buckets);",
                 
-                // 3. Filter AFK (only keep 'not-afk')
+                // 3. Union them into one stream
+                "all_events = win_events;",
+                
+                // 4. Get AFK data to filter out idle time
+                "afk_buckets = find_bucket('aw-watcher-afk_');",
+                "afk_events = query_bucket(afk_buckets);",
                 "not_afk = filter_keyvals(afk_events, 'status', ['not-afk']);",
                 
-                // 4. Intersect: Only keep window events where user was NOT afk
-                "active_events = filter_period_intersect(win_events, not_afk);",
+                // 5. Intersect: Keep only window time where user was NOT AFK
+                "active_events = filter_period_intersect(all_events, not_afk);",
                 
-                // 5. Merge by APP only (resolves your Duplicate Entry SQL error)
+                // 6. THE FIX: Merge ONLY by 'app'. 
+                // This groups all Brave tabs into one 'Brave' entry.
                 "merged = merge_events_by_keys(active_events, ['app']);",
                 
-                // 6. Sort by duration
                 "RETURN = sort_by_duration(merged);"
             ]
         ];
