@@ -93,9 +93,7 @@ class ActivityWatchController extends AbstractController
         EntityManagerInterface $em,
         ActivityWatchService $awService
     ): JsonResponse {
-
         $session = $request->getSession();
-
         $sessionId = $session->get('ActivityWatchSessionId');
         $startStr = $session->get('ActivityWatchSessionStartTime');
 
@@ -104,36 +102,30 @@ class ActivityWatchController extends AbstractController
         }
 
         $workSession = $em->getRepository(WorkSession::class)->find($sessionId);
-
-        if (!$workSession) {
-            return $this->json(['error' => 'Session not found'], 404);
+        if (!$workSession || $workSession->getStatus() === 'terminated') {
+            return $this->json(['error' => 'Session not found or already ended'], 404);
         }
 
-        if ($workSession->getStatus() === 'terminated') {
-            return $this->json(['error' => 'Session already ended'], 400);
-        }
-        
-        // 1. Create DateTime objects
-        $start = new \DateTime($startStr);
-        $end = new \DateTime();
-
-        // 2. CONVERT TO UTC (This is the critical fix)
+        // 1. Setup Time Objects
         $utcTimeZone = new \DateTimeZone('UTC');
-        $start->setTimezone($utcTimeZone);
-        $end->setTimezone($utcTimeZone);
+        $localStart = new \DateTime($startStr); // Original local time
+        $localEnd = new \DateTime();           // Current local time
         
+        // Clone for the API to avoid messing up the database timestamps
+        $utcStart = (clone $localStart)->setTimezone($utcTimeZone);
+        $utcEnd = (clone $localEnd)->setTimezone($utcTimeZone);
+
         /*
         ========================
         FETCH ACTIVITYWATCH DATA
         ========================
         */
+        $events = $awService->getActiveWindowEvents($utcStart, $utcEnd);
+        $afk = $awService->getAfkData($utcStart, $utcEnd);
+        $cleanEvents = $awService->cleanEvents($events); 
 
-        $events = $awService->getWindowEvents($start, $end);
-        $afk = $awService->getAfkData($start, $end);
-
-        $cleanEvents = $awService->cleanEvents($events);
-
-        $sessionDuration = $end->getTimestamp() - $start->getTimestamp();
+        // Calculate total duration in seconds
+        $sessionDuration = $localEnd->getTimestamp() - $localStart->getTimestamp();
 
         $activeTime = $afk['not-afk'] ?? 0;
         $afkTime = $afk['afk'] ?? 0;
@@ -143,19 +135,14 @@ class ActivityWatchController extends AbstractController
         NORMALIZE EVENTS
         ========================
         */
-
         $totalEventTime = array_sum(array_column($cleanEvents, 'duration'));
 
+        // If ActivityWatch reports more time than the session actually lasted, normalize it
         if ($totalEventTime > 0 && $totalEventTime > $sessionDuration) {
             $factor = $sessionDuration / $totalEventTime;
-
             foreach ($cleanEvents as &$event) {
-                $event['duration'] *= $factor;
+                $event['duration'] = round($event['duration'] * $factor, 2);
             }
-        }
-
-        foreach ($cleanEvents as &$event) {
-            $event['duration'] = round($event['duration'], 2);
         }
 
         $coveredTime = $activeTime + $afkTime;
@@ -163,15 +150,14 @@ class ActivityWatchController extends AbstractController
 
         /*
         ========================
-        UPDATE SESSION
+        UPDATE SESSION ENTITY
         ========================
         */
-
-        $workSession->setEndTime($end);
+        $workSession->setEndTime($localEnd); // Stays as local time
         $workSession->setStatus('terminated');
         $workSession->setSessionDuration($sessionDuration);
-        $workSession->setActiveTime($activeTime);
-        $workSession->setAfkTime($afkTime);
+        $workSession->setActiveTime(round($activeTime, 2));
+        $workSession->setAfkTime(round($afkTime, 2));
         $workSession->setUnknownTime($unknownTime);
 
         /*
@@ -179,44 +165,31 @@ class ActivityWatchController extends AbstractController
         INSERT DETAILS
         ========================
         */
-
         foreach ($cleanEvents as $event) {
-
             $detail = new WorkSessionDetail();
-            $detail->setApp($event['app']);
+            // Ensure the service returned the 'app' key
+            $detail->setApp($event['app'] ?? 'Unknown App');
             $detail->setDuration($event['duration']);
 
-            // Optional percentage
             $percentage = $sessionDuration > 0
                 ? round(($event['duration'] / $sessionDuration) * 100, 2)
-                : null;
+                : 0;
 
             $detail->setPercentage($percentage);
-
-            // IMPORTANT: use helper
             $workSession->addDetail($detail);
         }
 
-        /*
-        ========================
-        SAVE EVERYTHING
-        ========================
-        */
-
         $em->flush();
 
-        /*
-        ========================
-        CLEAN WEB SESSION
-        ========================
-        */
-
+        // Clean up web session
         $session->remove('ActivityWatchSessionId');
         $session->remove('ActivityWatchSessionStartTime');
 
         return $this->json([
             'status' => 'terminated',
-            'sessionId' => $workSession->getId()
+            'sessionId' => $workSession->getId(),
+            'active_time' => $activeTime,
+            'unknown_time' => $unknownTime
         ]);
     }
 

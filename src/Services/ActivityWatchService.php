@@ -21,29 +21,49 @@ class ActivityWatchService
                 'timeout' => 5
             ]);
 
+            // The API returns an array of results for each query block
             return $response->toArray()[0] ?? [];
-
         } catch (\Throwable $e) {
-            return []; // fail silently for now
+            return [];
         }
     }
 
     private function formatTime(\DateTime $date): string
     {
-        return $date->format('Y-m-d\TH:i:s\Z');
+        // Ensure UTC and format for AW
+        return (clone $date)->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z');
     }
 
-    public function getWindowEvents(\DateTime $start, \DateTime $end): array
+    /**
+     * This method now returns window events INTERSECTED with non-AFK time.
+     * This solves the overlap problem entirely.
+     */
+    public function getActiveWindowEvents(\DateTime $start, \DateTime $end): array
     {
         $body = [
             "timeperiods" => [
                 $this->formatTime($start) . "/" . $this->formatTime($end)
             ],
             "query" => [
-                "bucket = find_bucket('aw-watcher-window_');",
-                "events = query_bucket(bucket);",
-                "events = merge_events_by_keys(events, ['app', 'title']);",
-                "RETURN = events;"
+                // 1. Get Buckets
+                "win_buckets = find_bucket('aw-watcher-window_');",
+                "afk_buckets = find_bucket('aw-watcher-afk_');",
+                
+                // 2. Get Events
+                "win_events = query_bucket(win_buckets);",
+                "afk_events = query_bucket(afk_buckets);",
+                
+                // 3. Filter AFK (only keep 'not-afk')
+                "not_afk = filter_keyvals(afk_events, 'status', ['not-afk']);",
+                
+                // 4. Intersect: Only keep window events where user was NOT afk
+                "active_events = filter_period_intersect(win_events, not_afk);",
+                
+                // 5. Merge by APP only (resolves your Duplicate Entry SQL error)
+                "merged = merge_events_by_keys(active_events, ['app']);",
+                
+                // 6. Sort by duration
+                "RETURN = sort_by_duration(merged);"
             ]
         ];
 
@@ -66,52 +86,37 @@ class ActivityWatchService
 
         $result = $this->query($body);
 
-        $formatted = [];
+        $formatted = ['afk' => 0, 'not-afk' => 0];
         foreach ($result as $item) {
             $status = $item['data']['status'] ?? 'unknown';
-            $formatted[$status] = $item['duration'];
+            if (isset($formatted[$status])) {
+                $formatted[$status] = $item['duration'];
+            }
         }
 
         return $formatted;
     }
 
+    /**
+     * Cleans and maps the AWQL return to your Entity structure
+     */
     public function cleanEvents(array $events): array
     {
         $cleaned = [];
-
         foreach ($events as $event) {
-
+            // AWQL merge puts the key in data['app']
+            $app = $event['data']['app'] ?? ($event['data']['title'] ?? null);
             $duration = $event['duration'] ?? 0;
-            if ($duration < 1) continue;
 
-            $app = $event['data']['app'] ?? '';
-            $title = $event['data']['title'] ?? '';
+            if (!$app || $duration < 1) continue;
 
-            if (!$app) continue;
+            $appKey = strtolower(trim($app)); // Normalize the name
 
-            $key = $app;
-
-            if (!isset($cleaned[$key])) {
-                $cleaned[$key] = [
-                    'app' => $app,
-                    'duration' => 0
-                ];
+            if (!isset($cleaned[$appKey])) {
+                $cleaned[$appKey] = ['app' => $app, 'duration' => 0];
             }
-
-            $cleaned[$key]['duration'] += $duration;
+            $cleaned[$appKey]['duration'] += $duration;
         }
-
-        // Convert to indexed array BEFORE sorting
-        $cleaned = array_values($cleaned);
-
-        // Round values
-        foreach ($cleaned as &$event) {
-            $event['duration'] = round($event['duration'], 2);
-        }
-
-        // Sort DESC
-        usort($cleaned, fn($a, $b) => $b['duration'] <=> $a['duration']);
-
-        return $cleaned;
+        return array_values($cleaned);
     }
 }
