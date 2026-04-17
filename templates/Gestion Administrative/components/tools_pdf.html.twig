@@ -7,6 +7,7 @@
             <th>Executable</th>
             <th>Hash</th>
             <th>Cout Mensuel</th>
+            <th>Categorie</th>
         </tr>
     </thead>
     <tbody>
@@ -16,6 +17,7 @@
                 <td>{{ tool.Executable }}</td>
                 <td>{{ tool.Hash }}</td>
                 <td>{{ tool["Cout Mensuel"]|number_format(2, ',', ' ') }}</td>
+                <td>{{ tool.categorie }}</td>
             </tr>
         {% endfor %}
     </tbody>

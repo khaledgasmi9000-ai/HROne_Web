@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Repository\OutilsDeTravailRepository;
+use App\Repository\CategorieRepository;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,6 +28,7 @@ class ToolController extends AbstractController{
             'Executable' => $tool->getIdentifiantUniverselle() ?? '',
             'Hash' => $tool->getHashApp() ?? '',
             'Cout Mensuel' => $tool->getMonthlyCost() ?? 0,
+            'categorie' => $tool->getCategorie()?->getNom() ?? 'Non catégorisé',
         ];
     }
 
@@ -148,6 +150,10 @@ class ToolController extends AbstractController{
             $errors['hash'] = 'Hash invalide (hex requis)';
         }
 
+        if (empty($data['categorie'])) {
+            $errors['categorie'] = 'Catégorie obligatoire';
+        }
+
         return $errors;
     }
 
@@ -162,16 +168,18 @@ class ToolController extends AbstractController{
     }
 
     #[Route('/Gestion_Administrative/outils', name: 'employee_outils')]
-    public function outils(Request $request ,OutilsDeTravailRepository $outilsRepository): Response
+    public function outils(Request $request ,OutilsDeTravailRepository $outilsRepository, CategorieRepository $catRepo): Response
     {
-
+        $categories = $catRepo->findAllCategories();
         $allTools = array_map(function($tool) use($outilsRepository) {
             return [
                 'id' => $tool->getIDOutil(),
                 'name' => $tool->getNomOutil(),
                 'monthly_cost' => $tool->getMonthlyCost(),
+                'categorie' => $tool->getCategorie()?->getNom(),
                 'avgTime' => $this->CalculateAvgUseTime($outilsRepository, $tool->getIDOutil()),
                 'users' => $this->CalculateNbrofUserPerTool($outilsRepository, $tool->getIDOutil()),
+                'categorie' => $tool->getCategorie()?->getNom() ?? 'Non catégorisé',
             ];
         }, $outilsRepository->findAllTools());
         
@@ -224,6 +232,7 @@ class ToolController extends AbstractController{
             'totalTools' => $totalTools,
             'orderUsers' => $orderUsers,
             'orderTime' => $orderTime,
+            'categories' => $categories,
         ]);
     }
 
@@ -244,6 +253,7 @@ class ToolController extends AbstractController{
             'exe'  => $tool->getIdentifiantUniverselle(),
             'hash' => $tool->getHashApp(),
             'monthly_cost' => $tool->getMonthlyCost(),
+            'categorie' => $tool->getCategorie()?->getIDCategorie(),
         ]);
     }
 
@@ -273,6 +283,7 @@ class ToolController extends AbstractController{
             'exe'  => $data['exe'],
             'hash' => $data['hash'],
             'monthly_cost' => $data['monthly_cost'] ?? 0,
+            'categorie' => $data['categorie'],
         ]);
 
         return $this->json([
@@ -299,6 +310,7 @@ class ToolController extends AbstractController{
             'exe'  => $data['exe'],
             'hash' => $data['hash'],
             'monthly_cost' => $data['monthly_cost'] ?? 0,
+            'categorie' => $data['categorie'],
         ]);
 
         return $this->json([

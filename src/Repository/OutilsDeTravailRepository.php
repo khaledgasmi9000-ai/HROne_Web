@@ -3,6 +3,8 @@
 namespace App\Repository;
 
 use App\Entity\OutilsDeTravail;
+use App\Entity\Categorie;
+
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -47,6 +49,7 @@ class OutilsDeTravailRepository extends ServiceEntityRepository
 
     public function createTool(array $data): OutilsDeTravail
     {
+        $em = $this->getEntityManager();
         $tool = new OutilsDeTravail();
 
         $tool->setNomOutil($data['name']);
@@ -54,7 +57,9 @@ class OutilsDeTravailRepository extends ServiceEntityRepository
         $tool->setHashApp($data['hash']);
         $tool->setMonthly_Cost($data['monthly_cost']);
 
-        $em = $this->getEntityManager();
+        $categorie = $em->getReference(Categorie::class, $data['categorie']);
+        $tool->setCategorie($categorie);
+
         $em->persist($tool);
         $em->flush();
 
@@ -74,6 +79,9 @@ class OutilsDeTravailRepository extends ServiceEntityRepository
         $tool->setIdentifiantUniverselle($data['exe']);
         $tool->setHashApp($data['hash']);
         $tool->setMonthly_Cost($data['monthly_cost']);
+
+        $categorie = $em->getReference(\App\Entity\Categorie::class, $data['categorie']);
+        $tool->setCategorie($categorie);
 
         $em->flush();
 

@@ -40,3 +40,10 @@ ALTER TABLE employee ADD COLUMN ID_Departement INT DEFAULT 0;
 ALTER TABLE employee ADD CONSTRAINT FK_EMP_DEPARTEMENT FOREIGN KEY (ID_Departement) REFERENCES departement(ID_Departement) ON DELETE SET NULL;
 INSERT INTO departement (Nom) VALUES ('Direction Générale'), ('Ressources Humaines'), ('Finance'), ('Comptabilité'), ('Informatique'), ('Marketing'), ('Ventes'), ('Support Client'), ('Opérations'), ('Logistique');
 UPDATE departement SET Nom = 'Unkown' WHERE ID_Departement = 0;
+
+CREATE TABLE categorie ( ID_Categorie INT AUTO_INCREMENT PRIMARY KEY, Nom VARCHAR(255) NOT NULL );
+ALTER TABLE outils_de_travail ADD COLUMN ID_Categorie INT DEFAULT 0;
+INSERT INTO `categorie` (`ID_Categorie`, `Nom`) VALUES (1, 'Unknown');
+ALTER TABLE outils_de_travail ADD CONSTRAINT FK_OUTIL_CATEGORIE FOREIGN KEY (ID_Categorie) REFERENCES categorie(ID_Categorie);
+UPDATE outils_de_travail SET ID_Categorie = 1 WHERE ID_Categorie = NULL;
+INSERT INTO categorie (Nom) VALUES ('Navigateurs'), ('Développement'), ('Communication'), ('Gestion de projet'), ('Bureautique'), ('Design'), ('Base de données'), ('DevOps'), ('Sécurité'), ('Support');

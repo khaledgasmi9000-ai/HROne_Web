@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("toolExe").value = data.exe || "";
                 document.getElementById("toolHash").value = data.hash || "";
                 document.getElementById("toolCost").value = data.monthly_cost || 0;
+                document.getElementById("toolCategorie").value = data.categorie || "";
 
                 window.currentToolId = id;
 
@@ -45,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.getElementById("toolModalTitle").innerText = "Ajouter un outil";
 
-        ["toolName", "toolExe", "toolHash"].forEach(id => {
+        ["toolName", "toolExe", "toolHash", "toolCategorie"].forEach(id => {
             document.getElementById(id).value = "";
         });
         document.getElementById("toolCost").value = 0;
@@ -67,11 +68,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const exe  = document.getElementById("toolExe").value.trim();
         const hash = document.getElementById("toolHash").value.trim();
         const cost = parseFloat(document.getElementById("toolCost").value) || 0;
+        const categorie = parseInt(document.getElementById("toolCategorie").value);
 
         // =========================
         // SUBMIT
         // =========================
-        const data = { name, exe, hash, monthly_cost: cost };
+        const data = { name, exe, hash, monthly_cost: cost, categorie };
 
         let url;
 

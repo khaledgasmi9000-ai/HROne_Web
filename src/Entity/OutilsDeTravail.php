@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use App\Entity\Categorie;
+
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -83,6 +85,21 @@ class OutilsDeTravail
         $this->Monthly_Cost = $cost ?? 0;
         return $this;
         
+    }
+
+    #[ORM\ManyToOne(targetEntity: Categorie::class, inversedBy: 'outils')]
+    #[ORM\JoinColumn(name: 'ID_Categorie', referencedColumnName: 'ID_Categorie', nullable: true)]
+    private ?Categorie $categorie = null;
+
+    public function getCategorie(): ?Categorie
+    {
+        return $this->categorie;
+    }
+
+    public function setCategorie(?Categorie $categorie): self
+    {
+        $this->categorie = $categorie;
+        return $this;
     }
 
     #[ORM\ManyToMany(targetEntity: Employee::class, mappedBy: 'outilsDeTravails')]

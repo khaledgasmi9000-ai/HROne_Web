@@ -1,0 +1,93 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #ffffff;
+    color: #000;
+}
+
+.fiche-container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* HEADER */
+.tool-header {
+    border-bottom: 2px solid #000;
+    margin-bottom: 20px;
+}
+
+.tool-header h1 {
+    margin-bottom: 10px;
+}
+
+.tool-meta p {
+    margin: 2px 0;
+}
+
+/* STATS */
+.tool-stats {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+}
+
+.stat {
+    width: 30%;
+    text-align: center;
+    border: 1px solid #000;
+    padding: 10px;
+}
+
+/* SECTIONS */
+.section {
+    margin-top: 30px;
+}
+
+.section h2 {
+    border-bottom: 1px solid #000;
+    padding-bottom: 5px;
+}
+
+/* TABLE */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+table th, table td {
+    border: 1px solid #000;
+    padding: 8px;
+    text-align: left;
+}
+
+/* SUMMARY */
+.summary {
+    border: 1px solid #000;
+    padding: 10px;
+}
+
+/* BUTTON */
+.actions {
+    margin-top: 30px;
+    text-align: right;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    background: black;
+    color: white;
+    cursor: pointer;
+}
+
+/* PRINT RULES */
+@media print {
+    .no-print {
+        display: none;
+    }
+
+    body {
+        margin: 0;
+    }
+}
