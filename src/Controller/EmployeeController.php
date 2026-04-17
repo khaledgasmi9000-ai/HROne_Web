@@ -4,8 +4,8 @@ namespace App\Controller;
 
 use App\Repository\EmployeeRepository;
 use App\Repository\OutilsDeTravailRepository;
-use App\Repository\DemandeCongeRepository;
 use App\Repository\UtilisateurRepository;
+use App\Repository\DepartementRepository;
 
 use App\Entity\Employee;
 use App\Entity\Utilisateur;
@@ -56,6 +56,7 @@ class EmployeeController extends AbstractController{
             'Solde Congé' => $emp->getSoldeConge() ?? 0,
             'Salaire' => $emp->getSALAIRE() ?? 0,
             'Heures' => $emp->getNbrHeureDeTravail() ?? 0,
+            'Departement' => $emp->getDepartement() ? $emp->getDepartement()->getNom() : 'N/A'
         ];
     }
 
@@ -73,7 +74,8 @@ class EmployeeController extends AbstractController{
             'Genre',
             'Solde Congé',
             'Salaire',
-            'Heures'
+            'Heures',
+            'Departement'
         ]);
 
         // ✅ Data rows
@@ -100,7 +102,7 @@ class EmployeeController extends AbstractController{
         $headers = [
             'Nom', 'Email', 'Téléphone', 'CIN',
             'Date Naissance', 'Genre', 'Solde Congé',
-            'Salaire', 'Heures'
+            'Salaire', 'Heures','Departement'
         ];
 
         $sheet->fromArray($headers, null, 'A1');
@@ -215,6 +217,10 @@ class EmployeeController extends AbstractController{
         if (!isset($data['gender']) || empty($data['gender'])){
             $errors['gender'] = 'Sexe obligatoire';
         }
+        
+        if (empty($data['departement'])) {
+            $errors['departement'] = 'Département obligatoire';
+        }
 
         return $errors;
     }
@@ -227,7 +233,7 @@ class EmployeeController extends AbstractController{
     }
 
     #[Route('/Gestion_Administrative/employee', name: 'employee_overview')]
-    public function overview(Request $request, EmployeeRepository $employeeRepository): Response
+    public function overview(Request $request, EmployeeRepository $employeeRepository, DepartementRepository $depRepo): Response
     {
         
         $allEmployees = array_map(function($emp) use ($employeeRepository) {
@@ -238,7 +244,8 @@ class EmployeeController extends AbstractController{
                 'heures' => $emp->getNbrHeureDeTravail(),
                 'email' => $emp->getUtilisateur()->getEmail(),
                 'soldeConge' => $emp->getSoldeConge(),
-                'soldeRestant' => $this->CalculateSodeCongeRestant($employeeRepository ,$emp->getSoldeConge(), $emp->getIDEmploye())
+                'soldeRestant' => $this->CalculateSodeCongeRestant($employeeRepository ,$emp->getSoldeConge(), $emp->getIDEmploye()),
+                'departement' => $emp->getDepartement() ? $emp->getDepartement()->getNom() : 'N/A'
             ];
         }, $employeeRepository->findAllEmployees());
         
@@ -333,14 +340,15 @@ class EmployeeController extends AbstractController{
             'avgHours' => $avgHours,
             'avgCongeTaken' => $avgCongeTaken
         ];
-
+        $departements = $depRepo->findAllDepartements();
         return $this->render('Gestion Administrative/overview.html.twig', [
             'employees' => $employees,
             'currentPage' => $currentPage,
             'totalPages' => $totalPages,
             'totalEmployees' => $totalEmployees,
             'rowsPerPage' => $rowsPerPage,
-            'kpi' => $kpi
+            'kpi' => $kpi,
+            'departements' => $departements
         ]);
     }
 
@@ -386,7 +394,8 @@ class EmployeeController extends AbstractController{
             'gender' => $user->getGender(),
             'salaire' => $employee->getSalaire(),
             'heures' => $employee->getNbrHeureDeTravail(),
-            'solde' => $employee->getSoldeConge()
+            'solde' => $employee->getSoldeConge(),
+            'departement' => $employee->getDepartement() ? $employee->getDepartement()->getIDDepartement() : null
         ]);
     }
 

@@ -33,3 +33,10 @@ CREATE TABLE work_session (id INT AUTO_INCREMENT NOT NULL, employee_id INT NOT N
 CREATE TABLE work_session_detail (id INT AUTO_INCREMENT NOT NULL, app VARCHAR(255) NOT NULL, duration DOUBLE PRECISION NOT NULL, tool_id INT DEFAULT NULL, percentage DOUBLE PRECISION DEFAULT NULL, work_session_id INT NOT NULL, INDEX IDX_60995C067A5C410C (work_session_id), UNIQUE INDEX unique_session_app (work_session_id, app), PRIMARY KEY(id));
 
 ALTER TABLE `work_session_detail` DROP INDEX `unique_session_app`;
+
+CREATE TABLE departement ( ID_Departement INT AUTO_INCREMENT PRIMARY KEY, Nom VARCHAR(255) NOT NULL );
+INSERT INTO departement (ID_Departement, Nom) VALUES (0,'');
+ALTER TABLE employee ADD COLUMN ID_Departement INT DEFAULT 0;
+ALTER TABLE employee ADD CONSTRAINT FK_EMP_DEPARTEMENT FOREIGN KEY (ID_Departement) REFERENCES departement(ID_Departement) ON DELETE SET NULL;
+INSERT INTO departement (Nom) VALUES ('Direction Générale'), ('Ressources Humaines'), ('Finance'), ('Comptabilité'), ('Informatique'), ('Marketing'), ('Ventes'), ('Support Client'), ('Opérations'), ('Logistique');
+UPDATE departement SET Nom = 'Unkown' WHERE ID_Departement = 0;

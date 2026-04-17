@@ -41,6 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("empSolde").value = data.solde || "";
             document.getElementById("empSalaire").value = data.salaire || "";
             document.getElementById("empHeures").value = data.heures || "";
+            document.getElementById("empDepartement").value = data.departement || "";
 
             window.currentEmployeeId = id;
 
@@ -66,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
         [
             "empName","empEmail","empPhone","empCIN",
             "empBirth","empGender","empSolde",
-            "empSalaire","empHeures"
+            "empSalaire","empHeures","empDepartement"
         ].forEach(id => {
             document.getElementById(id).value = "";
         });
@@ -95,6 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
             solde: (document.getElementById("empSolde").value),
             salaire:(document.getElementById("empSalaire").value),
             heures: (document.getElementById("empHeures").value),
+            departement: document.getElementById("empDepartement").value,
         };
 
         clearError();

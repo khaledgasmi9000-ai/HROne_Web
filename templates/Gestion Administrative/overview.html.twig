@@ -103,6 +103,7 @@
                     <th>Solde Restant</th>
                     <th>Salaire</th>
                     <th>Heures / mois</th>
+                    <th>Departement</th>
                     <th></th> {# Operations column #}
                 </tr>
             </thead>
@@ -120,6 +121,7 @@
                         <td>{{ employee.soldeRestant|default('12') }}</td>
                         <td>{{ employee.salaire|default('2500') }}</td>
                         <td>{{ employee.heures|default('160') }}</td>
+                        <td>{{ employee.departement|default('N/A') }}</td>
 
                        <td class="actions-cell">
                             {% include 'Gestion Administrative/components/row_actions.html.twig' with {

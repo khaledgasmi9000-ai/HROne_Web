@@ -216,4 +216,19 @@ class Employee
         return $this;
     }
 
+    #[ORM\ManyToOne(targetEntity: Departement::class, inversedBy: 'employees')]
+    #[ORM\JoinColumn(name: 'ID_Departement', referencedColumnName: 'ID_Departement', nullable: true)]
+    private ?Departement $departement = null;
+
+    public function getDepartement(): ?Departement
+    {
+        return $this->departement;
+    }
+
+    public function setDepartement(?Departement $departement): self
+    {
+        $this->departement = $departement;
+        return $this;
+    }
+
 }

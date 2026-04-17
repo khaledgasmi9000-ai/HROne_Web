@@ -5,6 +5,8 @@ namespace App\Repository;
 use App\Entity\Employee;
 use App\Entity\Ordre;
 use App\Entity\Utilisateur;
+use App\Entity\Departement;
+
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -75,6 +77,8 @@ class EmployeeRepository extends ServiceEntityRepository
 
     public function createEmployee(array $data, Utilisateur $user): Employee
     {
+        $em = $this->getEntityManager();
+
         $employee = new Employee();
 
         $employee->setUtilisateur($user);
@@ -82,7 +86,9 @@ class EmployeeRepository extends ServiceEntityRepository
         $employee->setSalaire($data['salaire']);
         $employee->setNbrHeureDeTravail($data['heures']);
 
-        $em = $this->getEntityManager();
+        $departement = $em->getReference(Departement::class, $data['departement']);
+        $employee->setDepartement($departement);
+
         $em->persist($employee);
         $em->flush();
 
@@ -102,6 +108,11 @@ class EmployeeRepository extends ServiceEntityRepository
         $employee->setSalaire($data['salaire']);
         $employee->setNbrHeureDeTravail($data['heures']);
 
+        if (isset($data['departement'])) {
+        $departement = $em->getReference(\App\Entity\Departement::class, $data['departement']);
+            $employee->setDepartement($departement);
+        }
+    
         $em->flush();
 
         return $employee;

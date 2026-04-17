@@ -60,6 +60,16 @@
                     <input type="number" id="empHeures" class="input-field">
                 </div>
 
+                <div class="form-group">
+                    <label>Département</label>
+                    <select id="empDepartement" class="input-field">
+                        <option value="">-- Choisir --</option>
+                        {% for dep in departements %}
+                            <option value="{{ dep.IDDepartement }}">{{ dep.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
             </div>
 
             <!-- ACTIONS -->
