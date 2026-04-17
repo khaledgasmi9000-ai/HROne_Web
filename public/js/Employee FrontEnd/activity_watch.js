@@ -51,22 +51,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await fetch('/api/session/start', { method: 'POST' });
         const data = await res.json();
 
-        currentSessionId = data.sessionId;
-
         startBtn.disabled = true;
         endBtn.disabled = false;
     });
 
     endBtn.addEventListener('click', async () => {
-        if (!currentSessionId) {
-            alert('No active session');
-            return;
-        }
-
-        await fetch(`/api/session/end/${currentSessionId}`, { method: 'POST' });
-
-        currentSessionId = null;
-
+        await fetch(`/api/session/end`, { method: 'POST' });
+        
+        
         startBtn.disabled = false;
         endBtn.disabled = true;
     });

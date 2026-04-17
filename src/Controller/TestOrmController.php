@@ -5,9 +5,13 @@ namespace App\Controller;
 use App\Entity\Utilisateur;
 use App\Entity\Profil;
 use App\Entity\Entreprise;
+use App\Entity\WorkSession;
+use App\Entity\WorkSessionDetail;
 use App\Repository\EmployeeRepository;
 use App\Repository\OutilsDeTravailRepository;
 use App\Repository\DemandeCongeRepository;
+use App\Repository\WorkSessionDetailRepository;
+use App\Repository\WorkSessionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -187,5 +191,83 @@ class TestOrmController extends AbstractController
         }, $conges);
 
         return new JsonResponse($data);
+    }
+
+
+    #[Route('/api/test/worksession/crud', methods: ['GET'])]
+    public function testWorkSessionCrud(EntityManagerInterface $em): JsonResponse
+    {
+        try {
+            /*
+            ========================
+            1. CREATE
+            ========================
+            */
+
+            $session = new WorkSession();
+            $session->setEmployeeId(22);
+            $session->setStartTime(new \DateTime());
+            $session->setEndTime(new \DateTime('+1 hour'));
+            $session->setStatus('active');
+
+            $detail1 = new WorkSessionDetail();
+            $detail1->setApp('brave.exe');
+            $detail1->setDuration(120);
+
+            $detail2 = new WorkSessionDetail();
+            $detail2->setApp('Code.exe');
+            $detail2->setDuration(60);
+
+            // Link both sides
+            $detail1->setWorkSession($session);
+            $detail2->setWorkSession($session);
+
+            $session->getDetails()->add($detail1);
+            $session->getDetails()->add($detail2);
+
+            $em->persist($session);
+            $em->persist($detail1);
+            $em->persist($detail2);
+
+            $em->flush();
+
+            $createdId = $session->getId();
+
+            /*
+            ========================
+            2. UPDATE
+            ========================
+            */
+
+            $session->setStatus('terminated');
+            $session->setSessionDuration(3600);
+
+            $detail1->setDuration(200);
+            $detail2->setDuration(100);
+
+            $em->flush();
+
+            /*
+            ========================
+            3. DELETE
+            ========================
+            */
+
+            // Because of FK + cascade, removing session removes details
+            $em->remove($session);
+            $em->flush();
+
+            return new JsonResponse([
+                'status' => 'success',
+                'message' => 'CRUD test completed',
+                'sessionId' => $createdId
+            ]);
+
+        } catch (\Throwable $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }

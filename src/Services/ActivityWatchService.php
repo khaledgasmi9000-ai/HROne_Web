@@ -30,7 +30,7 @@ class ActivityWatchService
 
     private function formatTime(\DateTime $date): string
     {
-        return $date->format('Y-m-d\TH:i:s');
+        return $date->format('Y-m-d\TH:i:s\Z');
     }
 
     public function getWindowEvents(\DateTime $start, \DateTime $end): array
