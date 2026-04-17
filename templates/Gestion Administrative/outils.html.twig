@@ -85,6 +85,7 @@
                     <th>Nom</th>
                     <th>Temps moyen</th>
                     <th>Nombre d'utilisateurs</th>
+                    <th>Cout mensuel</th>
                     <th></th> {# Actions column #}
                 </tr>
             </thead>
@@ -97,7 +98,7 @@
                         <td class="tool-name">{{ tool.name }}</td>
                         <td>{{ tool.avgTime }} h</td>
                         <td>{{ tool.users }}</td>
-
+                        <td>{{ tool.monthly_cost|number_format(2, ',', ' ') }}</td>
                         <td class="actions-cell">
                             {% include 'Gestion Administrative/components/row_actions.html.twig' with {
                                 employeeId: tool.id,

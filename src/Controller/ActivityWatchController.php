@@ -15,8 +15,6 @@ use App\Services\ActivityWatchService;
 use App\Entity\WorkSession;
 use App\Entity\WorkSessionDetail;
 
-use App\Repository\WorkSessionDetailRepository;
-use App\Repository\WorkSessionRepository;
 
 class ActivityWatchController extends AbstractController
 {
@@ -156,15 +154,6 @@ class ActivityWatchController extends AbstractController
         NORMALIZE EVENTS
         ========================
         */
-        // $totalEventTime = array_sum(array_column($cleanEvents, 'duration'));
-
-        // // If ActivityWatch reports more time than the session actually lasted, normalize it
-        // if ($totalEventTime > 0 && $totalEventTime > $sessionDuration) {
-        //     $factor = $sessionDuration / $totalEventTime;
-        //     foreach ($cleanEvents as &$event) {
-        //         $event['duration'] = round($event['duration'] * $factor, 2);
-        //     }
-        // }
 
         $coveredTime = $activeTime + $afkTime;
         $unknownTime = round(max(0, $sessionDuration - $coveredTime), 2);
@@ -215,77 +204,4 @@ class ActivityWatchController extends AbstractController
         ]);
     }
 
-    // private function buildSummary(
-    //     Request $request,
-    //     ActivityWatchService $awService
-    // ): JsonResponse {
-
-    //     $session = $request->getSession();
-
-    //     $start = $session->get('ActivityWatchSessionStartTime');
-    //     $end = $session->get('ActivityWatchSessionEndTime');
-    //     $employeeId = $session->get('ID_Employee') ?? 22; // fallback
-
-    //     // $start = "2026-04-17T11:59:30";
-    //     // $end = "2026-04-17T12:00:12";
-    //     if (!$start || !$end) {
-    //         return $this->json(['error' => 'Session not completed'], 400);
-    //     }
-
-        
-    //     $start = new \DateTime($start);
-    //     $end = new \DateTime($end);
-
-    //     // Fetch data
-    //     $events = $awService->getActiveWindowEvents($start, $end);
-    //     $afk = $awService->getAfkData($start, $end);
-
-    //     // Clean
-    //     $cleanEvents = $awService->cleanEvents($events);
-
-    //     // Duration
-    //     $sessionDuration = $end->getTimestamp() - $start->getTimestamp();
-
-    //     // AFK / Active
-    //     $activeTime = $afk['not-afk'] ?? 0;
-    //     $afkTime = $afk['afk'] ?? 0;
-
-    //     // // Normalize overlap
-    //     // $totalEventTime = array_sum(array_column($cleanEvents, 'duration'));
-
-    //     // if ($totalEventTime > 0 && $totalEventTime > $sessionDuration) {
-    //     //     $factor = $sessionDuration / $totalEventTime;
-
-    //     //     foreach ($cleanEvents as &$event) {
-    //     //         $event['duration'] *= $factor;
-    //     //     }
-    //     // }
-
-    //     // Round
-    //     foreach ($cleanEvents as &$event) {
-    //         $event['duration'] = round($event['duration'], 2);
-    //     }
-
-    //     $coveredTime = $activeTime + $afkTime;
-    //     $unknownTime = round(max(0, $sessionDuration - $coveredTime), 2);
-
-    //     return $this->json([
-    //         'employeeId' => $employeeId,
-    //         'start' => $start->format('Y-m-d\TH:i:s'),
-    //         'end' => $end->format('Y-m-d\TH:i:s'),
-    //         'sessionDuration' => $sessionDuration,
-    //         'activeTime' => round($activeTime, 2),
-    //         'afkTime' => round($afkTime, 2),
-    //         'unknownTime' => 0,
-    //         'events' => $cleanEvents
-    //     ]);
-    // }
-
-    // #[Route('/api/session/summary', methods: ['GET'])]
-    // public function getSessionSummary(
-    //     Request $request,
-    //     ActivityWatchService $awService
-    // ): JsonResponse {
-    //     return $this->buildSummary($request, $awService);
-    // }
 }

@@ -28,6 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("toolName").value = data.name || "";
                 document.getElementById("toolExe").value = data.exe || "";
                 document.getElementById("toolHash").value = data.hash || "";
+                document.getElementById("toolCost").value = data.monthly_cost || 0;
 
                 window.currentToolId = id;
 
@@ -47,6 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ["toolName", "toolExe", "toolHash"].forEach(id => {
             document.getElementById(id).value = "";
         });
+        document.getElementById("toolCost").value = 0;
 
         window.currentToolId = null;
 
@@ -64,13 +66,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const name = document.getElementById("toolName").value.trim();
         const exe  = document.getElementById("toolExe").value.trim();
         const hash = document.getElementById("toolHash").value.trim();
-
-        
+        const cost = parseFloat(document.getElementById("toolCost").value) || 0;
 
         // =========================
         // SUBMIT
         // =========================
-        const data = { name, exe, hash };
+        const data = { name, exe, hash, monthly_cost: cost };
 
         let url;
 

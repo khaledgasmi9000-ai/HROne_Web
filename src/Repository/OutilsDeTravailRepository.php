@@ -30,7 +30,6 @@ class OutilsDeTravailRepository extends ServiceEntityRepository
             return false;
         }
 
-        // Optional but safer: detach relations
         foreach ($tool->getEmployees() as $employee) {
             $employee->removeOutilsDeTravail($tool);
         }
@@ -53,6 +52,7 @@ class OutilsDeTravailRepository extends ServiceEntityRepository
         $tool->setNomOutil($data['name']);
         $tool->setIdentifiantUniverselle($data['exe']);
         $tool->setHashApp($data['hash']);
+        $tool->setMonthly_Cost($data['monthly_cost']);
 
         $em = $this->getEntityManager();
         $em->persist($tool);
@@ -73,6 +73,7 @@ class OutilsDeTravailRepository extends ServiceEntityRepository
         $tool->setNomOutil($data['name']);
         $tool->setIdentifiantUniverselle($data['exe']);
         $tool->setHashApp($data['hash']);
+        $tool->setMonthly_Cost($data['monthly_cost']);
 
         $em->flush();
 

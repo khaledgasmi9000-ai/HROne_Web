@@ -26,6 +26,7 @@ class ToolController extends AbstractController{
             'Nom' => $tool->getNomOutil() ?? '',
             'Executable' => $tool->getIdentifiantUniverselle() ?? '',
             'Hash' => $tool->getHashApp() ?? '',
+            'Cout Mensuel' => $tool->getMonthlyCost() ?? 0,
         ];
     }
 
@@ -168,6 +169,7 @@ class ToolController extends AbstractController{
             return [
                 'id' => $tool->getIDOutil(),
                 'name' => $tool->getNomOutil(),
+                'monthly_cost' => $tool->getMonthlyCost(),
                 'avgTime' => $this->CalculateAvgUseTime($outilsRepository, $tool->getIDOutil()),
                 'users' => $this->CalculateNbrofUserPerTool($outilsRepository, $tool->getIDOutil()),
             ];
@@ -241,6 +243,7 @@ class ToolController extends AbstractController{
             'name' => $tool->getNomOutil(),
             'exe'  => $tool->getIdentifiantUniverselle(),
             'hash' => $tool->getHashApp(),
+            'monthly_cost' => $tool->getMonthlyCost(),
         ]);
     }
 
@@ -269,6 +272,7 @@ class ToolController extends AbstractController{
             'name' => $data['name'],
             'exe'  => $data['exe'],
             'hash' => $data['hash'],
+            'monthly_cost' => $data['monthly_cost'] ?? 0,
         ]);
 
         return $this->json([
@@ -294,6 +298,7 @@ class ToolController extends AbstractController{
             'name' => $data['name'],
             'exe'  => $data['exe'],
             'hash' => $data['hash'],
+            'monthly_cost' => $data['monthly_cost'] ?? 0,
         ]);
 
         return $this->json([

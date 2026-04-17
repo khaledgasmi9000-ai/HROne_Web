@@ -70,6 +70,21 @@ class OutilsDeTravail
         return $this;
     }
 
+    #[ORM\Column(name: 'Monthly_Cost', type: 'float', nullable: true)]
+    private ?float $Monthly_Cost = 0;
+
+    public function getMonthlyCost(): ?float
+    {
+        return $this->Monthly_Cost;
+    }
+
+    public function setMonthly_Cost(?float $cost) : self
+    {
+        $this->Monthly_Cost = $cost ?? 0;
+        return $this;
+        
+    }
+
     #[ORM\ManyToMany(targetEntity: Employee::class, mappedBy: 'outilsDeTravails')]
     private Collection $employees;
 
