@@ -548,6 +548,161 @@ class EmployeeController extends AbstractController{
         return $this->json(['success' => true]);
     }
 
+    #[Route('/Gestion_Administrative/employee/fiche/{id}', name: 'employee_fiche')]
+    public function ficheEmployee(int $id, EmployeeRepository $repo): Response
+    {
+        $employee = $repo->findEmployeeById($id);
+
+        if (!$employee) {
+            throw $this->createNotFoundException('Employé non trouvé');
+        }
+
+        // =========================
+        // 1. Managed tools map
+        // =========================
+        $managedToolsMap = [];
+
+        foreach ($employee->getOutilsDeTravails() as $outil) {
+            $key = strtolower(trim($outil->getIdentifiantUniverselle()));
+            $managedToolsMap[$key] = $outil->getNomOutil() ?? $key;
+        }
+
+        // =========================
+        // 2. Init variables
+        // =========================
+        $tools = [];
+
+        $productifTime = 0;
+        $nonProductifTime = 0;
+        $idleTime = 0;
+
+        // =========================
+        // 3. Loop sessions
+        // =========================
+        foreach ($employee->getWorkSessions() as $session) {
+
+            // Idle time
+            $idleTime += $session->getAfkTime() ?? 0;
+
+            foreach ($session->getDetails() as $detail) {
+
+                $appRaw = strtolower(trim($detail->getApp()));
+                $duration = $detail->getDuration();
+
+                if (!$appRaw) continue;
+
+                // Normalize name (managed tools get clean names)
+                $isManaged = isset($managedToolsMap[$appRaw]);
+                if ($isManaged) {
+                    $app = $managedToolsMap[$appRaw];
+                } else {
+                    $app = preg_replace('/\.exe$/i', '', $appRaw);
+                }
+
+                // Aggregate tool time
+                if (!isset($tools[$app])) {
+                    $tools[$app] = 0;
+                }
+
+                $tools[$app] += $duration;
+
+                // Classification
+                if ($isManaged) {
+                    $productifTime += $duration;
+                } else {
+                    $nonProductifTime += $duration;
+                }
+            }
+        }
+
+        // =========================
+        // 4. Global time
+        // =========================
+        $totalTimeSeconds = array_sum($tools);
+        $totalTime = round($totalTimeSeconds / 60, 2);
+
+        // =========================
+        // 5. Build toolsData
+        // =========================
+        $toolsData = [];
+
+        $monthlyHours = $employee->getNbrHeureDeTravail() ?: 160;
+        $salary = $employee->getSALAIRE();
+
+        foreach ($tools as $app => $time) {
+
+            $hours = round($time / 60, 2);
+
+            $percent = $totalTime > 0
+                ? round(($hours / $totalTime) * 100, 2)
+                : 0;
+
+            $cost = ($salary && $hours > 0)
+                ? round(($hours / $monthlyHours) * $salary, 2)
+                : 0;
+
+            $toolsData[] = [
+                'name' => $app,
+                'temps' => $hours,
+                'percent' => $percent,
+                'cout' => $cost
+            ];
+        }
+
+        // Sort
+        usort($toolsData, fn($a, $b) => $b['temps'] <=> $a['temps']);
+
+        $managedTopTools = [];
+        $unmanagedTopTools = [];
+
+        foreach ($toolsData as $tool) {
+
+            $isManaged = in_array($tool['name'], array_values($managedToolsMap));
+
+            if ($isManaged) {
+                $managedTopTools[] = $tool;
+            } else {
+                $unmanagedTopTools[] = $tool;
+            }
+        }
+
+        $managedTopTools = array_slice($managedTopTools, 0, 3);
+        $unmanagedTopTools = array_slice($unmanagedTopTools, 0, 3);
+
+        // =========================
+        // 6. Stats
+        // =========================
+        $toolsCount = count($toolsData);
+
+        $totalCost = ($salary && $totalTime > 0)
+            ? round(($totalTime / $monthlyHours) * $salary, 2)
+            : 0;
+
+        $topTools = array_slice($toolsData, 0, 3);
+
+        // =========================
+        // 7. Breakdown
+        // =========================
+        $breakdown = [
+            'productif' => round($productifTime / 60, 2),
+            'nonProductif' => round($nonProductifTime / 60, 2),
+            'idle' => round($idleTime / 60, 2)
+        ];
+
+        return $this->render('Gestion Administrative/fiche_employee.html.twig', [
+            'employee' => $employee,
+            'stats' => [
+                'totalTime' => $totalTime,
+                'toolsCount' => $toolsCount,
+                'totalCost' => $totalCost
+            ],
+            'tools' => $toolsData,
+            'managedTopTools' => $managedTopTools,
+            'unmanagedTopTools' => $unmanagedTopTools,
+            'breakdown' => $breakdown
+        ]);
+    }
+
     // ========== End Employee Controller ==========  //
 
 #pragma endregion
