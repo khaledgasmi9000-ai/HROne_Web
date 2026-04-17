@@ -231,4 +231,12 @@ class Employee
         return $this;
     }
 
+    #[ORM\OneToMany(mappedBy: 'employee', targetEntity: WorkSession::class)]
+    private Collection $workSessions;
+
+    public function getWorkSessions(): Collection
+    {
+        return $this->workSessions;
+    }
+
 }

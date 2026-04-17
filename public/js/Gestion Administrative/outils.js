@@ -86,7 +86,8 @@ window.rowActionsHandlers.outils = {
     },
 
     view: function(id) {
-        console.log("Voir détails outil:", id);
+        const url = window.toolFicheUrlTemplate.replace('TOOL_ID', id);
+        window.location.href = url; 
     }
 
 };

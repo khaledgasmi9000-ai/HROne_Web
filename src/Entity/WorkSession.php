@@ -15,8 +15,9 @@ class WorkSession
     #[ORM\Column(name: 'id')]
     private ?int $id = null;
 
-    #[ORM\Column(name: 'employee_id')]
-    private int $employeeId;
+    #[ORM\ManyToOne(targetEntity: Employee::class, inversedBy: 'workSessions')]
+    #[ORM\JoinColumn(name: 'employee_id', referencedColumnName: 'ID_Employe', nullable: false)]
+    private ?Employee $employee = null;
 
     #[ORM\Column(name: 'start_time', type: 'datetime')]
     private \DateTime $startTime;
@@ -57,14 +58,14 @@ class WorkSession
         return $this->id;
     }
 
-    public function getEmployeeId(): int
+    public function getEmployee(): ?Employee
     {
-        return $this->employeeId;
+        return $this->employee;
     }
 
-    public function setEmployeeId(int $employeeId): self
+    public function setEmployee(?Employee $employee): self
     {
-        $this->employeeId = $employeeId;
+        $this->employee = $employee;
         return $this;
     }
 

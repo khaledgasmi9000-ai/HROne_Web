@@ -108,22 +108,6 @@ class ToolController extends AbstractController{
         ]);
     }
 
-    // Helper Function to calculate average usage time
-    private function CalculateAvgUseTime(OutilsDeTravailRepository $outilsRepository, int $outilId): int
-    {
-        // This function should calculate the average time based on actual usage data for the given tool ID
-        // Placeholder implementation:
-        return rand(30, 300); // Random value between 30 and 300 minutes
-    }
-
-    //Helper Function to calculate number of users per tool
-    private function CalculateNbrofUserPerTool(OutilsDeTravailRepository $outilsRepository,int $outilId): int
-    {
-        // This function should calculate the number of users based on actual usage data for the given tool ID
-        // Placeholder implementation:
-        return rand(1, 100); // Random value between 1 and 100
-    }
-
     // Data Validation Function 
     private function validateToolData(array $data): array
     {
@@ -171,14 +155,39 @@ class ToolController extends AbstractController{
     public function outils(Request $request ,OutilsDeTravailRepository $outilsRepository, CategorieRepository $catRepo): Response
     {
         $categories = $catRepo->findAllCategories();
-        $allTools = array_map(function($tool) use($outilsRepository) {
+        $allTools = array_map(function($tool)  {
+            $employeesData = [];
+
+            foreach ($tool->getEmployees() as $employee) {
+
+                $time = 0;
+
+                foreach ($employee->getWorkSessions() as $session) {
+                    foreach ($session->getDetails() as $detail) {
+
+                        if (strtolower(trim($detail->getApp())) === strtolower(trim($tool->getIdentifiantUniverselle()))) {
+                            $time += $detail->getDuration();
+                        }
+
+                    }
+                }
+
+                $employeesData[] = $time / 60;
+            }
+
+            $count = count($employeesData);
+
+            $avgTime = $count > 0
+                ? round(array_sum($employeesData) / $count, 2)
+                : 0;
+                
             return [
                 'id' => $tool->getIDOutil(),
                 'name' => $tool->getNomOutil(),
                 'monthly_cost' => $tool->getMonthlyCost(),
                 'categorie' => $tool->getCategorie()?->getNom(),
-                'avgTime' => $this->CalculateAvgUseTime($outilsRepository, $tool->getIDOutil()),
-                'users' => $this->CalculateNbrofUserPerTool($outilsRepository, $tool->getIDOutil()),
+                'avgTime' => $avgTime,
+                'users' => $tool->getEmployees() ? count($tool->getEmployees()) : 0,
                 'categorie' => $tool->getCategorie()?->getNom() ?? 'Non catégorisé',
             ];
         }, $outilsRepository->findAllTools());
@@ -418,6 +427,101 @@ class ToolController extends AbstractController{
             'errors' => $errors
         ]);
     }
+
+    #[Route('/Gestion_Administrative/outils/fiche/{id}', name: 'tool_fiche')]
+    public function ficheTool(int $id, OutilsDeTravailRepository $repo): Response
+    {
+        $tool = $repo->findToolById($id);
+
+        if (!$tool) {
+            throw $this->createNotFoundException('Outil non trouvé');
+        }
+
+        $employeesData = [];
+
+        foreach ($tool->getEmployees() as $employee) {
+
+            $time = 0;
+
+            foreach ($employee->getWorkSessions() as $session) {
+                foreach ($session->getDetails() as $detail) {
+
+                    if (strtolower(trim($detail->getApp())) === strtolower(trim($tool->getIdentifiantUniverselle()))) {
+                        $time += $detail->getDuration();
+                    }
+
+                }
+            }
+
+            $monthlyHours = $employee->getNbrHeureDeTravail() ?: 160;
+
+            $cost = $employee->getSALAIRE() && $time > 0
+                ? round(($time / 60) / $monthlyHours * $employee->getSALAIRE(), 2)
+                : 0;
+                
+            $employeesData[] = [
+                'id' => $employee->getIDEmploye(),
+                'nom' => $employee->getUtilisateur()?->getNomUtilisateur() ?? 'N/A',
+                'departement' => $employee->getDepartement()?->getNom() ?? 'Non défini',
+                'temps' => round($time / 60, 2), // convert to hours if needed
+                'salaire' => $employee->getSALAIRE(),
+                'cout' => $cost
+            ];
+        }
+
+        usort($employeesData, fn($a, $b) => $b['temps'] <=> $a['temps']);
+        $topUsers = array_slice($employeesData, 0, 3);
+
+        $totalTime = array_sum(array_column($employeesData, 'temps'));
+
+        $users = count($employeesData);
+
+        $avgTime = $users > 0 ? round($totalTime / $users, 2) : 0;
+
+        $costTotal = array_sum(array_column($employeesData, 'cout'));
+
+
+        $departementStats = [];
+
+        foreach ($employeesData as $emp) {
+
+            $dept = $emp['departement'];
+
+            if (!isset($departementStats[$dept])) {
+                $departementStats[$dept] = 0;
+            }
+
+            $departementStats[$dept] += $emp['temps'];
+        }
+
+        $departementDistribution = [];
+
+        foreach ($departementStats as $dept => $time) {
+
+            $percent = $totalTime > 0
+                ? round(($time / $totalTime) * 100, 2)
+                : 0;
+
+            $departementDistribution[] = [
+                'name' => $dept,
+                'percent' => $percent
+            ];
+        }
+
+        
+        return $this->render('Gestion Administrative/fiche_outil.html.twig', [
+            'tool' => $tool,
+            'stats' => [
+                'avgTime' => $avgTime,
+                'users' => $users,
+                'costTotal' => $costTotal
+            ],
+            'employees' => $employeesData,
+            'topUsers' => $topUsers,
+            'departements' => $departementDistribution
+        ]);
+    }
+
     // ========== End Outil Controller ==========  //
 
 #pragma endregion

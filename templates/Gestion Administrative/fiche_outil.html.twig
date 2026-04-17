@@ -13,9 +13,9 @@
     <div class="tool-header">
         <h1>Fiche Outil</h1>
         <div class="tool-meta">
-            <p><strong>Nom :</strong> Chrome</p>
-            <p><strong>Catégorie :</strong> Navigateur</p>
-            <p><strong>Coût mensuel :</strong> 15,00 TND</p>
+            <p><strong>Nom :</strong> {{ tool.nomOutil }}</p>
+            <p><strong>Catégorie :</strong> {{ tool.categorie.nom ?? 'Non catégorisé' }}</p>
+            <p><strong>Coût mensuel :</strong> {{ tool.monthlyCost }} TND</p>
         </div>
     </div>
 
@@ -23,15 +23,15 @@
     <div class="tool-stats">
         <div class="stat">
             <span>Temps moyen</span>
-            <strong>134 h</strong>
+            <strong>{{ stats.avgTime }} h</strong>
         </div>
         <div class="stat">
             <span>Utilisateurs</span>
-            <strong>51</strong>
+            <strong>{{ stats.users }}</strong>
         </div>
         <div class="stat">
             <span>Coût total</span>
-            <strong>765 TND</strong>
+            <strong>{{ stats.costTotal }} TND</strong>
         </div>
     </div>
 
@@ -39,9 +39,11 @@
     <div class="section">
         <h2>Top utilisateurs</h2>
         <ul>
-            <li>Khaled → 240h</li>
-            <li>Ahmed → 180h</li>
-            <li>Sara → 150h</li>
+            {% for user in topUsers %}
+                <li>{{ user.nom }} → {{ user.temps }} h</li>
+            {% else %}
+                <li>Aucune donnée</li>
+            {% endfor %}
         </ul>
     </div>
 
@@ -49,9 +51,11 @@
     <div class="section">
         <h2>Répartition par département</h2>
         <ul>
-            <li>IT → 60%</li>
-            <li>RH → 25%</li>
-            <li>Finance → 15%</li>
+            {% for dept in departements %}
+                <li>{{ dept.name }} → {{ dept.percent }}%</li>
+            {% else %}
+                <li>Aucune donnée</li>
+            {% endfor %}
         </ul>
     </div>
 
@@ -69,24 +73,18 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>Khaled</td>
-                    <td>240</td>
-                    <td>1500</td>
-                    <td>120</td>
-                </tr>
-                <tr>
-                    <td>Ahmed</td>
-                    <td>180</td>
-                    <td>1200</td>
-                    <td>90</td>
-                </tr>
-                <tr>
-                    <td>Sara</td>
-                    <td>150</td>
-                    <td>1000</td>
-                    <td>75</td>
-                </tr>
+                {% for emp in employees %}
+                    <tr>
+                        <td>{{ emp.nom ?? '' }} </td>
+                        <td>{{ emp.temps }} h</td>
+                        <td>{{ emp.salaire ?? '-' }}</td>
+                        <td>{{ emp.cout > 0 ? emp.cout ~ ' TND' : '-' }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4">Aucun employé trouvé</td>
+                    </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
@@ -99,11 +97,6 @@
             Coût global élevé mais justifié par usage intensif.
             Possibilité d’optimisation des licences.
         </p>
-    </div>
-
-    <!-- ACTIONS -->
-    <div class="actions no-print">
-        <button onclick="window.print()">Exporter PDF</button>
     </div>
 
 </div>
