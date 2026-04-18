@@ -22,10 +22,11 @@
     </header>
 
     <section class="toolbar">
-      <div class="search">
-        <input id="candidatureSearch" type="search" placeholder="Rechercher une offre, une entreprise..." aria-label="Rechercher" />
-        <button class="btn btn--ghost" type="button">Filtrer</button>
-      </div>
+      <form class="search" method="get" action="{{ path('topnav_mes_candidatures') }}">
+        <input id="candidatureSearch" name="q" type="search" placeholder="Rechercher une offre, une entreprise..." aria-label="Rechercher" value="{{ filters.search|default('') }}" />
+        <button class="btn btn--ghost" type="submit">Filtrer</button>
+        <a class="btn btn--ghost" href="{{ path('topnav_mes_candidatures') }}">Reinitialiser</a>
+      </form>
       <div class="toolbar__actions">
         <button id="btnNouvelleCandidature" class="btn" type="button" data-href="{{ path('topnav_offres') }}">Nouvelle candidature</button>
       </div>
@@ -150,7 +151,6 @@
 
     <script>
       const btnNouvelleCandidature = document.getElementById("btnNouvelleCandidature");
-      const candidatureSearch = document.getElementById("candidatureSearch");
       const grid = document.querySelector(".grid");
       const editPanel = document.getElementById("editCandidaturePanel");
       const editForm = document.getElementById("editCandidatureForm");
@@ -229,17 +229,6 @@
           option.value = String(id);
           option.textContent = title;
           editOfferId.appendChild(option);
-        });
-      };
-
-      const filterCards = () => {
-        if (!candidatureSearch || !grid) {
-          return;
-        }
-        const query = candidatureSearch.value.trim().toLowerCase();
-        grid.querySelectorAll(".card[data-candidature-id]").forEach((card) => {
-          const text = card.textContent.toLowerCase();
-          card.style.display = text.includes(query) ? "block" : "none";
         });
       };
 
@@ -361,8 +350,6 @@
       btnNouvelleCandidature.addEventListener("click", () => {
         window.location.href = btnNouvelleCandidature.dataset.href;
       });
-
-      candidatureSearch?.addEventListener("input", filterCards);
 
       grid.querySelectorAll(".btn-edit-candidature").forEach((button) => {
         button.addEventListener("click", () => {

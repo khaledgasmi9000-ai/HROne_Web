@@ -17,14 +17,46 @@ use Symfony\Component\Routing\Attribute\Route;
 class TopnavbarController extends AbstractController
 {
     #[Route('/top/offres', name: 'topnav_offres')]
-    public function offres(OffreRepository $offreRepository, ExternalJobBoardService $externalJobBoardService): Response
+    public function offres(Request $request, OffreRepository $offreRepository, ExternalJobBoardService $externalJobBoardService): Response
     {
-        $offers = $this->normalizeUtf8Recursive($offreRepository->fetchOffersForCandidate());
-        $externalOffers = $this->normalizeUtf8Recursive($externalJobBoardService->fetchExternalOffers());
+        $search = trim((string) $request->query->get('q', ''));
+        $location = trim((string) $request->query->get('location', ''));
+
+        $offers = $this->normalizeUtf8Recursive($offreRepository->fetchOffersForCandidate($search, $location));
+
+        $externalOffers = $externalJobBoardService->fetchExternalOffers();
+        if ($search !== '' || $location !== '') {
+            $searchLower = mb_strtolower($search);
+            $locationLower = mb_strtolower($location);
+
+            $externalOffers = array_values(array_filter($externalOffers, static function (array $offer) use ($searchLower, $locationLower): bool {
+                $title = mb_strtolower((string) ($offer['title'] ?? ''));
+                $description = mb_strtolower((string) ($offer['description'] ?? ''));
+                $workType = mb_strtolower((string) ($offer['workType'] ?? ''));
+                $offerLocation = mb_strtolower((string) ($offer['location'] ?? ''));
+                $experience = mb_strtolower((string) ($offer['experience'] ?? ''));
+
+                $matchesSearch = $searchLower === ''
+                    || str_contains($title, $searchLower)
+                    || str_contains($description, $searchLower)
+                    || str_contains($workType, $searchLower)
+                    || str_contains($experience, $searchLower);
+
+                $matchesLocation = $locationLower === '' || str_contains($offerLocation, $locationLower);
+
+                return $matchesSearch && $matchesLocation;
+            }));
+        }
+
+        $externalOffers = $this->normalizeUtf8Recursive($externalOffers);
 
         return $this->render('OffresEmplois/OffresEmplois.html.twig', [
             'offers' => is_array($offers) ? $offers : [],
             'externalOffers' => is_array($externalOffers) ? $externalOffers : [],
+            'filters' => [
+                'search' => $search,
+                'location' => $location,
+            ],
         ]);
     }
 
@@ -145,21 +177,26 @@ class TopnavbarController extends AbstractController
     }
 
     #[Route('/top/mes-candidatures', name: 'topnav_mes_candidatures')]
-    public function mesCandidatures(CondidatRepository $condidatRepository): Response
+    public function mesCandidatures(Request $request, CondidatRepository $condidatRepository): Response
     {
-        $dashboard = $condidatRepository->getCandidateDashboard();
+        $search = trim((string) $request->query->get('q', ''));
+        $dashboard = $condidatRepository->getCandidateDashboard($search);
 
         return $this->render('Topnavbar/mes-candidatures.html.twig', [
             'candidatures' => $dashboard['items'],
             'candidaturesTotal' => $dashboard['total'],
             'candidaturesInProgress' => $dashboard['inProgress'],
+            'filters' => [
+                'search' => $search,
+            ],
         ]);
     }
 
     #[Route('/top/candidatures/api', name: 'topnav_candidatures_api_list', methods: ['GET'])]
-    public function listCandidaturesApi(CondidatRepository $condidatRepository): JsonResponse
+    public function listCandidaturesApi(Request $request, CondidatRepository $condidatRepository): JsonResponse
     {
-        $dashboard = $condidatRepository->getCandidateDashboard();
+        $search = trim((string) $request->query->get('q', ''));
+        $dashboard = $condidatRepository->getCandidateDashboard($search);
 
         return $this->json([
             'candidatures' => $dashboard['items'] ?? [],

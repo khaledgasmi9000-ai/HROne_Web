@@ -13,14 +13,15 @@
       <h1>Trouvez l'offre qui vous correspond</h1>
       <p>Parcourez les offres actives, filtrez par localisation et postulez en quelques clics.</p>
     </div>
-    <div class="hero-search">
-      <input id="offerSearch" type="text" placeholder="Rechercher un poste, une competence..." />
-      <input id="offerLocation" type="text" placeholder="Ville (ex: Casablanca)" />
+    <form class="hero-search" method="get" action="{{ path('topnav_offres') }}">
+      <input id="offerSearch" name="q" type="text" placeholder="Rechercher un poste, une competence..." value="{{ filters.search|default('') }}" />
+      <input id="offerLocation" name="location" type="text" placeholder="Ville (ex: Casablanca)" value="{{ filters.location|default('') }}" />
       <div class="hero-search-actions">
-        <button class="btn btn-primary" type="button">Rechercher</button>
+        <button class="btn btn-primary" type="submit">Rechercher</button>
+        <a class="btn btn-ghost" href="{{ path('topnav_offres') }}">Reinitialiser</a>
         <button id="btnMesCandidatures" class="btn btn-ghost" type="button" data-href="{{ path('topnav_mes_candidatures') }}">Mes candidatures</button>
       </div>
-    </div>
+    </form>
   </section>
 
   <main class="content">
@@ -222,10 +223,7 @@
   </div>
 
   <script>
-    const offerSearch = document.getElementById("offerSearch");
-    const offerLocation = document.getElementById("offerLocation");
     const offersGrid = document.getElementById("offersGrid");
-    const offerCount = document.getElementById("offerCount");
     const btnMesCandidatures = document.getElementById("btnMesCandidatures");
     const selectedOffer = document.getElementById("selectedOffer");
     const submitCandidatureBtn = document.getElementById("submitCandidatureBtn");
@@ -347,26 +345,6 @@
       });
     };
 
-    const filterOffers = () => {
-      const query = offerSearch.value.trim().toLowerCase();
-      const location = offerLocation.value.trim().toLowerCase();
-      let visible = 0;
-
-      offersGrid.querySelectorAll(".offer-card[data-location]").forEach((card) => {
-        const text = card.textContent.trim().toLowerCase();
-        const cardLocation = (card.dataset.location || "").toLowerCase();
-        const matchesQuery = text.includes(query);
-        const matchesLocation = !location || cardLocation.includes(location);
-        const show = matchesQuery && matchesLocation;
-        card.style.display = show ? "flex" : "none";
-        if (show) {
-          visible += 1;
-        }
-      });
-
-      offerCount.textContent = `${visible} offre${visible > 1 ? "s" : ""}`;
-    };
-
     const formatSalaryRange = (minSalaryRaw, maxSalaryRaw) => {
       const minSalary = Number(minSalaryRaw || 0);
       const maxSalary = Number(maxSalaryRaw || 0);
@@ -448,8 +426,6 @@
       offerQrImage.src = "";
     };
 
-    offerSearch.addEventListener("input", filterOffers);
-    offerLocation.addEventListener("input", filterOffers);
     btnMesCandidatures.addEventListener("click", () => {
       window.location.href = btnMesCandidatures.dataset.href;
     });
@@ -457,14 +433,9 @@
     offersGrid.querySelectorAll(".btn-apply-offer").forEach((button) => {
       button.addEventListener("click", () => {
         const offerId = button.dataset.offerId || "";
-        const offerTitle = button.dataset.offerTitle || "";
         if (selectedOffer && offerId !== "") {
           selectedOffer.value = offerId;
           selectedOffer.focus();
-        }
-        if (offerTitle !== "") {
-          offerSearch.value = offerTitle;
-          filterOffers();
         }
       });
     });

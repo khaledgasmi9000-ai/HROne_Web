@@ -17,9 +17,23 @@ class CondidatRepository extends ServiceEntityRepository
         parent::__construct($registry, Condidat::class);
     }
 
-    public function fetchCandidateCandidatures(): array
+    public function fetchCandidateCandidatures(string $search = ''): array
     {
         $candidateId = $this->getActiveCandidateId();
+        $search = mb_strtolower(trim($search));
+
+        $params = ['candidateId' => $candidateId];
+        $searchCondition = '';
+        if ($search !== '') {
+            $params['search'] = '%' . $search . '%';
+            $searchCondition = ' AND (
+                LOWER(COALESCE(o.Titre, \'\')) LIKE :search
+                OR LOWER(COALESCE(o.Localisation, \'\')) LIKE :search
+                OR LOWER(COALESCE(tc.Description_Contrat, \'\')) LIKE :search
+                OR LOWER(COALESCE(tsc.Description_Status_Condidature, \'\')) LIKE :search
+            )';
+        }
+
         $rows = $this->getConnection()->fetchAllAssociative(
             'SELECT
                 c.ID_Condidature,
@@ -65,17 +79,17 @@ class CondidatRepository extends ServiceEntityRepository
                 ) latest_e ON latest_e.ID_Condidat = e1.ID_Condidat AND latest_e.Max_Num_Ordre_Entretien = e1.Num_Ordre_Entretien
              ) ie ON ie.ID_Condidat = c.ID_Condidat
              LEFT JOIN ordre io ON io.Num_Ordre = ie.Num_Ordre_Entretien
-             WHERE c.ID_Condidat = :candidateId
+             WHERE c.ID_Condidat = :candidateId' . $searchCondition . '
              ORDER BY c.ID_Condidature DESC',
-            ['candidateId' => $candidateId]
+            $params
         );
 
         return array_map(fn (array $row): array => $this->mapCandidatureRow($row), $rows);
     }
 
-    public function getCandidateDashboard(): array
+    public function getCandidateDashboard(string $search = ''): array
     {
-        $items = $this->fetchCandidateCandidatures();
+        $items = $this->fetchCandidateCandidatures($search);
         $inProgress = 0;
         foreach ($items as $item) {
             if (in_array($item['statusCode'], [1, 2], true)) {

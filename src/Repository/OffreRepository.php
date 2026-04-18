@@ -64,11 +64,34 @@ class OffreRepository extends ServiceEntityRepository
         return array_map(fn (array $row): array => $this->normalizeOfferRow($row, false), $rows);
     }
 
-    public function fetchOffersForCandidate(): array
+    public function fetchOffersForCandidate(string $search = '', string $location = ''): array
     {
+        $search = mb_strtolower(trim($search));
+        $location = mb_strtolower(trim($location));
+
         return array_values(array_filter(
             $this->fetchOffersForManagement(),
-            static fn (array $offer): bool => ($offer['statusClass'] ?? '') === 'status-live'
+            static function (array $offer) use ($search, $location): bool {
+                if (($offer['statusClass'] ?? '') !== 'status-live') {
+                    return false;
+                }
+
+                $title = mb_strtolower((string) ($offer['title'] ?? ''));
+                $description = mb_strtolower((string) ($offer['description'] ?? ''));
+                $workType = mb_strtolower((string) ($offer['workType'] ?? ''));
+                $experience = mb_strtolower((string) ($offer['experience'] ?? ''));
+                $offerLocation = mb_strtolower((string) ($offer['location'] ?? ''));
+
+                $matchesSearch = $search === ''
+                    || str_contains($title, $search)
+                    || str_contains($description, $search)
+                    || str_contains($workType, $search)
+                    || str_contains($experience, $search);
+
+                $matchesLocation = $location === '' || str_contains($offerLocation, $location);
+
+                return $matchesSearch && $matchesLocation;
+            }
         ));
     }
 
