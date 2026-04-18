@@ -28,6 +28,11 @@ class CondidatRepository extends ServiceEntityRepository
                 c.Portfolio,
                 c.Lettre_Recomendation,
                 c.Code_Type_Status,
+                c.CV_Extracted_Text,
+                c.AI_Score,
+                c.AI_Recommendation,
+                c.AI_Summary,
+                c.AI_Last_Analyzed_At,
                      cd.CV,
                      u.Nom_Utilisateur,
                      u.Email,
@@ -96,6 +101,11 @@ class CondidatRepository extends ServiceEntityRepository
                 c.Portfolio,
                 c.Lettre_Recomendation,
                 c.Code_Type_Status,
+                c.CV_Extracted_Text,
+                c.AI_Score,
+                c.AI_Recommendation,
+                c.AI_Summary,
+                c.AI_Last_Analyzed_At,
                      cd.CV,
                      u.Nom_Utilisateur,
                      u.Email,
@@ -149,6 +159,9 @@ class CondidatRepository extends ServiceEntityRepository
         $portfolioUrl = trim((string) ($payload['portfolioUrl'] ?? ''));
         $motivationLetter = trim((string) ($payload['motivationLetter'] ?? ''));
         $cvFileName = trim((string) ($payload['cvFileName'] ?? ''));
+        $cvMimeType = trim((string) ($payload['cvMimeType'] ?? ''));
+        $cvFileContentBase64 = trim((string) ($payload['cvFileContentBase64'] ?? ''));
+        $cvExtractedText = trim((string) ($payload['cvExtractedText'] ?? ''));
         $recommendationFileName = trim((string) ($payload['recommendationFileName'] ?? ''));
 
         if ($offerId === null) {
@@ -177,6 +190,9 @@ class CondidatRepository extends ServiceEntityRepository
             $errors['cvFileName'] = 'Le CV est obligatoire.';
         }
 
+        // Fields below are optional for backward compatibility with older clients.
+        // If available, they are used for AI analysis.
+
         if ($motivationLetter === '') {
             $errors['motivationLetter'] = 'La lettre de motivation est obligatoire.';
         }
@@ -194,6 +210,9 @@ class CondidatRepository extends ServiceEntityRepository
                 'portfolioUrl' => $portfolioUrl,
                 'motivationLetter' => $motivationLetter,
                 'cvFileName' => $cvFileName,
+                'cvMimeType' => $cvMimeType,
+                'cvFileContentBase64' => $cvFileContentBase64,
+                'cvExtractedText' => $cvExtractedText,
                 'recommendationFileName' => $recommendationFileName,
             ],
         ];
@@ -223,6 +242,7 @@ class CondidatRepository extends ServiceEntityRepository
                 'Lettre_Motivation' => $data['motivationLetter'],
                 'Portfolio' => $data['portfolioUrl'],
                 'Lettre_Recomendation' => $data['recommendationFileName'],
+                'CV_Extracted_Text' => $data['cvExtractedText'],
                 'Code_Type_Status' => $statusCode,
             ]);
 
@@ -264,6 +284,7 @@ class CondidatRepository extends ServiceEntityRepository
                 'Lettre_Motivation' => $data['motivationLetter'],
                 'Portfolio' => $data['portfolioUrl'],
                 'Lettre_Recomendation' => $data['recommendationFileName'],
+                'CV_Extracted_Text' => $data['cvExtractedText'],
             ], ['ID_Condidature' => $id, 'ID_Condidat' => $candidateId]);
 
             $connection->commit();
@@ -286,6 +307,21 @@ class CondidatRepository extends ServiceEntityRepository
         ]);
 
         return $deleted > 0;
+    }
+
+    public function saveAiAssessmentForCandidature(int $id, float $score, string $recommendation, string $summary): void
+    {
+        $candidateId = $this->getActiveCandidateId();
+
+        $this->getConnection()->update('condidature', [
+            'AI_Score' => round($score, 2),
+            'AI_Recommendation' => $recommendation,
+            'AI_Summary' => $summary,
+            'AI_Last_Analyzed_At' => (new \DateTimeImmutable('now'))->format('Y-m-d H:i:s'),
+        ], [
+            'ID_Condidature' => $id,
+            'ID_Condidat' => $candidateId,
+        ]);
     }
 
     private function getConnection(): Connection
@@ -391,7 +427,12 @@ class CondidatRepository extends ServiceEntityRepository
             'candidateName' => (string) ($row['Nom_Utilisateur'] ?? ''),
             'candidateEmail' => (string) ($row['Email'] ?? ''),
             'cvFileName' => (string) ($row['CV'] ?? ''),
+            'cvExtractedText' => (string) ($row['CV_Extracted_Text'] ?? ''),
             'recommendationFileName' => (string) ($row['Lettre_Recomendation'] ?? ''),
+            'aiScore' => isset($row['AI_Score']) ? (float) $row['AI_Score'] : null,
+            'aiRecommendation' => (string) ($row['AI_Recommendation'] ?? ''),
+            'aiSummary' => (string) ($row['AI_Summary'] ?? ''),
+            'aiLastAnalyzedAt' => (string) ($row['AI_Last_Analyzed_At'] ?? ''),
             'hasInterview' => $interviewComment !== '',
             'interviewDate' => $interviewComment !== '' ? $interviewDate : '',
             'interviewTime' => $interviewComment !== '' ? $interviewTime : '',

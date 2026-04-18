@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Repository\CondidatRepository;
 use App\Repository\OffreRepository;
+use App\Service\CandidateAiScoringService;
+use App\Service\CvTextExtractorService;
 use App\Service\ExternalJobBoardService;
 use App\Service\OfferQrCodeService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -154,13 +156,50 @@ class TopnavbarController extends AbstractController
         ]);
     }
 
+    #[Route('/top/candidatures/api', name: 'topnav_candidatures_api_list', methods: ['GET'])]
+    public function listCandidaturesApi(CondidatRepository $condidatRepository): JsonResponse
+    {
+        $dashboard = $condidatRepository->getCandidateDashboard();
+
+        return $this->json([
+            'candidatures' => $dashboard['items'] ?? [],
+            'total' => $dashboard['total'] ?? 0,
+            'inProgress' => $dashboard['inProgress'] ?? 0,
+        ]);
+    }
+
     #[Route('/top/candidatures/api', name: 'topnav_candidatures_api_create', methods: ['POST'])]
-    public function createCandidatureApi(Request $request, CondidatRepository $condidatRepository): JsonResponse
+    public function createCandidatureApi(
+        Request $request,
+        CondidatRepository $condidatRepository,
+        OffreRepository $offreRepository,
+        CvTextExtractorService $cvTextExtractorService,
+        CandidateAiScoringService $candidateAiScoringService
+    ): JsonResponse
     {
         try {
             $payload = json_decode($request->getContent(), true);
             if (!is_array($payload)) {
                 return $this->json(['message' => 'Payload invalide.'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $aiStatus = null;
+            $payload['cvExtractedText'] = '';
+            if (trim((string) ($payload['cvFileContentBase64'] ?? '')) !== '') {
+                try {
+                    $payload['cvExtractedText'] = $cvTextExtractorService->extractFromBase64(
+                        (string) ($payload['cvFileName'] ?? ''),
+                        (string) ($payload['cvMimeType'] ?? ''),
+                        (string) ($payload['cvFileContentBase64'] ?? '')
+                    );
+                } catch (\Throwable $cvException) {
+                    $aiStatus = [
+                        'status' => 'failed',
+                        'message' => trim($cvException->getMessage()) !== ''
+                            ? 'Extraction CV impossible: ' . $cvException->getMessage()
+                            : 'Extraction CV impossible.',
+                    ];
+                }
             }
 
             $validated = $condidatRepository->validateCandidaturePayload($payload);
@@ -172,8 +211,42 @@ class TopnavbarController extends AbstractController
             }
 
             $candidature = $condidatRepository->createCandidature($validated['data']);
+            if (!is_array($aiStatus)) {
+                $aiStatus = [
+                    'status' => 'skipped',
+                    'message' => 'Analyse IA non lancee.',
+                ];
+            }
 
-            return $this->json(['candidature' => $candidature], Response::HTTP_CREATED);
+            if ($aiStatus['status'] !== 'failed' && isset($candidature['id']) && isset($candidature['offerId'])) {
+                try {
+                    $offer = $offreRepository->fetchOfferForManagement((int) $candidature['offerId']) ?? [];
+                    $assessment = $candidateAiScoringService->scoreCandidate($candidature, $offer);
+                    $condidatRepository->saveAiAssessmentForCandidature(
+                        (int) $candidature['id'],
+                        $assessment['score'],
+                        $assessment['recommendation'],
+                        $assessment['summary']
+                    );
+                    $candidature = $condidatRepository->fetchCandidatureById((int) $candidature['id']) ?? $candidature;
+                    $aiStatus = [
+                        'status' => 'success',
+                        'message' => 'Analyse IA terminee.',
+                    ];
+                } catch (\Throwable $aiException) {
+                    $aiStatus = [
+                        'status' => 'failed',
+                        'message' => trim($aiException->getMessage()) !== ''
+                            ? $aiException->getMessage()
+                            : 'Echec analyse IA.',
+                    ];
+                }
+            }
+
+            return $this->json([
+                'candidature' => $candidature,
+                'aiStatus' => $aiStatus,
+            ], Response::HTTP_CREATED);
         } catch (\Throwable $exception) {
             $status = str_contains($exception->getMessage(), 'deja')
                 ? Response::HTTP_CONFLICT
@@ -198,7 +271,14 @@ class TopnavbarController extends AbstractController
     }
 
     #[Route('/top/candidatures/api/{id}', name: 'topnav_candidatures_api_update', methods: ['PUT'])]
-    public function updateCandidatureApi(int $id, Request $request, CondidatRepository $condidatRepository): JsonResponse
+    public function updateCandidatureApi(
+        int $id,
+        Request $request,
+        CondidatRepository $condidatRepository,
+        OffreRepository $offreRepository,
+        CvTextExtractorService $cvTextExtractorService,
+        CandidateAiScoringService $candidateAiScoringService
+    ): JsonResponse
     {
         try {
             $existing = $condidatRepository->fetchCandidatureById($id);
@@ -209,6 +289,28 @@ class TopnavbarController extends AbstractController
             $payload = json_decode($request->getContent(), true);
             if (!is_array($payload)) {
                 return $this->json(['message' => 'Payload invalide.'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $aiStatus = null;
+            $payload['cvExtractedText'] = '';
+            if (trim((string) ($payload['cvFileContentBase64'] ?? '')) !== '') {
+                try {
+                    $payload['cvExtractedText'] = $cvTextExtractorService->extractFromBase64(
+                        (string) ($payload['cvFileName'] ?? ''),
+                        (string) ($payload['cvMimeType'] ?? ''),
+                        (string) ($payload['cvFileContentBase64'] ?? '')
+                    );
+                } catch (\Throwable $cvException) {
+                    $payload['cvExtractedText'] = (string) ($existing['cvExtractedText'] ?? '');
+                    $aiStatus = [
+                        'status' => 'failed',
+                        'message' => trim($cvException->getMessage()) !== ''
+                            ? 'Extraction CV impossible: ' . $cvException->getMessage()
+                            : 'Extraction CV impossible.',
+                    ];
+                }
+            } elseif (isset($existing['cvExtractedText'])) {
+                $payload['cvExtractedText'] = (string) $existing['cvExtractedText'];
             }
 
             $validated = $condidatRepository->validateCandidaturePayload($payload);
@@ -224,7 +326,42 @@ class TopnavbarController extends AbstractController
                 return $this->json(['message' => 'Candidature introuvable.'], Response::HTTP_NOT_FOUND);
             }
 
-            return $this->json(['candidature' => $candidature]);
+            if (!is_array($aiStatus)) {
+                $aiStatus = [
+                    'status' => 'skipped',
+                    'message' => 'Analyse IA non lancee.',
+                ];
+            }
+
+            if ($aiStatus['status'] !== 'failed') {
+                try {
+                    $offer = $offreRepository->fetchOfferForManagement((int) ($candidature['offerId'] ?? 0)) ?? [];
+                    $assessment = $candidateAiScoringService->scoreCandidate($candidature, $offer);
+                    $condidatRepository->saveAiAssessmentForCandidature(
+                        (int) $candidature['id'],
+                        $assessment['score'],
+                        $assessment['recommendation'],
+                        $assessment['summary']
+                    );
+                    $candidature = $condidatRepository->fetchCandidatureById((int) $candidature['id']) ?? $candidature;
+                    $aiStatus = [
+                        'status' => 'success',
+                        'message' => 'Analyse IA terminee.',
+                    ];
+                } catch (\Throwable $aiException) {
+                    $aiStatus = [
+                        'status' => 'failed',
+                        'message' => trim($aiException->getMessage()) !== ''
+                            ? $aiException->getMessage()
+                            : 'Echec analyse IA.',
+                    ];
+                }
+            }
+
+            return $this->json([
+                'candidature' => $candidature,
+                'aiStatus' => $aiStatus,
+            ]);
         } catch (\Throwable $exception) {
             $status = str_contains($exception->getMessage(), 'deja')
                 ? Response::HTTP_CONFLICT

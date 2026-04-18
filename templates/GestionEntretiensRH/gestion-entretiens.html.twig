@@ -147,6 +147,8 @@
               <div><dt>CV</dt><dd id="detailsCv">-</dd></div>
               <div><dt>Lettre recommandation</dt><dd id="detailsRecommendation">-</dd></div>
               <div><dt>Lettre motivation</dt><dd id="detailsMotivation">-</dd></div>
+              <div><dt>Score IA</dt><dd id="detailsAiScore">-</dd></div>
+              <div><dt>Resume IA</dt><dd id="detailsAiSummary">-</dd></div>
             </dl>
           </article>
         </div>
@@ -235,6 +237,8 @@
     const detailsCv = document.getElementById("detailsCv");
     const detailsRecommendation = document.getElementById("detailsRecommendation");
     const detailsMotivation = document.getElementById("detailsMotivation");
+    const detailsAiScore = document.getElementById("detailsAiScore");
+    const detailsAiSummary = document.getElementById("detailsAiSummary");
     const finalDecisionModal = document.getElementById("finalDecisionModal");
     const closeFinalDecisionBtn = document.getElementById("closeFinalDecisionBtn");
     const cancelFinalDecisionBtn = document.getElementById("cancelFinalDecisionBtn");
@@ -319,6 +323,10 @@
       detailsCv.textContent = safeText(candidate.cvFileName);
       detailsRecommendation.textContent = safeText(candidate.recommendationFileName);
       detailsMotivation.textContent = safeText(candidate.motivationLetter);
+      detailsAiScore.textContent = candidate.aiScore !== null && candidate.aiScore !== undefined
+        ? `${Number(candidate.aiScore).toFixed(1)}% (${safeText(candidate.aiRecommendation).replace(/_/g, " ")})`
+        : "-";
+      detailsAiSummary.textContent = safeText(candidate.aiSummary);
       detailsStatus.className = `status ${statusClassMap[candidate.status] || "status-review"}`;
       detailsStatus.textContent = safeText(candidate.status);
 
@@ -540,6 +548,14 @@
           interviewMeta.className = "resource-meta";
           interviewMeta.textContent = `${candidate.interviewComment}${candidate.interviewLocation ? ` (${candidate.interviewLocation})` : ""}`;
           info.appendChild(interviewMeta);
+        }
+
+        if (candidate.aiScore !== null && candidate.aiScore !== undefined) {
+          const aiMeta = document.createElement("div");
+          aiMeta.className = "resource-meta";
+          const recommendation = (candidate.aiRecommendation || "").toString().replace(/_/g, " ");
+          aiMeta.textContent = `Match IA: ${Number(candidate.aiScore).toFixed(1)}%${recommendation ? ` - ${recommendation}` : ""}`;
+          info.appendChild(aiMeta);
         }
 
         const actions = document.createElement("div");

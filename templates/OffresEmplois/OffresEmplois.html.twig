@@ -128,7 +128,7 @@
         </div>
         <div class="field">
           <label for="cvFile">CV</label>
-          <input id="cvFile" type="file" accept=".pdf,.doc,.docx" />
+          <input id="cvFile" type="file" accept=".pdf,.docx" />
         </div>
         <div class="field">
           <label for="motivationLetter">Lettre de motivation</label>
@@ -136,7 +136,7 @@
         </div>
         <div class="field">
           <label for="recommendationLetter">Lettre de recommandation</label>
-          <input id="recommendationLetter" type="file" accept=".pdf,.doc,.docx" />
+          <input id="recommendationLetter" type="file" accept=".pdf,.docx" />
         </div>
         <small id="applyFeedback" class="muted" role="alert" aria-live="polite"></small>
         <button id="submitCandidatureBtn" class="btn btn-primary" type="button">Envoyer ma candidature</button>
@@ -313,6 +313,12 @@
       if (!payload.cvFileName) {
         errors.push("Le CV est obligatoire.");
       }
+      if (!payload.cvMimeType) {
+        errors.push("Le type du CV est obligatoire.");
+      }
+      if (!payload.cvFileContentBase64) {
+        errors.push("Le contenu du CV est obligatoire.");
+      }
       if (!payload.motivationLetter) {
         errors.push("La lettre de motivation est obligatoire.");
       }
@@ -321,6 +327,24 @@
       }
 
       return errors;
+    };
+
+    const readFileAsBase64 = (file) => {
+      return new Promise((resolve, reject) => {
+        if (!file) {
+          reject(new Error("Fichier introuvable."));
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = typeof reader.result === "string" ? reader.result : "";
+          const parts = result.split(",");
+          resolve(parts.length > 1 ? parts[1] : result);
+        };
+        reader.onerror = () => reject(new Error("Impossible de lire le fichier CV."));
+        reader.readAsDataURL(file);
+      });
     };
 
     const filterOffers = () => {
@@ -489,12 +513,26 @@
     });
 
     submitCandidatureBtn?.addEventListener("click", async () => {
+      const cvSelectedFile = cvFile?.files?.[0] || null;
+      let cvFileContentBase64 = "";
+
+      if (cvSelectedFile) {
+        try {
+          cvFileContentBase64 = await readFileAsBase64(cvSelectedFile);
+        } catch (error) {
+          showApplyFeedback([(error?.message || "Impossible de lire le CV.").toString()]);
+          return;
+        }
+      }
+
       const payload = {
         offerId: selectedOffer?.value ? Number(selectedOffer.value) : null,
         candidateName: candidateName?.value.trim() || "",
         candidateEmail: candidateEmail?.value.trim() || "",
         portfolioUrl: portfolioUrl?.value.trim() || "",
-        cvFileName: cvFile?.files?.[0]?.name || "",
+        cvFileName: cvSelectedFile?.name || "",
+        cvMimeType: cvSelectedFile?.type || "",
+        cvFileContentBase64,
         motivationLetter: motivationLetter?.value.trim() || "",
         recommendationFileName: recommendationLetter?.files?.[0]?.name || "",
       };
@@ -517,8 +555,20 @@
           body: JSON.stringify(payload),
         });
 
-        await parseApiResponse(response);
-        showApplyFeedback(["Candidature envoyee avec succes."], true);
+        const result = await parseApiResponse(response);
+        const aiStatus = result?.aiStatus || null;
+        const messages = ["Candidature envoyee avec succes."];
+        let success = true;
+
+        if (aiStatus?.status === "success") {
+          messages.push("Analyse IA terminee.");
+        } else if (aiStatus?.status === "failed") {
+          const reason = (aiStatus?.message || "Analyse IA indisponible.").toString();
+          messages.push(`Analyse IA echouee: ${reason}`);
+          success = false;
+        }
+
+        showApplyFeedback(messages, success);
       } catch (error) {
         showApplyFeedback((error?.message || "Impossible d'envoyer la candidature.").split("\n").filter(Boolean));
       } finally {

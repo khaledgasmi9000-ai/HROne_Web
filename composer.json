@@ -12,6 +12,8 @@
         "doctrine/orm": "^3.6",
         "endroid/qr-code-bundle": "^6.0",
         "nucleos/dompdf-bundle": "^4.3",
+        "phpoffice/phpword": "*",
+        "smalot/pdfparser": "*",
         "symfony/asset": "6.4.*",
         "symfony/console": "6.4.*",
         "symfony/dotenv": "6.4.*",

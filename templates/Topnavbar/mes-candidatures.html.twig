@@ -112,12 +112,12 @@
             </div>
             <div class="field">
               <label for="editCvFile">CV</label>
-              <input id="editCvFile" type="file" accept=".pdf,.doc,.docx" />
+              <input id="editCvFile" type="file" accept=".pdf,.docx" />
               <small id="currentCvFile" class="file-hint muted"></small>
             </div>
             <div class="field">
               <label for="editRecommendationLetter">Lettre de recommandation</label>
-              <input id="editRecommendationLetter" type="file" accept=".pdf,.doc,.docx" />
+              <input id="editRecommendationLetter" type="file" accept=".pdf,.docx" />
               <small id="currentRecommendationFile" class="file-hint muted"></small>
             </div>
             <div class="field field--full">
@@ -283,6 +283,24 @@
         return errors;
       };
 
+      const readFileAsBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+          if (!file) {
+            reject(new Error("Fichier introuvable."));
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = typeof reader.result === "string" ? reader.result : "";
+            const parts = result.split(",");
+            resolve(parts.length > 1 ? parts[1] : result);
+          };
+          reader.onerror = () => reject(new Error("Impossible de lire le fichier CV."));
+          reader.readAsDataURL(file);
+        });
+      };
+
       const openDeleteCandidatureModal = (card) => {
         if (!card || !deleteCandidatureModal) {
           return;
@@ -395,12 +413,25 @@
           return;
         }
 
+        const cvSelectedFile = editCvFile.files?.[0] || null;
+        let cvFileContentBase64 = "";
+        if (cvSelectedFile) {
+          try {
+            cvFileContentBase64 = await readFileAsBase64(cvSelectedFile);
+          } catch (error) {
+            showEditFeedback([(error?.message || "Impossible de lire le CV.").toString()]);
+            return;
+          }
+        }
+
         const payload = {
           offerId: editOfferId.value ? Number(editOfferId.value) : null,
           candidateName: editCandidateName.value.trim(),
           candidateEmail: editCandidateEmail.value.trim(),
           portfolioUrl: editPortfolioUrl.value.trim(),
-          cvFileName: editCvFile.files?.[0]?.name || editForm.dataset.currentCv || "",
+          cvFileName: cvSelectedFile?.name || editForm.dataset.currentCv || "",
+          cvMimeType: cvSelectedFile?.type || "",
+          cvFileContentBase64,
           motivationLetter: editMotivationLetter.value.trim(),
           recommendationFileName:
             editRecommendationLetter.files?.[0]?.name || editForm.dataset.currentRecommendation || "",
@@ -422,8 +453,20 @@
             body: JSON.stringify(payload),
           });
 
-          await parseApiResponse(response);
-          showEditFeedback(["Candidature mise a jour avec succes."], true);
+          const result = await parseApiResponse(response);
+          const aiStatus = result?.aiStatus || null;
+          const messages = ["Candidature mise a jour avec succes."];
+          let success = true;
+
+          if (aiStatus?.status === "success") {
+            messages.push("Analyse IA terminee.");
+          } else if (aiStatus?.status === "failed") {
+            const reason = (aiStatus?.message || "Analyse IA indisponible.").toString();
+            messages.push(`Analyse IA echouee: ${reason}`);
+            success = false;
+          }
+
+          showEditFeedback(messages, success);
           setTimeout(() => window.location.reload(), 600);
         } catch (error) {
           showEditFeedback((error?.message || "Modification impossible.").split("\n").filter(Boolean));
