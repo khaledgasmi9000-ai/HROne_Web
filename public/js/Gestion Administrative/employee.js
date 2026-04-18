@@ -43,6 +43,9 @@ window.rowActionsHandlers.employee = {
 
     view: function(id) {
         console.log("Voir détails employee:", id);
+        const url = window.employeeFicheUrlTemplate.replace('EMP_ID', id);
+        console.log("Redirecting to:", url);
+        window.location.href = url; 
     },
 
     tools: function(id) {

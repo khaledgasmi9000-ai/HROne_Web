@@ -16,6 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpClient\HttpClient;
 
 use Knp\Snappy\Pdf;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -552,11 +553,19 @@ class EmployeeController extends AbstractController{
     #[Route('/Gestion_Administrative/employee/fiche/{id}', name: 'employee_fiche')]
     public function ficheEmployee(int $id, EmployeeRepository $repo): Response
     {
+        // =========================
+        // DEBUG 0 — Route hit check
+        // =========================
+            //dump("ROUTE HIT", $id);
+
         $employee = $repo->findEmployeeById($id);
 
         if (!$employee) {
+            //dump("Employee NOT found");
             throw $this->createNotFoundException('Employé non trouvé');
         }
+
+        //dump("Employee FOUND", $employee->getIDEmploye());
 
         // =========================
         // 1. Managed tools map
@@ -568,11 +577,12 @@ class EmployeeController extends AbstractController{
             $managedToolsMap[$key] = $outil->getNomOutil() ?? $key;
         }
 
+        //dump("Managed tools", $managedToolsMap);
+
         // =========================
         // 2. Init variables
         // =========================
         $tools = [];
-
         $productifTime = 0;
         $nonProductifTime = 0;
         $idleTime = 0;
@@ -582,7 +592,6 @@ class EmployeeController extends AbstractController{
         // =========================
         foreach ($employee->getWorkSessions() as $session) {
 
-            // Idle time
             $idleTime += $session->getAfkTime() ?? 0;
 
             foreach ($session->getDetails() as $detail) {
@@ -592,22 +601,18 @@ class EmployeeController extends AbstractController{
 
                 if (!$appRaw) continue;
 
-                // Normalize name (managed tools get clean names)
                 $isManaged = isset($managedToolsMap[$appRaw]);
-                if ($isManaged) {
-                    $app = $managedToolsMap[$appRaw];
-                } else {
-                    $app = preg_replace('/\.exe$/i', '', $appRaw);
-                }
 
-                // Aggregate tool time
+                $app = $isManaged
+                    ? $managedToolsMap[$appRaw]
+                    : preg_replace('/\.exe$/i', '', $appRaw);
+
                 if (!isset($tools[$app])) {
                     $tools[$app] = 0;
                 }
 
                 $tools[$app] += $duration;
 
-                // Classification
                 if ($isManaged) {
                     $productifTime += $duration;
                 } else {
@@ -616,11 +621,15 @@ class EmployeeController extends AbstractController{
             }
         }
 
+        //dump("Tools aggregated", $tools);
+
         // =========================
         // 4. Global time
         // =========================
         $totalTimeSeconds = array_sum($tools);
         $totalTime = round($totalTimeSeconds / 60, 2);
+
+        //dump("Total time (h)", $totalTime);
 
         // =========================
         // 5. Build toolsData
@@ -650,9 +659,13 @@ class EmployeeController extends AbstractController{
             ];
         }
 
-        // Sort
         usort($toolsData, fn($a, $b) => $b['temps'] <=> $a['temps']);
 
+        //dump("Tools data sorted", $toolsData);
+
+        // =========================
+        // 6. Split tools
+        // =========================
         $managedTopTools = [];
         $unmanagedTopTools = [];
 
@@ -668,10 +681,11 @@ class EmployeeController extends AbstractController{
         }
 
         $managedTopTools = array_slice($managedTopTools, 0, 3);
-        $unmanagedTopTools = array_slice($unmanagedTopTools, 0, 3);
+
+        //dump("Managed top tools", $managedTopTools);
 
         // =========================
-        // 6. Stats
+        // 7. Stats
         // =========================
         $toolsCount = count($toolsData);
 
@@ -679,17 +693,106 @@ class EmployeeController extends AbstractController{
             ? round(($totalTime / $monthlyHours) * $salary, 2)
             : 0;
 
-        $topTools = array_slice($toolsData, 0, 3);
-
-        // =========================
-        // 7. Breakdown
-        // =========================
         $breakdown = [
             'productif' => round($productifTime / 60, 2),
             'nonProductif' => round($nonProductifTime / 60, 2),
             'idle' => round($idleTime / 60, 2)
         ];
 
+        //dump("Breakdown", $breakdown);
+
+        // =========================
+        // 8. Format tools for AI
+        // =========================
+        $topToolsFormatted = array_map(
+            fn($t) => "{$t['name']} ({$t['temps']}h)",
+            $managedTopTools
+        );
+
+        $topToolsStr = implode(', ', $topToolsFormatted);
+
+        //dump("Top tools string", $topToolsStr);
+
+        // =========================
+        // 9. Build prompt
+        // =========================
+        $prompt = trim(sprintf(
+        "Tu rédiges un court résumé pour une fiche employé affichée dans une application de gestion.
+
+        Contraintes STRICTES :
+        - 2 à 3 phrases maximum
+        - Ton neutre et professionnel
+        - AUCUNE première personne (interdit : je, nous)
+        - AUCUNE mise en contexte (interdit : \"en tant que\", \"je suis\", etc.)
+        - Pas d’introduction, aller directement à l’analyse
+        - Style direct, factuel
+        - Phrase 1: niveau de productivité  
+        - Phrase 2: observation principale  
+        - Phrase 3: recommandation
+
+        Données :
+        - Temps total : %s h
+        - Nombre d’outils : %d
+        - Coût total : %s TND
+        - Temps productif : %s h
+        - Temps non productif : %s h
+        - Temps idle : %s h
+        - Outils principaux : %s
+
+        Objectif :
+        - Évaluer le niveau de productivité
+        - Mentionner un point d’amélioration si pertinent",
+            $totalTime,
+            $toolsCount,
+            $totalCost,
+            $breakdown['productif'],
+            $breakdown['nonProductif'],
+            $breakdown['idle'],
+            $topToolsStr ?: 'Aucun'
+        ));
+
+        //dump("Prompt", $prompt);
+
+        // =========================
+        // 10. Call Groq
+        // =========================
+        try {
+            $client = HttpClient::create();
+
+            $response = $client->request('POST', 'https://api.groq.com/openai/v1/chat/completions', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $_ENV['GROQ_API_KEY'],
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => [
+                    'model' => 'llama-3.3-70b-versatile',
+                    'messages' => [
+                        [
+                            'role' => 'user',
+                            'content' => $prompt
+                        ]
+                    ],
+                    'max_tokens' => 100
+                ],
+            ]);
+
+            $raw = $response->getContent(false);
+            //dump("Raw API response", $raw);
+
+            $data = json_decode($raw, true);
+
+            $summary = $data['choices'][0]['message']['content'] ?? 'Résumé indisponible';
+
+        } catch (\Exception $e) {
+            dump("API ERROR", $e->getMessage());
+            $summary = 'Erreur génération résumé';
+        }
+
+        //dump("Final summary", $summary);
+
+        // =========================
+        // 11. Render
+        // =========================
         return $this->render('Gestion Administrative/fiche_employee.html.twig', [
             'employee' => $employee,
             'stats' => [
@@ -700,7 +803,8 @@ class EmployeeController extends AbstractController{
             'tools' => $toolsData,
             'managedTopTools' => $managedTopTools,
             'unmanagedTopTools' => $unmanagedTopTools,
-            'breakdown' => $breakdown
+            'breakdown' => $breakdown,
+            'summary' => $summary
         ]);
     }
 
