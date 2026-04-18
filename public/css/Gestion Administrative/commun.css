@@ -22,16 +22,16 @@
 }
 
 
-/* KPI */
+/* KPI
 .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* was 4 */
+    grid-template-columns: repeat(3, 1fr); 
     gap: 15px;
     margin-bottom: 25px;
 }
 
 .kpi-grid.compact {
-    grid-template-columns: repeat(3, 1fr); /* was 4 */
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
 }
 
@@ -70,7 +70,7 @@
 
 .kpi-change.negative {
     color: var(--danger);
-}
+} */
 
 /* Table Section */
 .table-section {

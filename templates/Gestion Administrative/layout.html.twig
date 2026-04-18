@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="{{ asset('css/Gestion Administrative/commun.css') }}">
 <link rel="stylesheet" href="{{ asset('css/Gestion Administrative/outils.css') }}">
 <link rel="stylesheet" href="{{ asset('css/Gestion Administrative/conges.css') }}">
+<link rel="stylesheet" href="{{ asset('css/Gestion Administrative/statistique_overview.css') }}">
 <link rel="stylesheet" href="{{ asset('css/Gestion Administrative/components/pagination.css') }}">
 <link rel="stylesheet" href="{{ asset('css/Gestion Administrative/components/row_actions.css') }}">
 <link rel="stylesheet" href="{{ asset('css/Gestion Administrative/components/modal.css') }}">
@@ -31,6 +32,11 @@
         href="{{ path('employee_conges') }}">
             Gestion des congés
         </a>
+
+        <a class="tab {{ activeTab == 'stats' ? 'active' : '' }}"
+        href="{{ path('stats_overview') }}">
+            Statistiques avancées
+        </a>
     </div>
 
     <!-- Page content injected here -->
@@ -51,5 +57,6 @@
     <script src="{{ asset('js/Gestion Administrative/employee.js') }}"></script>
     <script src="{{ asset('js/Gestion Administrative/outils.js') }}"></script>
     <script src="{{ asset('js/Gestion Administrative/conges.js') }}"></script>
+    
 {% block page_scripts %}{% endblock %}
 {% endblock %}

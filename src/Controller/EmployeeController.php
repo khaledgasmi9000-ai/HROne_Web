@@ -229,6 +229,12 @@ class EmployeeController extends AbstractController{
     
     // Routes
     #[Route('/Gestion_Administrative', name: 'gestion_administrative')]
+    public function indexGestionAdministrative(): Response
+    {
+        return $this->redirectToRoute('employee_overview');
+    }
+
+    #[Route('/', name: 'index')]
     public function index(): Response
     {
         return $this->redirectToRoute('employee_overview');
@@ -290,58 +296,6 @@ class EmployeeController extends AbstractController{
         $offset = ($currentPage - 1) * $rowsPerPage;
         $employees = array_slice($filtered, $offset, $rowsPerPage);
         
-        // ===== KPI CALCULATIONS =====
-
-        $totalEmployeesRaw = count($allEmployees);
-
-        $avgSalary = 0;
-        $avgHours  = 0;
-        $avgCongeTaken = 0;
-
-        if ($totalEmployeesRaw > 0) {
-
-            $totalSalary = array_sum(array_column($allEmployees, 'salaire'));
-            $totalHours  = array_sum(array_column($allEmployees, 'heures'));
-
-            $avgSalary = round($totalSalary / $totalEmployeesRaw, 2);
-            $avgHours  = round($totalHours / $totalEmployeesRaw, 2);
-
-            // ===== CONGE USAGE RATE =====
-            $totalUsageRate = 0;
-            $validEmployees = 0;
-
-            foreach ($allEmployees as $emp) {
-
-                $available = (int)$emp['soldeConge'];
-                $restant   = (int)$emp['soldeRestant'];
-
-                // Avoid division by zero
-                if ($available <= 0) {
-                    continue;
-                }
-
-                $used = $available - $restant;
-
-                // Clamp safety (optional but smart)
-                if ($used < 0) $used = 0;
-                if ($used > $available) $used = $available;
-
-                $usageRate = $used / $available;
-
-                $totalUsageRate += $usageRate;
-                $validEmployees++;
-            }
-
-            if ($validEmployees > 0) {
-                $avgCongeTaken = round(($totalUsageRate / $validEmployees) * 100, 2); // %
-            }
-        }
-
-        $kpi = [
-            'avgSalary' => $avgSalary,
-            'avgHours' => $avgHours,
-            'avgCongeTaken' => $avgCongeTaken
-        ];
         $departements = $depRepo->findAllDepartements();
         return $this->render('Gestion Administrative/overview.html.twig', [
             'employees' => $employees,
@@ -349,7 +303,6 @@ class EmployeeController extends AbstractController{
             'totalPages' => $totalPages,
             'totalEmployees' => $totalEmployees,
             'rowsPerPage' => $rowsPerPage,
-            'kpi' => $kpi,
             'departements' => $departements
         ]);
     }

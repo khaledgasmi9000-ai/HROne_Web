@@ -6,32 +6,6 @@
 
 {% block employee_content %}
 
-<!-- KPI -->
-<div class="kpi-grid compact">
-
-    <div class="kpi-card">
-        <span class="kpi-title">Salaire moyen</span>
-        <div class="kpi-row">
-            <h3 class="kpi-value">{{ kpi.avgSalary|number_format(2, '.', ' ') }}</h3>
-        </div>
-    </div>
-
-    <div class="kpi-card">
-        <span class="kpi-title">Heures moyennes / mois</span>
-        <div class="kpi-row">
-            <h3 class="kpi-value">{{ kpi.avgHours|number_format(2, '.', ' ') }}</h3>
-        </div>
-    </div>
-
-    <div class="kpi-card">
-        <span class="kpi-title">Congé moyen pris</span>
-        <div class="kpi-row">
-            <h3 class="kpi-value">{{ kpi.avgCongeTaken|default('0') }}</h3>
-        </div>
-    </div>
-
-</div>
-
 <!-- Table Section -->
 <div class="table-section">
 
