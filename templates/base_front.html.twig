@@ -58,18 +58,30 @@
             flex-shrink: 0;
         }
 
-        .logo-brand-circle {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            border-radius: 50%;
+        .logo-svg {
+            width: 40px;
+            height: 40px;
+            filter: drop-shadow(0 4px 12px rgba(37, 99, 235, 0.2));
+        }
+
+        .logo-text-group {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 12px;
-            font-weight: 800;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            flex-direction: column;
+            gap: 0px;
+        }
+
+        .logo-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #2563eb;
+            line-height: 1;
+        }
+
+        .logo-subtitle {
+            font-size: 0.65rem;
+            color: #64748b;
+            font-weight: 500;
+            line-height: 1;
         }
 
         .nav-link {
@@ -137,23 +149,24 @@
             margin-bottom: 12px;
         }
 
-        .footer-logo-circle {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 14px;
-            font-weight: 800;
+        .footer-logo-svg {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
         }
 
-        .footer-logo-text {
+        .footer-logo-title {
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: #2563eb;
+            line-height: 1;
+        }
+
+        .footer-logo-subtitle {
+            font-size: 0.7rem;
+            color: #64748b;
+            font-weight: 500;
+            line-height: 1;
         }
 
         .footer-description {
@@ -255,8 +268,18 @@
     <header class="top-navbar">
         <nav class="top-nav">
             <a href="{{ path('community_index') }}" class="logo-brand">
-                <div class="logo-brand-circle">RH</div>
-                HR One
+                <svg class="logo-svg" width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="4" width="32" height="32" rx="6" fill="white" stroke="#2563eb" stroke-width="2"/>
+                    <rect x="10" y="10" width="6" height="6" fill="#2563eb" rx="1"/>
+                    <rect x="24" y="10" width="6" height="6" fill="#2563eb" rx="1"/>
+                    <line x1="10" y1="20" x2="30" y2="20" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
+                    <rect x="10" y="26" width="6" height="6" fill="#2563eb" rx="1"/>
+                    <rect x="24" y="26" width="6" height="6" fill="#2563eb" rx="1"/>
+                </svg>
+                <div class="logo-text-group">
+                    <div class="logo-title">HR One</div>
+                    <div class="logo-subtitle">Espace RH</div>
+                </div>
             </a>
 
             {% if app.user and is_granted('ROLE_CANDIDAT') and not is_granted('ROLE_EMPLOYEE') and not is_granted('ROLE_RH') %}
@@ -294,8 +317,18 @@
         <div class="footer-content">
             <div class="footer-section">
                 <div class="footer-logo">
-                    <div class="footer-logo-circle">RH</div>
-                    <span class="footer-logo-text">HR One</span>
+                    <svg class="footer-logo-svg" width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="4" y="4" width="32" height="32" rx="6" fill="white" stroke="#2563eb" stroke-width="2"/>
+                        <rect x="10" y="10" width="6" height="6" fill="#2563eb" rx="1"/>
+                        <rect x="24" y="10" width="6" height="6" fill="#2563eb" rx="1"/>
+                        <line x1="10" y1="20" x2="30" y2="20" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
+                        <rect x="10" y="26" width="6" height="6" fill="#2563eb" rx="1"/>
+                        <rect x="24" y="26" width="6" height="6" fill="#2563eb" rx="1"/>
+                    </svg>
+                    <div>
+                        <div class="footer-logo-title">HR One</div>
+                        <div class="footer-logo-subtitle">Espace RH</div>
+                    </div>
                 </div>
                 <p class="footer-description">Plateforme RH complète pour gérer formations, communauté et flux RH en une interface unique.</p>
             </div>
