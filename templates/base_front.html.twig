@@ -6,6 +6,247 @@
     <title>{% block title %}HR One - Formations{% endblock %}</title>
     <link rel="icon" type="image/png" href="/images/logo-rh.png">
     <link rel="stylesheet" href="/styles/front-shared.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .app-shell {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        /* Header avec Logo */
+        .top-navbar {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .top-nav {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            height: 70px;
+        }
+
+        .logo-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: #2563eb;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .logo-brand-circle {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 800;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .nav-link {
+            color: #475569;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            white-space: nowrap;
+            font-size: 0.95rem;
+        }
+
+        .nav-link:hover {
+            color: #2563eb;
+            background: #f0f4ff;
+        }
+
+        .nav-link.active {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .nav-spacer {
+            margin-left: auto;
+        }
+
+        .page-content {
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 40px 20px;
+        }
+
+        /* Footer */
+        .footer {
+            background: #f9fafb;
+            border-top: 1px solid #e2e8f0;
+            margin-top: 60px;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .footer-section h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .footer-logo-circle {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .footer-logo-text {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #2563eb;
+        }
+
+        .footer-description {
+            color: #64748b;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .footer-links a {
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #2563eb;
+            padding-left: 4px;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #e2e8f0;
+            margin-top: 30px;
+            padding-top: 20px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .top-nav {
+                gap: 16px;
+                padding: 0 12px;
+                height: 65px;
+            }
+
+            .logo-brand {
+                font-size: 1rem;
+                margin-right: 12px;
+            }
+
+            .logo-brand-circle {
+                width: 28px;
+                height: 28px;
+                font-size: 11px;
+            }
+
+            .page-content {
+                padding: 24px 16px;
+            }
+
+            .footer-content {
+                padding: 30px 16px;
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .nav-link {
+                padding: 6px 10px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .top-nav {
+                gap: 8px;
+                padding: 0 8px;
+                height: 60px;
+            }
+
+            .page-content {
+                padding: 16px 12px;
+            }
+
+            .footer-content {
+                padding: 24px 12px;
+                gap: 20px;
+            }
+
+            .nav-link {
+                padding: 6px 8px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
     {% block stylesheets %}{% endblock %}
 </head>
 <body class="{% block body_class %}page-formations{% endblock %}">
@@ -13,12 +254,17 @@
 <div class="app-shell">
     <header class="top-navbar">
         <nav class="top-nav">
+            <a href="{{ path('community_index') }}" class="logo-brand">
+                <div class="logo-brand-circle">RH</div>
+                HR One
+            </a>
+
             {% if app.user and is_granted('ROLE_CANDIDAT') and not is_granted('ROLE_EMPLOYEE') and not is_granted('ROLE_RH') %}
                 <a class="nav-link {% if current_route == 'app_offres_index' %}active{% endif %}" href="{{ path('app_offres_index') }}">Offres d'emploi</a>
             {% endif %}
 
             {% if app.user and is_granted('ROLE_EMPLOYEE') and not is_granted('ROLE_RH') %}
-                <a class="nav-link {% if current_route starts with 'community_' %}active{% endif %}" href="{{ path('community_index') }}">Communaute</a>
+                <a class="nav-link {% if current_route starts with 'community_' %}active{% endif %}" href="{{ path('community_index') }}">Communauté</a>
                 <a class="nav-link {% if current_route == 'app_offres_index' %}active{% endif %}" href="{{ path('app_offres_index') }}">Offres d'emploi</a>
                 <a class="nav-link {% if current_route starts with 'app_formation_' and current_route != 'app_my_participations' %}active{% endif %}" href="{{ path('app_formation_index') }}">Formations</a>
                 <a class="nav-link {% if current_route == 'app_my_participations' %}active{% endif %}" href="{{ path('app_my_participations') }}">Mes participations</a>
@@ -34,7 +280,8 @@
             {% endif %}
 
             {% if app.user %}
-                <a class="nav-link" href="{{ path('app_logout') }}">Deconnexion</a>
+                <div class="nav-spacer"></div>
+                <a class="nav-link" href="{{ path('app_logout') }}">Déconnexion</a>
             {% endif %}
         </nav>
     </header>
@@ -42,6 +289,51 @@
     <main class="page-content">
         {% block body %}{% endblock %}
     </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <div class="footer-logo-circle">RH</div>
+                    <span class="footer-logo-text">HR One</span>
+                </div>
+                <p class="footer-description">Plateforme RH complète pour gérer formations, communauté et flux RH en une interface unique.</p>
+            </div>
+
+            <div class="footer-section">
+                <h3>Navigation</h3>
+                <ul class="footer-links">
+                    {% if app.user and is_granted('ROLE_EMPLOYEE') %}
+                        <li><a href="{{ path('community_index') }}">Communauté</a></li>
+                        <li><a href="{{ path('app_formation_index') }}">Formations</a></li>
+                        <li><a href="{{ path('app_offres_index') }}">Offres d'emploi</a></li>
+                    {% endif %}
+                    {% if app.user and is_granted('ROLE_RH') %}
+                        <li><a href="{{ path('community_admin_dashboard') }}">Dashboard</a></li>
+                        <li><a href="{{ path('app_user_module') }}">Utilisateurs</a></li>
+                    {% endif %}
+                    {% if not app.user %}
+                        <li><a href="{{ path('app_login') }}">Connexion</a></li>
+                        <li><a href="{{ path('app_register') }}">Inscription</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h3>Ressources</h3>
+                <ul class="footer-links">
+                    <li><a href="#help">Centre d'aide</a></li>
+                    <li><a href="#contact">Nous contacter</a></li>
+                    <li><a href="#privacy">Politique de confidentialité</a></li>
+                    <li><a href="#terms">Conditions d'utilisation</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2024-2026 HR One. Tous droits réservés. | Plateforme RH Intégrée</p>
+        </div>
+    </footer>
 </div>
 </body>
 </html>

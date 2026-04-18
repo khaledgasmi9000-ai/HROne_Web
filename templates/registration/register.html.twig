@@ -5,93 +5,94 @@
 {% block body_class %}page-auth{% endblock %}
 
 {% block stylesheets %}
-    <link rel="stylesheet" href="/styles/auth-pro.css?v=2">
+    <link rel="stylesheet" href="/styles/auth-pro.css?v=3">
 {% endblock %}
 
 {% block body %}
     <section class="auth-page">
         <div class="auth-container auth-login-layout">
             <aside class="auth-panel auth-brand">
-                <p class="auth-brand-tag">Module Utilisateur</p>
-                <h1>{% block auth_hero_title %}Inscription Candidat{% endblock %}</h1>
-                <p class="auth-brand-copy">{% block auth_hero_copy %}Creez votre compte candidat pour acceder aux offres d emploi, a la formation et a la communaute selon vos droits.{% endblock %}</p>
+                <div class="logo-section">
+                    <div class="logo-circle">
+                        <span class="logo-text">👤</span>
+                    </div>
+                    <h1>Candidat</h1>
+                </div>
+                <p class="auth-brand-copy">Créez votre compte pour accéder aux offres d'emploi, formations et communauté.</p>
                 <ul class="auth-feature-list">
-                    {% block auth_hero_features %}
-                        <li>Profil cible: candidat (ID_Profil = 4)</li>
-                        <li>Connexion possible par email ou nom utilisateur</li>
-                        <li>Interface synchronisee avec les autres modules RH One</li>
-                    {% endblock %}
+                    <li>Profil candidat personnalisé</li>
+                    <li>Accès aux offres d'emploi</li>
+                    <li>Participation aux formations</li>
+                    <li>Communauté et discussions</li>
                 </ul>
                 <div class="auth-brand-links">
-                    <a href="{{ path('app_login') }}">Connexion</a>
-                    <a href="{{ path('app_register_employee') }}">Inscription employe</a>
-                    <a href="{{ path('app_register_rh') }}">Inscription RH</a>
+                    <a href="{{ path('app_login') }}" class="brand-link">Se connecter</a>
+                    <a href="{{ path('app_register_employee') }}" class="brand-link">Compte Employé</a>
+                    <a href="{{ path('app_register_rh') }}" class="brand-link">Compte RH</a>
                 </div>
             </aside>
 
             <article class="auth-panel">
                 <header class="auth-panel-header">
-                    <p class="auth-eyebrow">{% block auth_role_label %}Compte candidat{% endblock %}</p>
-                    <h2>{% block auth_form_title %}Creation du compte{% endblock %}</h2>
-                    <p class="auth-subtitle">{% block auth_form_copy %}Renseignez vos informations pour ouvrir une session sur HR One.{% endblock %}</p>
-                    <div class="auth-chip-row">
-                        {% block auth_chips %}
-                            <span class="auth-chip">Role candidat</span>
-                            <span class="auth-chip">Acces controle</span>
-                        {% endblock %}
-                    </div>
+                    <p class="auth-eyebrow">👥 Module Candidat</p>
+                    <h2>Créer votre compte</h2>
+                    <p class="auth-subtitle">Renseignez vos informations pour rejoindre HR One.</p>
                 </header>
 
                 <div class="auth-flash-list">
                     {% for message in app.flashes('success') %}
-                        <div class="auth-flash success">{{ message }}</div>
+                        <div class="auth-flash success">
+                            <strong>✓ Succès:</strong> {{ message }}
+                        </div>
                     {% endfor %}
                     {% for message in app.flashes('error') %}
-                        <div class="auth-flash error">{{ message }}</div>
+                        <div class="auth-flash error">
+                            <strong>✕ Erreur:</strong> {{ message }}
+                        </div>
                     {% endfor %}
                 </div>
 
-                {{ form_start(registrationForm, {'attr': {'class': 'auth-form'}}) }}
+                {{ form_start(registrationForm, {'attr': {'class': 'auth-form', 'novalidate': true}}) }}
                     <div class="auth-errors">{{ form_errors(registrationForm) }}</div>
 
                     <div class="auth-grid">
                         <div class="auth-field">
-                            <label for="{{ registrationForm.nomUtilisateur.vars.id }}">Nom_Utilisateur</label>
-                            {{ form_widget(registrationForm.nomUtilisateur, {'attr': {'placeholder': 'nom utilisateur'}}) }}
+                            <label for="{{ registrationForm.nomUtilisateur.vars.id }}">👤 Nom d'utilisateur</label>
+                            {{ form_widget(registrationForm.nomUtilisateur, {'attr': {'placeholder': 'votre_username', 'required': true}}) }}
                             <div class="auth-errors">{{ form_errors(registrationForm.nomUtilisateur) }}</div>
                         </div>
                         <div class="auth-field">
-                            <label for="{{ registrationForm.email.vars.id }}">Email</label>
-                            {{ form_widget(registrationForm.email, {'attr': {'placeholder': 'email@exemple.com'}}) }}
+                            <label for="{{ registrationForm.email.vars.id }}">📧 Email</label>
+                            {{ form_widget(registrationForm.email, {'attr': {'placeholder': 'email@exemple.com', 'required': true}}) }}
                             <div class="auth-errors">{{ form_errors(registrationForm.email) }}</div>
                         </div>
                         <div class="auth-field">
-                            <label for="{{ registrationForm.plainPassword.vars.id }}">Mot_Passe</label>
-                            {{ form_widget(registrationForm.plainPassword, {'attr': {'placeholder': 'minimum 6 caracteres'}}) }}
+                            <label for="{{ registrationForm.plainPassword.vars.id }}">🔑 Mot de passe</label>
+                            {{ form_widget(registrationForm.plainPassword, {'attr': {'placeholder': 'minimum 6 caractères', 'required': true}}) }}
                             <div class="auth-errors">{{ form_errors(registrationForm.plainPassword) }}</div>
                         </div>
                         <div class="auth-field">
-                            <label for="{{ registrationForm.gender.vars.id }}">Gender</label>
+                            <label for="{{ registrationForm.gender.vars.id }}">👨 Genre</label>
                             {{ form_widget(registrationForm.gender) }}
                             <div class="auth-errors">{{ form_errors(registrationForm.gender) }}</div>
                         </div>
                         <div class="auth-field auth-col-span-two">
-                            <label for="{{ registrationForm.adresse.vars.id }}">Adresse</label>
-                            {{ form_widget(registrationForm.adresse, {'attr': {'placeholder': 'adresse'}}) }}
+                            <label for="{{ registrationForm.adresse.vars.id }}">📍 Adresse</label>
+                            {{ form_widget(registrationForm.adresse, {'attr': {'placeholder': 'Votre adresse complète'}}) }}
                             <div class="auth-errors">{{ form_errors(registrationForm.adresse) }}</div>
                         </div>
                         <div class="auth-field">
-                            <label for="{{ registrationForm.numTel.vars.id }}">Num_Tel</label>
-                            {{ form_widget(registrationForm.numTel, {'attr': {'placeholder': '00000000'}}) }}
+                            <label for="{{ registrationForm.numTel.vars.id }}">📱 Téléphone</label>
+                            {{ form_widget(registrationForm.numTel, {'attr': {'placeholder': '+216 12345678'}}) }}
                             <div class="auth-errors">{{ form_errors(registrationForm.numTel) }}</div>
                         </div>
                         <div class="auth-field">
-                            <label for="{{ registrationForm.CIN.vars.id }}">CIN</label>
-                            {{ form_widget(registrationForm.CIN, {'attr': {'placeholder': 'CIN'}}) }}
+                            <label for="{{ registrationForm.CIN.vars.id }}">🆔 CIN</label>
+                            {{ form_widget(registrationForm.CIN, {'attr': {'placeholder': 'Carte d\'identité'}}) }}
                             <div class="auth-errors">{{ form_errors(registrationForm.CIN) }}</div>
                         </div>
                         <div class="auth-field">
-                            <label for="{{ registrationForm.dateNaissance.vars.id }}">Date_Naissance</label>
+                            <label for="{{ registrationForm.dateNaissance.vars.id }}">🎂 Date de naissance</label>
                             {{ form_widget(registrationForm.dateNaissance) }}
                             <div class="auth-errors">{{ form_errors(registrationForm.dateNaissance) }}</div>
                         </div>

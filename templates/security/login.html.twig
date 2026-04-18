@@ -5,80 +5,258 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HR One - Connexion</title>
     <link rel="icon" type="image/png" href="/images/logo-rh.png">
-    <link rel="stylesheet" href="/styles/auth-pro.css?v=2">
+    <link rel="stylesheet" href="/styles/auth-pro.css?v=3">
+    <style>
+        .logo-section {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .logo-circle {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
+        }
+        .logo-text {
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+        }
+        .dashboard-link {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .dashboard-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Footer */
+        .footer {
+            background: #f9fafb;
+            border-top: 1px solid #e2e8f0;
+            padding: 30px 20px;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            max-width: 1120px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: #2563eb;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .footer-logo-circle {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .footer-copyright {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 20px;
+            list-style: none;
+            margin: 0;
+        }
+
+        .footer-links a {
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #2563eb;
+        }
+
+        body.auth-standalone {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .auth-page {
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+
+            .footer-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body class="auth-standalone">
 <main class="auth-page">
     <section class="auth-container auth-login-layout">
         <aside class="auth-panel auth-brand">
-            <p class="auth-brand-tag">Plateforme RH</p>
-            <h1>HR One</h1>
+            <div class="logo-section">
+                <div class="logo-circle">
+                    <span class="logo-text">RH</span>
+                </div>
+                <h1>HR One</h1>
+            </div>
             <p class="auth-brand-copy">
-                Connectez-vous a votre espace pour gerer les formations, la communaute et les flux RH dans une interface unique.
+                Connectez-vous à votre espace pour gérer les formations, la communauté et les flux RH dans une interface unique.
             </p>
             <ul class="auth-feature-list">
-                <li>RH: ouverture directe sur la gestion des utilisateurs</li>
-                <li>Candidat: acces cible aux offres d emploi</li>
-                <li>Employe: acces aux modules front et activites</li>
+                <li><strong>RH:</strong> Ouverture directe sur la gestion des utilisateurs et du tableau de bord</li>
+                <li><strong>Candidat:</strong> Accès ciblé aux offres d'emploi</li>
+                <li><strong>Employé:</strong> Accès aux modules front et activités</li>
             </ul>
             <div class="auth-brand-links">
-                <a href="{{ path('app_register_rh') }}">Compte RH</a>
-                <a href="{{ path('app_register_employee') }}">Compte employe</a>
-                <a href="{{ path('app_register') }}">Compte candidat</a>
+                <a href="{{ path('app_register_rh') }}" class="brand-link">Créer compte RH</a>
+                <a href="{{ path('app_register_employee') }}" class="brand-link">Créer compte Employé</a>
+                <a href="{{ path('app_register') }}" class="brand-link">Créer compte Candidat</a>
             </div>
         </aside>
 
         <section class="auth-panel">
             <header class="auth-panel-header">
-                <p class="auth-eyebrow">Authentification</p>
+                <p class="auth-eyebrow">🔐 Authentification</p>
                 <h2>Connexion</h2>
-                <p class="auth-subtitle">Entrez votre email (ou nom utilisateur) et votre mot de passe.</p>
+                <p class="auth-subtitle">Entrez votre email (ou nom utilisateur) et votre mot de passe pour accéder à votre espace personnel.</p>
             </header>
 
             <div class="auth-flash-list">
                 {% if error %}
-                    <div class="auth-flash error">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                    <div class="auth-flash error">
+                        <strong>Erreur:</strong> {{ error.messageKey|trans(error.messageData, 'security') }}
+                    </div>
                 {% endif %}
                 {% for message in app.flashes('success') %}
-                    <div class="auth-flash success">{{ message }}</div>
+                    <div class="auth-flash success">
+                        <strong>Succès:</strong> {{ message }}
+                    </div>
                 {% endfor %}
             </div>
 
-            <form method="post" class="auth-form">
+            <form method="post" class="auth-form" novalidate>
                 <div class="auth-field">
-                    <label for="email">Email ou Nom_Utilisateur</label>
-                    <input id="email" name="email" value="{{ last_username }}" autocomplete="username" required autofocus>
+                    <label for="email">📧 Email ou Nom d'utilisateur</label>
+                    <input 
+                        id="email" 
+                        name="email" 
+                        value="{{ last_username }}" 
+                        autocomplete="username" 
+                        placeholder="nom@email.com ou utilisateur"
+                        required 
+                        autofocus
+                        class="auth-input">
                 </div>
 
                 <div class="auth-field">
-                    <label for="password">Mot de passe</label>
-                    <input id="password" type="password" name="password" autocomplete="current-password" required>
+                    <label for="password">🔑 Mot de passe</label>
+                    <input 
+                        id="password" 
+                        type="password" 
+                        name="password" 
+                        autocomplete="current-password"
+                        placeholder="••••••••"
+                        required
+                        class="auth-input">
                 </div>
 
                 <div class="auth-field">
-                    <label for="captcha_answer">Captcha</label>
+                    <label for="captcha_answer">✓ Captcha</label>
                     <div class="auth-captcha-box">
-                        <span class="auth-captcha-question">Resoudre: {{ captcha_question }}</span>
-                        <input id="captcha_answer" name="captcha_answer" inputmode="numeric" pattern="[0-9]*" placeholder="Votre reponse" required>
+                        <span class="auth-captcha-question">Résoudre: <strong>{{ captcha_question }}</strong></span>
+                        <input 
+                            id="captcha_answer" 
+                            name="captcha_answer" 
+                            inputmode="numeric" 
+                            pattern="[0-9]*" 
+                            placeholder="Votre réponse"
+                            required
+                            class="auth-input">
                     </div>
                 </div>
 
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
                 <div class="auth-action-row">
-                    <button class="auth-btn-primary" type="submit">Se connecter</button>
+                    <button class="auth-btn-primary" type="submit">
+                        <span>Se connecter</span>
+                        <span class="btn-icon">→</span>
+                    </button>
                 </div>
             </form>
 
-            <div class="auth-separator"></div>
+            <div class="auth-separator">
+                <span>Ou</span>
+            </div>
 
             <div class="auth-link-list">
-                <a href="{{ path('app_register_rh') }}">Inscription RH</a>
-                <a href="{{ path('app_register_employee') }}">Inscription employe</a>
-                <a href="{{ path('app_register') }}">Inscription candidat</a>
+                <div class="link-group">
+                    <p class="link-label">Pas encore inscrit?</p>
+                    <a href="{{ path('app_register_rh') }}" class="auth-link">Inscription RH</a>
+                    <a href="{{ path('app_register_employee') }}" class="auth-link">Inscription Employé</a>
+                    <a href="{{ path('app_register') }}" class="auth-link">Inscription Candidat</a>
+                </div>
             </div>
         </section>
     </section>
 </main>
+
+<footer class="footer">
+    <div class="footer-content">
+        <a href="{{ path('app_login') }}" class="footer-logo">
+            <div class="footer-logo-circle">RH</div>
+            <span>HR One</span>
+        </a>
+        <p class="footer-copyright">&copy; 2024-2026 HR One - Plateforme RH Intégrée</p>
+        <ul class="footer-links">
+            <li><a href="#privacy">Politique de confidentialité</a></li>
+            <li><a href="#terms">Conditions d'utilisation</a></li>
+            <li><a href="#help">Aide</a></li>
+        </ul>
+    </div>
+</footer>
 </body>
 </html>
