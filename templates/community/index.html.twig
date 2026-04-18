@@ -365,10 +365,23 @@
       .community-chat-item {
         border: 1px solid #e2e8f0;
         border-radius: 12px;
-        padding: 10px 12px;
+        padding: 12px 14px;
         background: #f8fafc;
         display: grid;
         gap: 8px;
+        border-left: 4px solid #3b82f6; /* User border */
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      }
+
+      .community-chat-bot {
+        background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+        border-color: #5eead4;
+        border-left: 4px solid #14b8a6; /* Bot border */
+      }
+
+      .community-chat-bot .community-chat-meta strong {
+        color: #0f766e;
+        font-size: 0.95rem;
       }
 
       .community-chat-meta {
@@ -385,6 +398,50 @@
         color: #0f172a;
         white-space: pre-wrap;
         word-break: break-word;
+        line-height: 1.5;
+      }
+
+      /* Specific HR-Bot UI */
+      .hr-bot-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background: #fff;
+      }
+      .hr-bot-history {
+        max-height: 250px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-right: 4px;
+      }
+      .hr-bot-msg {
+        border-radius: 12px;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        width: fit-content;
+        max-width: 90%;
+      }
+      .hr-bot-msg-user {
+        align-self: flex-end;
+        background: #3b82f6;
+        color: white;
+        border-bottom-right-radius: 2px;
+      }
+      .hr-bot-msg-bot {
+        align-self: flex-start;
+        background: #f1f5f9;
+        color: #0f172a;
+        border-left: 4px solid #14b8a6;
+        border-bottom-left-radius: 2px;
+      }
+      .hr-bot-msg-bot strong {
+        display: block;
+        font-size: 0.75rem;
+        color: #0f766e;
+        margin-bottom: 4px;
       }
 
       .community-chat-delete {
@@ -476,13 +533,21 @@
         <div class="community-layout">
             <aside class="community-side">
                 <article class="detail-card">
-                    <h3>Meteo du jour (Tunis)</h3>
-                    {% if weather.error %}
-                        <p>{{ weather.error }}</p>
-                    {% else %}
-                        <p><strong>{{ weather.temperature }} C</strong></p>
-                        <p>Vent {{ weather.windspeed }} km/h - code {{ weather.weathercode }}</p>
-                    {% endif %}
+                    <h3 style="display:flex;align-items:center;gap:6px;">
+                       <span style="font-size:1.4rem;">🤖</span> HR-Bot Assistant
+                    </h3>
+                    <div class="hr-bot-container">
+                        <div id="hr-bot-history" class="hr-bot-history">
+                            <div class="hr-bot-msg hr-bot-msg-bot">
+                                <strong>HR-Bot</strong>
+                                Bonjour ! Je suis votre assistant virtuel HR One. Comment puis-je vous aider ?
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:6px;">
+                            <input id="hr-bot-input" class="community-input" placeholder="Posez une question..." style="padding: 8px;">
+                            <button id="hr-bot-send" class="community-btn community-btn-primary" type="button" style="padding: 8px 12px;">Go</button>
+                        </div>
+                    </div>
                 </article>
 
                 <article class="detail-card">
@@ -631,7 +696,7 @@
                                         <strong>#{{ c.userId }}</strong>
                                         {% if c.id in pinned %}<span class="community-pill community-pill-pin">Epingle</span>{% endif %}
                                         {% if not c.isActive %}<span class="community-pill community-pill-hidden">Masque</span>{% endif %}
-                                        {{ c.content }}
+                                        <span id="comment-text-{{ c.id }}">{{ c.content }}</span>
                                     </p>
                                     {% set isPinned = c.id in pinned %}
                                     {% set canEditComment = is_granted('ROLE_ADMIN') or c.userId == currentUserId %}
@@ -652,6 +717,16 @@
                                                 <span>Dislike {{ voteCounts[c.id].down|default(0) }}</span>
                                             </button>
                                         </form>
+
+                                        <!-- Translation Dropdown -->
+                                        <select class="community-select" style="width: auto; padding: 6px 10px; border-radius: 8px; font-size: 0.85rem;" onchange="translateComment({{ c.id }}, this.value)">
+                                            <option value="">Traduire...</option>
+                                            <option value="ar">Arabe (AR)</option>
+                                            <option value="en">Anglais (EN)</option>
+                                            <option value="fr">Francais (FR)</option>
+                                        </select>
+                                        <span id="translate-loader-{{ c.id }}" style="display: none; font-size: 0.85rem; color: #64748b;">⏳...</span>
+
                                         {% if canEditComment %}
                                             <form method="post" action="{{ path('community_comment_pin', {id: c.id}) }}">
                                                 <button class="community-btn community-btn-action {{ isPinned ? 'community-btn-pin-active' : 'community-btn-pin' }}" type="submit">
@@ -741,4 +816,105 @@
             <small>&copy; {{ 'now'|date('Y') }} HR One</small>
         </div>
     </footer>
+
+    <script>
+    function translateComment(commentId, targetLang) {
+        if (!targetLang) return;
+        const textSpan = document.getElementById('comment-text-' + commentId);
+        const loader = document.getElementById('translate-loader-' + commentId);
+        
+        loader.style.display = 'inline-block';
+        textSpan.style.opacity = '0.5';
+        
+        fetch('/api/communaute/comment/' + commentId + '/translate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ target: targetLang })
+        })
+        .then(response => response.json())
+        .then(data => {
+            loader.style.display = 'none';
+            textSpan.style.opacity = '1';
+            
+            if (data.success) {
+                textSpan.innerText = data.translatedText;
+            } else {
+                alert('Erreur: ' + data.error);
+            }
+        })
+        .catch(error => {
+            loader.style.display = 'none';
+            textSpan.style.opacity = '1';
+            console.error('Error:', error);
+            alert('Erreur de connexion. Translation impossible.');
+        });
+    }
+
+    // HR-Bot logic
+    document.addEventListener('DOMContentLoaded', () => {
+        const botInput = document.getElementById('hr-bot-input');
+        const botSendBtn = document.getElementById('hr-bot-send');
+        const botHistory = document.getElementById('hr-bot-history');
+
+        function sendBotMsg() {
+            const raw = botInput.value;
+            const text = raw.trim();
+            if (!text) return;
+
+            botInput.value = '';
+
+            // 1. Add User bubble
+            const userDiv = document.createElement('div');
+            userDiv.className = 'hr-bot-msg hr-bot-msg-user';
+            userDiv.innerText = text;
+            botHistory.appendChild(userDiv);
+            botHistory.scrollTop = botHistory.scrollHeight;
+
+            // 2. Add Loading bubble
+            const loaderDiv = document.createElement('div');
+            loaderDiv.className = 'hr-bot-msg hr-bot-msg-bot';
+            loaderDiv.innerHTML = '<strong>HR-Bot</strong><span style="opacity:0.5;">...🤔...</span>';
+            botHistory.appendChild(loaderDiv);
+            botHistory.scrollTop = botHistory.scrollHeight;
+
+            fetch('/api/communaute/hrbot', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ question: text })
+            })
+            .then(res => res.json())
+            .then(data => {
+                botHistory.removeChild(loaderDiv);
+                const botDiv = document.createElement('div');
+                botDiv.className = 'hr-bot-msg hr-bot-msg-bot';
+                if (data.success) {
+                    botDiv.innerHTML = '<strong>HR-Bot</strong>' + data.reply;
+                } else {
+                    botDiv.innerHTML = '<strong>HR-Bot</strong><span style="color:red">Erreur: ' + (data.error || 'Erreur serveur.') + '</span>';
+                }
+                botHistory.appendChild(botDiv);
+                botHistory.scrollTop = botHistory.scrollHeight;
+            })
+            .catch(err => {
+                botHistory.removeChild(loaderDiv);
+                const errDiv = document.createElement('div');
+                errDiv.className = 'hr-bot-msg hr-bot-msg-bot';
+                errDiv.innerHTML = '<strong>HR-Bot</strong><span style="color:red">Erreur de connexion.</span>';
+                botHistory.appendChild(errDiv);
+                botHistory.scrollTop = botHistory.scrollHeight;
+            });
+        }
+
+        botSendBtn.addEventListener('click', sendBotMsg);
+        botInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendBotMsg();
+            }
+        });
+    });
+    </script>
 {% endblock %}

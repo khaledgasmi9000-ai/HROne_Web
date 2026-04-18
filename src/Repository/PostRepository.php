@@ -16,28 +16,57 @@ class PostRepository extends ServiceEntityRepository
         parent::__construct($registry, Post::class);
     }
 
-//    /**
-//     * @return Post[] Returns an array of Post objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('p')
-//            ->andWhere('p.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('p.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    /**
+     * Count active posts
+     */
+    public function countActive(): int
+    {
+        return (int)$this->createQueryBuilder('p')
+            ->select('COUNT(p.id)')
+            ->where('p.is_active = true OR p.is_active IS NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 
-//    public function findOneBySomeField($value): ?Post
-//    {
-//        return $this->createQueryBuilder('p')
-//            ->andWhere('p.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    /**
+     * Count all posts
+     */
+    public function countAll(): int
+    {
+        return (int)$this->createQueryBuilder('p')
+            ->select('COUNT(p.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Get recent active posts
+     *
+     * @return Post[]
+     */
+    public function findRecentActive(int $limit = 4): array
+    {
+        return $this->createQueryBuilder('p')
+            ->where('p.is_active = true OR p.is_active IS NULL')
+            ->orderBy('p.created_at', 'DESC')
+            ->addOrderBy('p.id', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Get posts by user
+     *
+     * @return Post[]
+     */
+    public function findByUserId(int $userId): array
+    {
+        return $this->createQueryBuilder('p')
+            ->where('p.user_id = :userId')
+            ->setParameter('userId', $userId)
+            ->orderBy('p.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

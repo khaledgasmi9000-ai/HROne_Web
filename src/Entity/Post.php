@@ -198,6 +198,82 @@ class Post
         return $this;
     }
 
+    /**
+     * @var Collection<int, PostVote>
+     */
+    #[ORM\OneToMany(targetEntity: PostVote::class, mappedBy: 'post', cascade: ['remove'], orphanRemoval: true)]
+    private Collection $votes;
+
+    /**
+     * @var Collection<int, PostFavorite>
+     */
+    #[ORM\OneToMany(targetEntity: PostFavorite::class, mappedBy: 'post', cascade: ['remove'], orphanRemoval: true)]
+    private Collection $favorites;
+
+    public function __construct()
+    {
+        $this->votes = new ArrayCollection();
+        $this->favorites = new ArrayCollection();
+    }
+
+    /**
+     * @return Collection<int, PostVote>
+     */
+    public function getVotes(): Collection
+    {
+        return $this->votes;
+    }
+
+    public function addVote(PostVote $vote): static
+    {
+        if (!$this->votes->contains($vote)) {
+            $this->votes->add($vote);
+            $vote->setPost($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVote(PostVote $vote): static
+    {
+        if ($this->votes->removeElement($vote)) {
+            if ($vote->getPost() === $this) {
+                $vote->setPost(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PostFavorite>
+     */
+    public function getFavorites(): Collection
+    {
+        return $this->favorites;
+    }
+
+    public function addFavorite(PostFavorite $favorite): static
+    {
+        if (!$this->favorites->contains($favorite)) {
+            $this->favorites->add($favorite);
+            $favorite->setPost($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFavorite(PostFavorite $favorite): static
+    {
+        if ($this->favorites->removeElement($favorite)) {
+            if ($favorite->getPost() === $this) {
+                $favorite->setPost(null);
+            }
+        }
+
+        return $this;
+    }
+
     public static function hydrateAndValidate(Request $request): array
     {
         $title = trim((string) $request->request->get('title'));

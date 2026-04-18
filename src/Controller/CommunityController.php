@@ -7,13 +7,16 @@ use App\Entity\CommentVote;
 use App\Entity\Post;
 use App\Entity\PostVote;
 use App\Entity\Utilisateur;
+use App\Entity\CommunityChatMessage;
+use App\Entity\PostFavorite;
 use App\Repository\CommentRepository;
 use App\Repository\CommentVoteRepository;
 use App\Repository\PostRepository;
 use App\Repository\PostVoteRepository;
+use App\Repository\PostFavoriteRepository;
+use App\Repository\CommunityChatMessageRepository;
 use App\Repository\UtilisateurRepository;
-use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Connection;
+use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -25,6 +28,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Stichoza\GoogleTranslate\GoogleTranslate;
 
 class CommunityController extends AbstractController
 {
@@ -32,10 +36,14 @@ class CommunityController extends AbstractController
     public function search(
         PostRepository $posts,
         CommentRepository $comments,
+        PostVoteRepository $postVoteRepository,
+        CommentVoteRepository $commentVoteRepository,
+        PostFavoriteRepository $favRepository,
+        CommunityChatMessageRepository $chatRepository,
         SessionInterface $session,
+        UserService $userService,
         Request $request,
-        PaginatorInterface $paginator,
-        Connection $conn
+        PaginatorInterface $paginator
     ): Response {
         $tagFilter = trim((string)$request->query->get('tag'));
         $search = trim((string)$request->query->get('q'));
@@ -61,7 +69,7 @@ class CommunityController extends AbstractController
         /** @var Post[] $postList */
         $postList = $pagination->getItems();
         $totalPosts = $pagination->getTotalItemCount();
-        $totalPages = $pagination->getPageCount();
+        $totalPages = max(1, (int)ceil($totalPosts / $perPage));
 
         $pagePostIds = array_values(array_map(static fn(Post $post): int => (int)$post->getId(), $postList));
         $filteredPostIds = array_values(array_map(static fn(Post $post): int => (int)$post->getId(), $filteredPosts));
@@ -75,69 +83,40 @@ class CommunityController extends AbstractController
         if (!empty($pagePostIds)) {
             $allPageComments = $comments->findBy(['post_id' => $pagePostIds], ['created_at' => 'ASC']);
             foreach ($allPageComments as $comment) {
-                $commentsByPost[(int)$comment->getPostId()][] = $comment;
+                $commentsByPost[(int)$comment->getPost_id()][] = $comment;
             }
         }
 
+        // Use QueryBuilder for vote counts instead of raw SQL
         $commentIds = array_values(array_map(static fn(Comment $comment): int => (int)$comment->getId(), $allPageComments));
         $voteCounts = [];
-        foreach ($commentIds as $commentId) {
-            $voteCounts[$commentId] = ['up' => 0, 'down' => 0];
-        }
         if (!empty($commentIds)) {
-            $rows = $conn->executeQuery(
-                'SELECT comment_id, vote_type, COUNT(*) AS cnt FROM comment_votes WHERE comment_id IN (?) GROUP BY comment_id, vote_type',
-                [$commentIds],
-                [ArrayParameterType::INTEGER]
-            )->fetchAllAssociative();
-            foreach ($rows as $row) {
-                $cid = (int)$row['comment_id'];
-                $type = (string)$row['vote_type'];
-                $count = (int)$row['cnt'];
-                if (!isset($voteCounts[$cid])) {
-                    $voteCounts[$cid] = ['up' => 0, 'down' => 0];
+            $voteCounts = $commentVoteRepository->getVoteCountsByCommentIds($commentIds);
+            // Initialize missing comment IDs
+            foreach ($commentIds as $commentId) {
+                if (!isset($voteCounts[$commentId])) {
+                    $voteCounts[$commentId] = ['up' => 0, 'down' => 0];
                 }
-                if ($type === 'up' || $type === 'down') {
-                    $voteCounts[$cid][$type] = $count;
-                }
+            }
+        } else {
+            foreach ($commentIds as $commentId) {
+                $voteCounts[$commentId] = ['up' => 0, 'down' => 0];
             }
         }
 
-        $commentCounts = [];
+        // Use QueryBuilder for comment counts instead of raw SQL
+        $commentCounts = $comments->getCountsByPostIds($filteredPostIds);
         foreach ($filteredPostIds as $postId) {
-            $commentCounts[$postId] = 0;
-        }
-        if (!empty($filteredPostIds)) {
-            $commentRows = $conn->executeQuery(
-                'SELECT post_id, COUNT(*) AS cnt FROM comments WHERE post_id IN (?) GROUP BY post_id',
-                [$filteredPostIds],
-                [ArrayParameterType::INTEGER]
-            )->fetchAllAssociative();
-            foreach ($commentRows as $row) {
-                $commentCounts[(int)$row['post_id']] = (int)$row['cnt'];
+            if (!isset($commentCounts[$postId])) {
+                $commentCounts[$postId] = 0;
             }
         }
 
-        $allPostVoteCounts = [];
+        // Use QueryBuilder for post vote counts instead of raw SQL
+        $allPostVoteCounts = $postVoteRepository->getVoteCountsByPostIds($filteredPostIds);
         foreach ($filteredPostIds as $postId) {
-            $allPostVoteCounts[$postId] = ['up' => 0, 'down' => 0];
-        }
-        if (!empty($filteredPostIds)) {
-            $postVoteRows = $conn->executeQuery(
-                'SELECT post_id, vote_type, COUNT(*) AS cnt FROM post_votes WHERE post_id IN (?) GROUP BY post_id, vote_type',
-                [$filteredPostIds],
-                [ArrayParameterType::INTEGER]
-            )->fetchAllAssociative();
-            foreach ($postVoteRows as $row) {
-                $pid = (int)$row['post_id'];
-                $type = (string)$row['vote_type'];
-                $count = (int)$row['cnt'];
-                if (!isset($allPostVoteCounts[$pid])) {
-                    $allPostVoteCounts[$pid] = ['up' => 0, 'down' => 0];
-                }
-                if ($type === 'up' || $type === 'down') {
-                    $allPostVoteCounts[$pid][$type] = $count;
-                }
+            if (!isset($allPostVoteCounts[$postId])) {
+                $allPostVoteCounts[$postId] = ['up' => 0, 'down' => 0];
             }
         }
 
@@ -153,9 +132,9 @@ class CommunityController extends AbstractController
 
         $totalLikes = array_sum(array_map(static fn(array $counts): int => (int)$counts['up'], $allPostVoteCounts));
         $totalDislikes = array_sum(array_map(static fn(array $counts): int => (int)$counts['down'], $allPostVoteCounts));
-        $currentUserId = $this->resolveCurrentUserId($session, $conn);
-        $favoritePostIds = $this->loadFavoritePostIds($conn, $currentUserId);
-        $chatMessages = $this->loadInternalChatMessages($conn);
+        $currentUserId = $userService->resolveCurrentUserId($session);
+        $favoritePostIds = $favRepository->findByUserId($currentUserId);
+        $chatMessages = array_reverse($chatRepository->findRecentActive(40));
 
         $weather = $this->getCachedWeather($session);
 
@@ -166,7 +145,7 @@ class CommunityController extends AbstractController
             'postVoteCounts' => $postVoteCounts,
             'commentCounts' => $commentCounts,
             'pinned' => $session->get('pinned_comments', []),
-            'favorites' => $favoritePostIds,
+            'favorites' => array_map(static fn($fav): int => (int)$fav->getPostId(), $favoritePostIds),
             'currentUserId' => $currentUserId,
             'tags' => $tags,
             'currentTag' => $tagFilter,
@@ -179,7 +158,15 @@ class CommunityController extends AbstractController
             'totalDislikes' => $totalDislikes,
             'pagination' => $pagination,
             'weather' => $weather,
-            'chatMessages' => $chatMessages,
+            'chatMessages' => array_map(static function ($msg) {
+                return [
+                    'id' => $msg->getId(),
+                    'userId' => $msg->getUserId(),
+                    'content' => $msg->getContent(),
+                    'createdAt' => $msg->getCreatedAt(),
+                    'username' => 'User ' . ($msg->getUserId() ?? 'Unknown'),
+                ];
+            }, $chatMessages),
         ]);
     }
 
@@ -187,7 +174,9 @@ class CommunityController extends AbstractController
     public function sendInternalChatMessage(
         Request $request,
         SessionInterface $session,
-        Connection $conn
+        UserService $userService,
+        CommunityChatMessageRepository $chatRepository,
+        EntityManagerInterface $em
     ): RedirectResponse {
         $content = trim((string)$request->request->get('content'));
         if ($content === '') {
@@ -199,14 +188,15 @@ class CommunityController extends AbstractController
             return $this->redirectToRoute('community_index');
         }
 
-        $this->ensureInternalChatTable($conn);
-        $userId = $this->resolveCurrentUserId($session, $conn);
-        $conn->insert('community_chat_messages', [
-            'user_id' => $userId,
-            'content' => $content,
-            'created_at' => (new \DateTime())->format('Y-m-d H:i:s'),
-            'is_active' => 1,
-        ]);
+        $userId = $userService->resolveCurrentUserId($session);
+        $message = new CommunityChatMessage();
+        $message->setUserId($userId);
+        $message->setContent($content);
+        $message->setCreatedAt(new \DateTime());
+        $message->setIsActive(true);
+
+        $em->persist($message);
+        $em->flush();
 
         $this->addFlash('success', 'Message envoye dans le chat interne.');
         return $this->redirectToRoute('community_index');
@@ -216,30 +206,25 @@ class CommunityController extends AbstractController
     public function deleteInternalChatMessage(
         int $id,
         SessionInterface $session,
-        Connection $conn
+        UserService $userService,
+        CommunityChatMessageRepository $chatRepository,
+        EntityManagerInterface $em
     ): RedirectResponse {
-        $this->ensureInternalChatTable($conn);
-
-        $row = $conn->fetchAssociative(
-            'SELECT id, user_id FROM community_chat_messages WHERE id = :id LIMIT 1',
-            ['id' => $id]
-        );
-        if (!is_array($row)) {
+        $message = $chatRepository->findOneById($id);
+        if (!$message) {
             $this->addFlash('error', 'Message chat introuvable.');
             return $this->redirectToRoute('community_index');
         }
 
-        $currentUserId = $this->resolveCurrentUserId($session, $conn);
-        $ownerId = (int)($row['user_id'] ?? 0);
+        $currentUserId = $userService->resolveCurrentUserId($session);
+        $ownerId = $message->getUserId() ?? 0;
         if (!$this->canManageContent($ownerId, $currentUserId)) {
             $this->addFlash('error', 'Action refusee: vous ne pouvez supprimer que vos messages.');
             return $this->redirectToRoute('community_index');
         }
 
-        $conn->executeStatement(
-            'DELETE FROM community_chat_messages WHERE id = :id',
-            ['id' => $id]
-        );
+        $em->remove($message);
+        $em->flush();
 
         $this->addFlash('success', 'Message chat supprime.');
         return $this->redirectToRoute('community_index');
@@ -251,22 +236,22 @@ class CommunityController extends AbstractController
         UtilisateurRepository $users,
         EntityManagerInterface $em,
         SessionInterface $session,
-        Connection $conn
+        UserService $userService
     ): RedirectResponse
     {
-        $userId = $this->resolveCurrentUserId($session, $conn);
+        $userId = $userService->resolveCurrentUserId($session);
         $user = $users->find($userId);
         if (!$user) {
             $identifier = (string)($this->getUser()?->getUserIdentifier() ?? '');
             $user = new Utilisateur();
-            $user->setNomUtilisateur($identifier !== '' ? $identifier : 'auto_user');
-            $user->setMotPasse('temp');
+            $user->setNom_Utilisateur($identifier !== '' ? $identifier : 'auto_user');
+            $user->setMot_Passe('temp');
             if ($identifier !== '' && filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
                 $user->setEmail($identifier);
             }
             $em->persist($user);
             $em->flush();
-            $userId = (int)$user->getIDUTILISATEUR();
+            $userId = (int)$user->getID_UTILISATEUR();
             $session->set('user_id', $userId);
         }
 
@@ -308,19 +293,19 @@ class CommunityController extends AbstractController
         PostRepository $posts,
         EntityManagerInterface $em,
         SessionInterface $session,
-        Connection $conn
+        UserService $userService
     ): RedirectResponse
     {
         $redirect = (string)$request->request->get('redirect_route');
         $targetRoute = ($redirect !== '' && $this->routeExists($redirect)) ? $redirect : 'community_index';
-        $currentUserId = $this->resolveCurrentUserId($session, $conn);
+        $currentUserId = $userService->resolveCurrentUserId($session);
 
         $post = $posts->find($id);
         if (!$post) {
             $this->addFlash('error', 'Post introuvable.');
             return $this->redirectToRoute($targetRoute);
         }
-        if (!$this->canManageContent((int)$post->getUserId(), $currentUserId)) {
+        if (!$this->canManageContent((int)$post->getUser_id(), $currentUserId)) {
             $this->addFlash('error', 'Action refusee: vous ne pouvez modifier que vos publications.');
             return $this->redirectToRoute($targetRoute);
         }
@@ -355,23 +340,18 @@ class CommunityController extends AbstractController
         int $id,
         PostRepository $posts,
         EntityManagerInterface $em,
-        Connection $conn,
         Request $request,
-        SessionInterface $session
+        SessionInterface $session,
+        UserService $userService
     ): RedirectResponse {
-        $currentUserId = $this->resolveCurrentUserId($session, $conn);
+        $currentUserId = $userService->resolveCurrentUserId($session);
         $post = $posts->find($id);
         if ($post) {
-            if (!$this->canManageContent((int)$post->getUserId(), $currentUserId)) {
+            if (!$this->canManageContent((int)$post->getUser_id(), $currentUserId)) {
                 $this->addFlash('error', 'Action refusee: vous ne pouvez supprimer que vos publications.');
                 return $this->redirectToRoute('community_index');
             }
-            $this->ensurePostFavoritesTable($conn);
-            $conn->executeStatement('UPDATE comments SET parent_comment_id = NULL WHERE post_id = :pid', ['pid' => $id]);
-            $conn->executeStatement('DELETE FROM post_votes WHERE post_id = :pid', ['pid' => $id]);
-            $conn->executeStatement('DELETE FROM comment_votes WHERE comment_id IN (SELECT id FROM comments WHERE post_id = :pid)', ['pid' => $id]);
-            $conn->executeStatement('DELETE FROM post_favorites WHERE post_id = :pid', ['pid' => $id]);
-            $conn->executeStatement('DELETE FROM comments WHERE post_id = :pid', ['pid' => $id]);
+            // ORM cascade delete will handle all related entities (comments, votes, favorites)
             $em->remove($post);
             $em->flush();
             $this->addFlash('success', 'Post supprime.');
@@ -388,7 +368,14 @@ class CommunityController extends AbstractController
     }
 
     #[Route('/communaute/post/{id}/favorite', name: 'community_post_fav', methods: ['POST'])]
-    public function favoritePost(int $id, SessionInterface $session, PostRepository $posts, Connection $conn): RedirectResponse
+    public function favoritePost(
+        int $id,
+        SessionInterface $session,
+        PostRepository $posts,
+        PostFavoriteRepository $favRepository,
+        EntityManagerInterface $em,
+        UserService $userService
+    ): RedirectResponse
     {
         $post = $posts->find($id);
         if (!$post) {
@@ -396,26 +383,28 @@ class CommunityController extends AbstractController
             return $this->redirectToRoute('community_index');
         }
 
-        $this->ensurePostFavoritesTable($conn);
-        $userId = $this->resolveCurrentUserId($session, $conn);
-        $exists = (bool)$conn->fetchOne(
-            'SELECT 1 FROM post_favorites WHERE post_id = :pid AND user_id = :uid LIMIT 1',
-            ['pid' => $id, 'uid' => $userId]
-        );
+        $userId = $userService->resolveCurrentUserId($session);
+        $isFavorited = $favRepository->isFavorited($id, $userId);
 
-        if (!$exists) {
-            $conn->insert('post_favorites', [
-                'post_id' => $id,
-                'user_id' => $userId,
-                'created_at' => (new \DateTime())->format('Y-m-d H:i:s'),
-            ]);
+        if (!$isFavorited) {
+            $user = $em->getReference(Utilisateur::class, $userId);
+            $favorite = new PostFavorite();
+            $favorite->setPost($post);
+            $favorite->setUser($user);
+            $favorite->setCreatedAt(new \DateTime());
+            $em->persist($favorite);
+            $em->flush();
             $this->addFlash('success', 'Post ajoute aux favoris.');
         } else {
-            $conn->executeStatement(
-                'DELETE FROM post_favorites WHERE post_id = :pid AND user_id = :uid',
-                ['pid' => $id, 'uid' => $userId]
-            );
             $this->addFlash('success', 'Post retire des favoris.');
+            $em->createQueryBuilder()
+                ->delete(PostFavorite::class, 'pf')
+                ->where('pf.post = :post')
+                ->andWhere('pf.user = :user')
+                ->setParameter('post', $post)
+                ->setParameter('user', $em->getReference(Utilisateur::class, $userId))
+                ->getQuery()
+                ->execute();
         }
 
         return $this->redirectToRoute('community_index');
@@ -429,7 +418,7 @@ class CommunityController extends AbstractController
         PostVoteRepository $postVotes,
         EntityManagerInterface $em,
         SessionInterface $session,
-        Connection $conn
+        UserService $userService
     ): RedirectResponse {
         $post = $posts->find($id);
         if (!$post) {
@@ -438,14 +427,15 @@ class CommunityController extends AbstractController
         }
 
         $voteType = $type === 'down' ? 'down' : 'up';
-        $userId = $this->resolveCurrentUserId($session, $conn);
-        $existing = $postVotes->findOneBy(['post_id' => $id, 'user_id' => $userId]);
+        $userId = $userService->resolveCurrentUserId($session);
+        $existing = $postVotes->findByUserAndPost($userId, $id);
         if ($existing) {
             $existing->setVoteType($voteType);
         } else {
+            $user = $em->getReference(Utilisateur::class, $userId);
             $vote = new PostVote();
-            $vote->setPostId($id);
-            $vote->setUserId($userId);
+            $vote->setPost($post);
+            $vote->setUser($user);
             $vote->setVoteType($voteType);
             $vote->setCreatedAt(new \DateTime());
             $em->persist($vote);
@@ -459,37 +449,28 @@ class CommunityController extends AbstractController
     #[Route('/communaute/comment', name: 'community_comment_create', methods: ['POST'])]
     public function createComment(
         Request $request,
-        UtilisateurRepository $users,
+        PostRepository $posts,
         EntityManagerInterface $em,
         SessionInterface $session,
-        Connection $conn
+        UserService $userService
     ): RedirectResponse
     {
         $postId = (int)$request->request->get('post_id');
         $content = trim((string)$request->request->get('content'));
-        $userId = $this->resolveCurrentUserId($session, $conn);
         $parentId = (int)$request->request->get('parent_comment_id', 0);
 
-        $user = $users->find($userId);
-        if (!$user) {
-            $identifier = (string)($this->getUser()?->getUserIdentifier() ?? '');
-            $user = new Utilisateur();
-            $user->setNomUtilisateur($identifier !== '' ? $identifier : 'auto_user');
-            $user->setMotPasse('temp');
-            if ($identifier !== '' && filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
-                $user->setEmail($identifier);
-            }
-            $em->persist($user);
-            $em->flush();
-            $userId = (int)$user->getIDUTILISATEUR();
-            $session->set('user_id', $userId);
+        $post = $posts->find($postId);
+        if (!$post) {
+            $this->addFlash('error', 'Post introuvable.');
+            return $this->redirectToRoute('community_index');
         }
 
-        if ($postId <= 0 || $content === '') {
+        if ($content === '') {
             $this->addFlash('error', 'Commentaire invalide.');
             return $this->redirectToRoute('community_index');
         }
 
+        $userId = $userService->resolveCurrentUserId($session);
         $comment = new Comment();
         $comment->setPostId($postId);
         $comment->setUserId($userId);
@@ -512,16 +493,16 @@ class CommunityController extends AbstractController
         CommentRepository $comments,
         EntityManagerInterface $em,
         SessionInterface $session,
-        Connection $conn
+        UserService $userService
     ): RedirectResponse
     {
-        $currentUserId = $this->resolveCurrentUserId($session, $conn);
+        $currentUserId = $userService->resolveCurrentUserId($session);
         $comment = $comments->find($id);
         if (!$comment) {
             $this->addFlash('error', 'Commentaire introuvable.');
             return $this->redirectToRoute('community_index');
         }
-        if (!$this->canManageContent((int)$comment->getUserId(), $currentUserId)) {
+        if (!$this->canManageContent((int)$comment->getUser_id(), $currentUserId)) {
             $this->addFlash('error', 'Action refusee: vous ne pouvez modifier que vos commentaires.');
             return $this->redirectToRoute('community_index');
         }
@@ -544,19 +525,18 @@ class CommunityController extends AbstractController
         int $id,
         CommentRepository $comments,
         EntityManagerInterface $em,
-        Connection $conn,
-        SessionInterface $session
+        SessionInterface $session,
+        UserService $userService
     ): RedirectResponse
     {
-        $currentUserId = $this->resolveCurrentUserId($session, $conn);
+        $currentUserId = $userService->resolveCurrentUserId($session);
         $comment = $comments->find($id);
         if ($comment) {
-            if (!$this->canManageContent((int)$comment->getUserId(), $currentUserId)) {
+            if (!$this->canManageContent((int)$comment->getUser_id(), $currentUserId)) {
                 $this->addFlash('error', 'Action refusee: vous ne pouvez supprimer que vos commentaires.');
                 return $this->redirectToRoute('community_index');
             }
-            $conn->executeStatement('UPDATE comments SET parent_comment_id = NULL WHERE parent_comment_id = :cid', ['cid' => $id]);
-            $conn->executeStatement('DELETE FROM comment_votes WHERE comment_id = :cid', ['cid' => $id]);
+            // ORM cascade delete will handle orphaned child comments and votes
             $em->remove($comment);
             $em->flush();
             $this->addFlash('success', 'Commentaire supprime.');
@@ -575,7 +555,7 @@ class CommunityController extends AbstractController
         CommentVoteRepository $votes,
         EntityManagerInterface $em,
         SessionInterface $session,
-        Connection $conn
+        UserService $userService
     ): RedirectResponse {
         $comment = $comments->find($id);
         if (!$comment) {
@@ -584,14 +564,15 @@ class CommunityController extends AbstractController
         }
 
         $voteType = $type === 'down' ? 'down' : 'up';
-        $userId = $this->resolveCurrentUserId($session, $conn);
-        $existing = $votes->findOneBy(['comment_id' => $id, 'user_id' => $userId]);
+        $userId = $userService->resolveCurrentUserId($session);
+        $existing = $votes->findByUserAndComment($userId, $id);
         if ($existing) {
             $existing->setVoteType($voteType);
         } else {
+            $user = $em->getReference(Utilisateur::class, $userId);
             $vote = new CommentVote();
-            $vote->setCommentId($id);
-            $vote->setUserId($userId);
+            $vote->setComment($comment);
+            $vote->setUser($user);
             $vote->setVoteType($voteType);
             $vote->setCreatedAt(new \DateTime());
             $em->persist($vote);
@@ -608,16 +589,16 @@ class CommunityController extends AbstractController
         CommentRepository $comments,
         EntityManagerInterface $em,
         SessionInterface $session,
-        Connection $conn
+        UserService $userService
     ): RedirectResponse
     {
-        $currentUserId = $this->resolveCurrentUserId($session, $conn);
+        $currentUserId = $userService->resolveCurrentUserId($session);
         $comment = $comments->find($id);
         if (!$comment) {
             $this->addFlash('error', 'Commentaire introuvable.');
             return $this->redirectToRoute('community_index');
         }
-        if (!$this->canManageContent((int)$comment->getUserId(), $currentUserId)) {
+        if (!$this->canManageContent((int)$comment->getUser_id(), $currentUserId)) {
             $this->addFlash('error', 'Action refusee: vous ne pouvez modifier que vos commentaires.');
             return $this->redirectToRoute('community_index');
         }
@@ -634,16 +615,16 @@ class CommunityController extends AbstractController
         int $id,
         SessionInterface $session,
         CommentRepository $comments,
-        Connection $conn
+        UserService $userService
     ): RedirectResponse
     {
-        $currentUserId = $this->resolveCurrentUserId($session, $conn);
+        $currentUserId = $userService->resolveCurrentUserId($session);
         $comment = $comments->find($id);
         if (!$comment) {
             $this->addFlash('error', 'Commentaire introuvable.');
             return $this->redirectToRoute('community_index');
         }
-        if (!$this->canManageContent((int)$comment->getUserId(), $currentUserId)) {
+        if (!$this->canManageContent((int)$comment->getUser_id(), $currentUserId)) {
             $this->addFlash('error', 'Action refusee: vous ne pouvez modifier que vos commentaires.');
             return $this->redirectToRoute('community_index');
         }
@@ -665,6 +646,78 @@ class CommunityController extends AbstractController
     public function weatherApi(): JsonResponse
     {
         return new JsonResponse($this->fetchWeather());
+    }
+
+    #[Route('/api/communaute/hrbot', name: 'api_community_hrbot', methods: ['POST'])]
+    public function askHrBot(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $question = trim((string)($data['question'] ?? ''));
+
+        if ($question === '') {
+            return new JsonResponse(['success' => false, 'error' => 'Question vide.']);
+        }
+
+        $systemContext = "Tu es HR-Bot, l'assistant virtuel intelligent de l'application HR One Web (modules: Communaute, RH, Conges, Recrutement, Formations). Reviens très brièvement à la ligne si besoin, sois concis et utilise la langue française pour répondre intelligemment.";
+        $promptUrl = "https://text.pollinations.ai/prompt/" . urlencode($question) . "?system=" . urlencode($systemContext);
+        
+        try {
+            $client = new \GuzzleHttp\Client([
+                'verify' => false,
+                'proxy' => ''
+            ]);
+            $response = $client->get($promptUrl, ['timeout' => 60]);
+            $aiResponse = $response->getBody()->getContents();
+
+            if ($aiResponse) {
+                // Return clean HTML string without XSS that breaks the JS injected DOM
+                $cleanHtml = nl2br(htmlspecialchars(trim($aiResponse)));
+                return new JsonResponse([
+                    'success' => true,
+                    'reply' => $cleanHtml
+                ]);
+            }
+        } catch (\Exception $e) {
+            return new JsonResponse(['success' => false, 'error' => 'Serveur IA indisponible: ' . $e->getMessage()], 500);
+        }
+
+        return new JsonResponse(['success' => false, 'error' => 'Serveur IA indisponible.'], 500);
+    }
+
+    #[Route('/api/communaute/comment/{id}/translate', name: 'api_community_comment_translate', methods: ['POST'])]
+    public function translateComment(
+        int $id,
+        Request $request,
+        CommentRepository $comments
+    ): JsonResponse {
+        $comment = $comments->find($id);
+        if (!$comment) {
+            return new JsonResponse(['error' => 'Commentaire introuvable'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $targetLang = $data['target'] ?? 'fr';
+
+        try {
+            $tr = new GoogleTranslate();
+            $tr->setTarget($targetLang);
+            // Disable default unexpected local proxy/ssl issues in XAMPP on Windows
+            $tr->setOptions([
+                'proxy' => '',
+                'verify' => false
+            ]);
+            $translatedText = $tr->translate($comment->getContent() ?? '');
+
+            return new JsonResponse([
+                'success' => true,
+                'translatedText' => $translatedText
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => 'Erreur de traduction : ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     #[Route('/admin/community', name: 'community_admin_dashboard', methods: ['GET'])]
@@ -812,143 +865,9 @@ class CommunityController extends AbstractController
         }
     }
 
-    private function resolveCurrentUserId(SessionInterface $session, Connection $conn): int
-    {
-        $sessionUserId = (int)$session->get('user_id', 0);
-        if ($sessionUserId > 0) {
-            return $sessionUserId;
-        }
-
-        $rawIdentifier = trim((string)($this->getUser()?->getUserIdentifier() ?? ''));
-        $identifier = mb_strtolower($rawIdentifier);
-        if ($identifier !== '') {
-            $matchedId = $conn->fetchOne(
-                'SELECT ID_UTILISATEUR FROM utilisateur WHERE LOWER(Email) = :identifier OR LOWER(Nom_Utilisateur) = :identifier LIMIT 1',
-                ['identifier' => $identifier]
-            );
-            $resolvedId = (int)$matchedId;
-            if ($resolvedId > 0) {
-                $session->set('user_id', $resolvedId);
-                return $resolvedId;
-            }
-
-            $username = $this->buildUsernameFromIdentifier($rawIdentifier);
-            $candidate = $username;
-            $suffix = 1;
-            while ((int)$conn->fetchOne(
-                'SELECT COUNT(*) FROM utilisateur WHERE LOWER(Nom_Utilisateur) = :username',
-                ['username' => mb_strtolower($candidate)]
-            ) > 0) {
-                $candidate = $username . '_' . $suffix;
-                $suffix++;
-                if ($suffix > 25) {
-                    $candidate = $username . '_' . substr(md5($identifier), 0, 6);
-                    break;
-                }
-            }
-
-            $email = filter_var($rawIdentifier, FILTER_VALIDATE_EMAIL) ? mb_strtolower($rawIdentifier) : null;
-            $conn->insert('utilisateur', [
-                'Nom_Utilisateur' => $candidate,
-                'Mot_Passe' => 'external_login',
-                'Email' => $email,
-            ]);
-
-            $createdId = (int)$conn->lastInsertId();
-            if ($createdId > 0) {
-                $session->set('user_id', $createdId);
-                return $createdId;
-            }
-        }
-
-        $session->set('user_id', 1);
-        return 1;
-    }
-
-    private function buildUsernameFromIdentifier(string $identifier): string
-    {
-        $value = trim($identifier);
-        if ($value === '') {
-            return 'user';
-        }
-
-        if (str_contains($value, '@')) {
-            $value = explode('@', $value)[0];
-        }
-
-        $value = strtolower(preg_replace('/[^a-zA-Z0-9_]+/', '_', $value) ?? '');
-        $value = trim($value, '_');
-
-        if ($value === '') {
-            return 'user';
-        }
-
-        return substr($value, 0, 40);
-    }
-
     private function canManageContent(int $ownerId, int $currentUserId): bool
     {
         return $this->isGranted('ROLE_ADMIN') || ($ownerId > 0 && $ownerId === $currentUserId);
-    }
-
-    private function loadFavoritePostIds(Connection $conn, int $userId): array
-    {
-        $this->ensurePostFavoritesTable($conn);
-        $rows = $conn->fetchFirstColumn(
-            'SELECT post_id FROM post_favorites WHERE user_id = :uid',
-            ['uid' => $userId]
-        );
-
-        return array_values(array_map(static fn($value): int => (int)$value, $rows));
-    }
-
-    private function ensurePostFavoritesTable(Connection $conn): void
-    {
-        $conn->executeStatement(
-            "CREATE TABLE IF NOT EXISTS post_favorites (
-                post_id INT NOT NULL,
-                user_id INT NOT NULL,
-                created_at DATETIME NOT NULL,
-                PRIMARY KEY (post_id, user_id),
-                KEY idx_post_favorites_user (user_id)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
-        );
-    }
-
-    private function loadInternalChatMessages(Connection $conn): array
-    {
-        $this->ensureInternalChatTable($conn);
-
-        $rows = $conn->fetchAllAssociative(
-            "SELECT
-                m.id,
-                m.user_id AS userId,
-                m.content,
-                m.created_at AS createdAt,
-                COALESCE(NULLIF(u.Nom_Utilisateur, ''), CONCAT('Utilisateur #', m.user_id)) AS username
-             FROM community_chat_messages m
-             LEFT JOIN utilisateur u ON u.ID_UTILISATEUR = m.user_id
-             WHERE m.is_active = 1
-             ORDER BY m.created_at DESC, m.id DESC
-             LIMIT 40"
-        );
-
-        return array_reverse($rows);
-    }
-
-    private function ensureInternalChatTable(Connection $conn): void
-    {
-        $conn->executeStatement(
-            "CREATE TABLE IF NOT EXISTS community_chat_messages (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NOT NULL,
-                content TEXT NOT NULL,
-                created_at DATETIME NOT NULL,
-                is_active TINYINT(1) NOT NULL DEFAULT 1,
-                KEY idx_ccm_user (user_id),
-                KEY idx_ccm_created (created_at)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
-        );
     }
 
     private function getCachedWeather(SessionInterface $session): array

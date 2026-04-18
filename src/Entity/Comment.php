@@ -173,4 +173,44 @@ class Comment
         return $this;
     }
 
+    /**
+     * @var Collection<int, CommentVote>
+     */
+    #[ORM\OneToMany(targetEntity: CommentVote::class, mappedBy: 'comment', cascade: ['remove'], orphanRemoval: true)]
+    private Collection $votes;
+
+    public function __construct()
+    {
+        $this->votes = new ArrayCollection();
+    }
+
+    /**
+     * @return Collection<int, CommentVote>
+     */
+    public function getVotes(): Collection
+    {
+        return $this->votes;
+    }
+
+    public function addVote(CommentVote $vote): static
+    {
+        if (!$this->votes->contains($vote)) {
+            $this->votes->add($vote);
+            $vote->setComment($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVote(CommentVote $vote): static
+    {
+        if ($this->votes->removeElement($vote)) {
+            if ($vote->getComment() === $this) {
+                $vote->setComment(null);
+            }
+        }
+
+        return $this;
+    }
+
 }
