@@ -16,8 +16,9 @@ class CommunityChatMessage
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
-    #[ORM\Column(type: 'integer')]
-    private ?int $user_id = null;
+    #[ORM\ManyToOne(targetEntity: Utilisateur::class)]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'ID_UTILISATEUR', nullable: false)]
+    private ?Utilisateur $user = null;
 
     #[ORM\Column(type: 'text')]
     private ?string $content = null;
@@ -33,14 +34,25 @@ class CommunityChatMessage
         return $this->id;
     }
 
-    public function getUserId(): ?int
+    public function getUser(): ?Utilisateur
     {
-        return $this->user_id;
+        return $this->user;
     }
 
-    public function setUserId(int $user_id): static
+    public function setUser(?Utilisateur $user): static
     {
-        $this->user_id = $user_id;
+        $this->user = $user;
+        return $this;
+    }
+
+    public function getUserId(): ?int
+    {
+        return $this->user?->getID_UTILISATEUR();
+    }
+
+    public function setUserId(int $userId): static
+    {
+        // This is a convenience method - in real usage, set the user via setUser()
         return $this;
     }
 

@@ -20,15 +20,27 @@ class UserService
      */
     public function resolveCurrentUserId(SessionInterface $session): int
     {
+        $user = $this->resolveCurrentUser($session);
+        return $user?->getID_UTILISATEUR() ?? 1;
+    }
+
+    /**
+     * Resolve current user entity from session or security context
+     */
+    public function resolveCurrentUser(SessionInterface $session): ?Utilisateur
+    {
         $sessionUserId = (int)$session->get('user_id', 0);
         if ($sessionUserId > 0) {
-            return $sessionUserId;
+            $user = $this->utilisateurRepository->find($sessionUserId);
+            if ($user) {
+                return $user;
+            }
         }
 
         $user = $this->security->getUser();
         if (!$user) {
             $session->set('user_id', 1);
-            return 1;
+            return $this->utilisateurRepository->find(1);
         }
 
         $rawIdentifier = trim((string)($user->getUserIdentifier() ?? ''));
@@ -47,7 +59,7 @@ class UserService
                 $resolvedId = $existingUser->getID_UTILISATEUR() ?? 0;
                 if ($resolvedId > 0) {
                     $session->set('user_id', $resolvedId);
-                    return $resolvedId;
+                    return $existingUser;
                 }
             }
 
@@ -68,12 +80,12 @@ class UserService
 
             if ($createdId > 0) {
                 $session->set('user_id', $createdId);
-                return $createdId;
+                return $newUser;
             }
         }
 
         $session->set('user_id', 1);
-        return 1;
+        return $this->utilisateurRepository->find(1);
     }
 
     /**

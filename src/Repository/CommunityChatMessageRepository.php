@@ -17,13 +17,15 @@ class CommunityChatMessageRepository extends ServiceEntityRepository
     }
 
     /**
-     * Get recent active chat messages
+     * Get recent active chat messages with user data
      *
      * @return CommunityChatMessage[]
      */
     public function findRecentActive(int $limit = 40): array
     {
         return $this->createQueryBuilder('m')
+            ->leftJoin('m.user', 'u')
+            ->addSelect('u')
             ->where('m.is_active = true')
             ->orderBy('m.created_at', 'DESC')
             ->setMaxResults($limit)

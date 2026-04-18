@@ -559,10 +559,10 @@
 
                     <div class="community-chat-list">
                         {% for msg in chatMessages %}
-                            {% set canDeleteChat = is_granted('ROLE_ADMIN') or msg.userId == currentUserId %}
+                            {% set canDeleteChat = is_granted('ROLE_ADMIN') or (msg.user and msg.user.ID_UTILISATEUR == currentUserId) %}
                             <div class="community-chat-item">
                                 <div class="community-chat-meta">
-                                    <strong>{{ msg.username }}</strong>
+                                    <strong>{{ msg.user.Nom_Utilisateur ?? 'Utilisateur inconnu' }}</strong>
                                     <span>{{ msg.createdAt|date('d/m/Y H:i') }}</span>
                                 </div>
                                 <p class="community-chat-body">{{ msg.content }}</p>

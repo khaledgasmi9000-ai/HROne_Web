@@ -158,15 +158,7 @@ class CommunityController extends AbstractController
             'totalDislikes' => $totalDislikes,
             'pagination' => $pagination,
             'weather' => $weather,
-            'chatMessages' => array_map(static function ($msg) {
-                return [
-                    'id' => $msg->getId(),
-                    'userId' => $msg->getUserId(),
-                    'content' => $msg->getContent(),
-                    'createdAt' => $msg->getCreatedAt(),
-                    'username' => 'User ' . ($msg->getUserId() ?? 'Unknown'),
-                ];
-            }, $chatMessages),
+            'chatMessages' => $chatMessages,
         ]);
     }
 
@@ -188,9 +180,14 @@ class CommunityController extends AbstractController
             return $this->redirectToRoute('community_index');
         }
 
-        $userId = $userService->resolveCurrentUserId($session);
+        $user = $userService->resolveCurrentUser($session);
+        if (!$user) {
+            $this->addFlash('error', 'Utilisateur non trouve.');
+            return $this->redirectToRoute('community_index');
+        }
+
         $message = new CommunityChatMessage();
-        $message->setUserId($userId);
+        $message->setUser($user);
         $message->setContent($content);
         $message->setCreatedAt(new \DateTime());
         $message->setIsActive(true);
@@ -216,8 +213,10 @@ class CommunityController extends AbstractController
             return $this->redirectToRoute('community_index');
         }
 
-        $currentUserId = $userService->resolveCurrentUserId($session);
-        $ownerId = $message->getUserId() ?? 0;
+        $currentUser = $userService->resolveCurrentUser($session);
+        $ownerId = $message->getUser()?->getID_UTILISATEUR() ?? 0;
+        $currentUserId = $currentUser?->getID_UTILISATEUR() ?? 0;
+        
         if (!$this->canManageContent($ownerId, $currentUserId)) {
             $this->addFlash('error', 'Action refusee: vous ne pouvez supprimer que vos messages.');
             return $this->redirectToRoute('community_index');
