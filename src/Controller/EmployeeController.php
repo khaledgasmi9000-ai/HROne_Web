@@ -135,7 +135,8 @@ class EmployeeController extends AbstractController{
         $formatted = array_map(fn($emp) => $this->formatEmployee($emp), $employees);
         // Render Twig view as HTML
         $html = $this->renderView('Gestion Administrative/components/employees_pdf.html.twig', [
-            'employees' => $formatted
+            'employees' => $formatted,
+            'public_path' => str_replace('\\', '/', $this->getParameter('kernel.project_dir') . '/public')
         ]);
 
         $output = $pdf->getOutputFromHtml($html);

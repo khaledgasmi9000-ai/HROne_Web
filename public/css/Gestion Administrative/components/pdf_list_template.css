@@ -1,0 +1,59 @@
+body {
+    font-family: DejaVu Sans, Arial, sans-serif;
+    color: #2c3e50;
+}
+
+.page {
+    border: 2px solid #2c3e50;
+    padding: 20px;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.logo img {
+    height: 50px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+th {
+    background-color: #34495e;
+    color: white;
+    padding: 8px;
+    text-align: left;
+}
+
+td {
+    padding: 6px;
+    border-bottom: 1px solid #ddd;
+}
+
+tr:nth-child(even) {
+    background-color: #f4f6f7;
+}
+
+.footer {
+    position: absolute;
+    bottom: 10px;
+    left: 20px;
+    right: 20px;
+    font-size: 10px;
+    color: #777;
+    text-align: center;
+}

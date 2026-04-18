@@ -97,7 +97,8 @@ class ToolController extends AbstractController{
         $formatted = array_map(fn($t) => $this->formatTool($t), $tools);
 
         $html = $this->renderView('Gestion Administrative/components/tools_pdf.html.twig', [
-            'tools' => $formatted
+            'tools' => $formatted,
+            'public_path' => str_replace('\\', '/', $this->getParameter('kernel.project_dir') . '/public')
         ]);
 
         $output = $pdf->getOutputFromHtml($html);
