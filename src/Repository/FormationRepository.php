@@ -93,4 +93,34 @@ class FormationRepository extends ServiceEntityRepository
 
         return max(1, (int) $min);
     }
+
+    /**
+     * @param list<int> $formationIds
+     *
+     * @return array<int, Formation>
+     */
+    public function findByIds(array $formationIds): array
+    {
+        if ($formationIds === []) {
+            return [];
+        }
+
+        $formations = $this->createQueryBuilder('f')
+            ->andWhere('f.ID_Formation IN (:ids)')
+            ->setParameter('ids', array_map('intval', $formationIds))
+            ->getQuery()
+            ->getResult();
+
+        $mapped = [];
+
+        foreach ($formations as $formation) {
+            if (!$formation instanceof Formation || $formation->getIDFormation() === null) {
+                continue;
+            }
+
+            $mapped[$formation->getIDFormation()] = $formation;
+        }
+
+        return $mapped;
+    }
 }

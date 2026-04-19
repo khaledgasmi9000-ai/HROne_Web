@@ -25,5 +25,10 @@ services:
         arguments:
             $fromAddress: '%app.mailer_from%'
 
+    App\Service\AiFormationRecommendationExplanationService:
+        arguments:
+            $apiKey: '%env(string:GROQ_API_KEY)%'
+            $model: '%env(string:GROQ_MODEL)%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

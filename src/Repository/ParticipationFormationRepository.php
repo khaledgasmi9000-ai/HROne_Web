@@ -11,9 +11,22 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class ParticipationFormationRepository extends ServiceEntityRepository
 {
+    /**
+     * @var list<string>
+     */
+    private const ACTIVE_STATUSES = ['inscrit', 'en_cours'];
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, ParticipationFormation::class);
+    }
+
+    public function findParticipation(int $formationId, int $participantId): ?ParticipationFormation
+    {
+        return $this->findOneBy([
+            'ID_Formation' => $formationId,
+            'ID_Participant' => $participantId,
+        ]);
     }
 
     public function findActiveParticipation(int $formationId, int $participantId): ?ParticipationFormation
@@ -21,10 +34,10 @@ class ParticipationFormationRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('p')
             ->andWhere('p.ID_Formation = :formationId')
             ->andWhere('p.ID_Participant = :participantId')
-            ->andWhere('p.Statut = :status')
+            ->andWhere('p.Statut IS NULL OR p.Statut IN (:statuses)')
             ->setParameter('formationId', $formationId)
             ->setParameter('participantId', $participantId)
-            ->setParameter('status', 'inscrit')
+            ->setParameter('statuses', self::ACTIVE_STATUSES)
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
@@ -55,9 +68,9 @@ class ParticipationFormationRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('p')
             ->andWhere('p.ID_Participant = :participantId')
-            ->andWhere('p.Statut = :status')
+            ->andWhere('p.Statut IS NULL OR p.Statut IN (:statuses)')
             ->setParameter('participantId', $participantId)
-            ->setParameter('status', 'inscrit')
+            ->setParameter('statuses', self::ACTIVE_STATUSES)
             ->orderBy('p.Num_Ordre_Participation', 'DESC')
             ->getQuery()
             ->getResult();
@@ -89,13 +102,15 @@ class ParticipationFormationRepository extends ServiceEntityRepository
     public function removeActiveParticipation(int $formationId, int $participantId): int
     {
         return $this->createQueryBuilder('p')
-            ->delete()
+            ->update()
+            ->set('p.Statut', ':status')
             ->andWhere('p.ID_Formation = :formationId')
             ->andWhere('p.ID_Participant = :participantId')
-            ->andWhere('p.Statut = :status')
+            ->andWhere('p.Statut IS NULL OR p.Statut IN (:statuses)')
             ->setParameter('formationId', $formationId)
             ->setParameter('participantId', $participantId)
-            ->setParameter('status', 'inscrit')
+            ->setParameter('statuses', self::ACTIVE_STATUSES)
+            ->setParameter('status', 'annule')
             ->getQuery()
             ->execute();
     }

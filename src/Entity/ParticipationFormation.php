@@ -42,7 +42,6 @@ class ParticipationFormation
         return $this;
     }
 
-    #[ORM\Id]
     #[ORM\Column(name: 'Num_Ordre_Participation', type: 'bigint', nullable: false)]
     private ?int $Num_Ordre_Participation = null;
 

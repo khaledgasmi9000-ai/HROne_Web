@@ -11,6 +11,7 @@ use App\Repository\ParticipationFormationRepository;
 use App\Repository\UtilisateurRepository;
 use App\Service\CertificatePdfGenerator;
 use App\Service\FormationMailer;
+use App\Service\FormationRecommendationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,21 +31,46 @@ final class FormationController extends AbstractController
     }
 
     #[Route('/formations', name: 'app_formation_index', methods: ['GET'])]
-    public function index(Request $request, FormationRepository $formationRepository): Response
+    public function index(
+        Request $request,
+        FormationRepository $formationRepository,
+        UtilisateurRepository $utilisateurRepository,
+        FormationRecommendationService $formationRecommendationService
+    ): Response
     {
         $mode = $request->query->get('mode');
         $level = $request->query->get('level');
         $keyword = $request->query->get('q');
         $formations = $formationRepository->searchForCatalog($mode, $keyword, $level);
         $featured = $formationRepository->findFeaturedFormation();
+        $demoEmployees = $this->buildDemoEmployees($utilisateurRepository);
+        $selectedParticipantId = $this->resolveParticipantId($request, $demoEmployees);
+        $selectedEmployee = $this->findSelectedEmployee($selectedParticipantId, $demoEmployees);
+        $recommendationContext = $formationRecommendationService->recommendForParticipant($selectedParticipantId, $formations);
 
         return $this->render('formation/index.html.twig', [
             'formations' => array_map([$this, 'mapFormation'], $formations),
             'featured' => $featured ? $this->mapFormation($featured) : null,
+            'demo_employees' => $demoEmployees,
+            'selected_participant_id' => $selectedParticipantId,
+            'selected_employee' => $selectedEmployee,
+            'recommendation_profile' => $recommendationContext['profile'],
+            'recommended_formations' => array_map(function (array $recommendation): array {
+                return array_merge(
+                    $this->mapFormation($recommendation['formation']),
+                    [
+                        'recommendation_score' => $recommendation['score'],
+                        'recommendation_reasons' => $recommendation['reasons'],
+                        'recommendation_explanation' => $recommendation['explanation'],
+                        'recommendation_explanation_source' => $recommendation['explanation_source'],
+                    ]
+                );
+            }, $recommendationContext['recommendations']),
             'filters' => [
                 'mode' => $mode,
                 'level' => $level,
                 'q' => $keyword,
+                'employee' => $selectedParticipantId,
             ],
             'stats' => [
                 'total' => count($formations),
@@ -170,15 +196,23 @@ final class FormationController extends AbstractController
             }
         }
 
-        $participation = (new ParticipationFormation())
-            ->setID_Formation($id)
-            ->setID_Participant($participantId)
+        $existingParticipation = $participationFormationRepository->findParticipation($id, $participantId);
+
+        $participation = $existingParticipation
+            ?? (new ParticipationFormation())
+                ->setID_Formation($id)
+                ->setID_Participant($participantId);
+
+        $participation
             ->setNum_Ordre_Participation($participationFormationRepository->getNextOrderNumber())
-            ->setStatut('inscrit');
+            ->setStatut('inscrit')
+            ->setCertificat(null);
 
         $formation->setPlacesRestantes(max(0, ($formation->getPlacesRestantes() ?? 0) - 1));
 
-        $entityManager->persist($participation);
+        if (!$existingParticipation instanceof ParticipationFormation) {
+            $entityManager->persist($participation);
+        }
         $entityManager->flush();
         $request->getSession()->set('participant_email', $registrationIdentity['email']);
 
@@ -1089,10 +1123,6 @@ final class FormationController extends AbstractController
         return $response;
     }
 }
-
-
-
-
 
 
 
