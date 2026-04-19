@@ -431,183 +431,183 @@ class ToolController extends AbstractController{
     }
 
     #[Route('/Gestion_Administrative/outils/fiche/{id}', name: 'tool_fiche')]
-public function ficheTool(int $id, OutilsDeTravailRepository $repo): Response
-{
-    $tool = $repo->findToolById($id);
+    public function ficheTool(int $id, OutilsDeTravailRepository $repo): Response
+    {
+        $tool = $repo->findToolById($id);
 
-    if (!$tool) {
-        throw $this->createNotFoundException('Outil non trouvé');
-    }
+        if (!$tool) {
+            throw $this->createNotFoundException('Outil non trouvé');
+        }
 
-    // =========================
-    // 1. Build employees data
-    // =========================
-    $employeesData = [];
+        // =========================
+        // 1. Build employees data
+        // =========================
+        $employeesData = [];
 
-    foreach ($tool->getEmployees() as $employee) {
+        foreach ($tool->getEmployees() as $employee) {
 
-        $time = 0;
+            $time = 0;
 
-        foreach ($employee->getWorkSessions() as $session) {
-            foreach ($session->getDetails() as $detail) {
+            foreach ($employee->getWorkSessions() as $session) {
+                foreach ($session->getDetails() as $detail) {
 
-                if (strtolower(trim($detail->getApp())) === strtolower(trim($tool->getIdentifiantUniverselle()))) {
-                    $time += $detail->getDuration();
+                    if (strtolower(trim($detail->getApp())) === strtolower(trim($tool->getIdentifiantUniverselle()))) {
+                        $time += $detail->getDuration();
+                    }
                 }
             }
+
+            $monthlyHours = $employee->getNbrHeureDeTravail() ?: 160;
+
+            $cost = $employee->getSALAIRE() && $time > 0
+                ? round(($time / 60) / $monthlyHours * $employee->getSALAIRE(), 2)
+                : 0;
+
+            $employeesData[] = [
+                'id' => $employee->getIDEmploye(),
+                'nom' => $employee->getUtilisateur()?->getNomUtilisateur() ?? 'N/A',
+                'departement' => $employee->getDepartement()?->getNom() ?? 'Non défini',
+                'temps' => round($time / 60, 2),
+                'salaire' => $employee->getSALAIRE(),
+                'cout' => $cost
+            ];
         }
 
-        $monthlyHours = $employee->getNbrHeureDeTravail() ?: 160;
+        // =========================
+        // 2. Sorting + top users
+        // =========================
+        usort($employeesData, fn($a, $b) => $b['temps'] <=> $a['temps']);
+        $topUsers = array_slice($employeesData, 0, 3);
 
-        $cost = $employee->getSALAIRE() && $time > 0
-            ? round(($time / 60) / $monthlyHours * $employee->getSALAIRE(), 2)
-            : 0;
+        // =========================
+        // 3. Global stats
+        // =========================
+        $totalTime = array_sum(array_column($employeesData, 'temps'));
+        $users = count($employeesData);
+        $avgTime = $users > 0 ? round($totalTime / $users, 2) : 0;
+        $costTotal = array_sum(array_column($employeesData, 'cout'));
 
-        $employeesData[] = [
-            'id' => $employee->getIDEmploye(),
-            'nom' => $employee->getUtilisateur()?->getNomUtilisateur() ?? 'N/A',
-            'departement' => $employee->getDepartement()?->getNom() ?? 'Non défini',
-            'temps' => round($time / 60, 2),
-            'salaire' => $employee->getSALAIRE(),
-            'cout' => $cost
-        ];
-    }
+        // =========================
+        // 4. Department distribution
+        // =========================
+        $departementStats = [];
 
-    // =========================
-    // 2. Sorting + top users
-    // =========================
-    usort($employeesData, fn($a, $b) => $b['temps'] <=> $a['temps']);
-    $topUsers = array_slice($employeesData, 0, 3);
+        foreach ($employeesData as $emp) {
+            $dept = $emp['departement'];
 
-    // =========================
-    // 3. Global stats
-    // =========================
-    $totalTime = array_sum(array_column($employeesData, 'temps'));
-    $users = count($employeesData);
-    $avgTime = $users > 0 ? round($totalTime / $users, 2) : 0;
-    $costTotal = array_sum(array_column($employeesData, 'cout'));
+            if (!isset($departementStats[$dept])) {
+                $departementStats[$dept] = 0;
+            }
 
-    // =========================
-    // 4. Department distribution
-    // =========================
-    $departementStats = [];
-
-    foreach ($employeesData as $emp) {
-        $dept = $emp['departement'];
-
-        if (!isset($departementStats[$dept])) {
-            $departementStats[$dept] = 0;
+            $departementStats[$dept] += $emp['temps'];
         }
 
-        $departementStats[$dept] += $emp['temps'];
-    }
+        $departementDistribution = [];
 
-    $departementDistribution = [];
+        foreach ($departementStats as $dept => $time) {
 
-    foreach ($departementStats as $dept => $time) {
+            $percent = $totalTime > 0
+                ? round(($time / $totalTime) * 100, 2)
+                : 0;
 
-        $percent = $totalTime > 0
-            ? round(($time / $totalTime) * 100, 2)
-            : 0;
+            $departementDistribution[] = [
+                'name' => $dept,
+                'percent' => $percent
+            ];
+        }
 
-        $departementDistribution[] = [
-            'name' => $dept,
-            'percent' => $percent
-        ];
-    }
+        // =========================
+        // 5. Format top users for AI
+        // =========================
+        $topUsersFormatted = array_map(
+            fn($u) => "{$u['nom']} ({$u['temps']}h)",
+            $topUsers
+        );
 
-    // =========================
-    // 5. Format top users for AI
-    // =========================
-    $topUsersFormatted = array_map(
-        fn($u) => "{$u['nom']} ({$u['temps']}h)",
-        $topUsers
-    );
+        $topUsersStr = implode(', ', $topUsersFormatted);
 
-    $topUsersStr = implode(', ', $topUsersFormatted);
+        // =========================
+        // 6. Build AI prompt
+        // =========================
+        $prompt = trim(sprintf(
+            "Tu rédiges un court résumé pour une fiche outil affichée dans une application de gestion.
 
-    // =========================
-    // 6. Build AI prompt
-    // =========================
-    $prompt = trim(sprintf(
-"Tu rédiges un court résumé pour une fiche outil affichée dans une application de gestion.
+            Contraintes STRICTES :
+            - 2 à 3 phrases maximum
+            - Ton neutre et professionnel
+            - AUCUNE première personne
+            - AUCUNE introduction ou mise en contexte
+            - Style direct et factuel
 
-Contraintes STRICTES :
-- 2 à 3 phrases maximum
-- Ton neutre et professionnel
-- AUCUNE première personne
-- AUCUNE introduction ou mise en contexte
-- Style direct et factuel
+            Données :
+            - Temps total : %s h
+            - Temps moyen par utilisateur : %s h
+            - Nombre d’utilisateurs : %d
+            - Coût total : %s TND
+            - Top utilisateurs : %s
 
-Données :
-- Temps total : %s h
-- Temps moyen par utilisateur : %s h
-- Nombre d’utilisateurs : %d
-- Coût total : %s TND
-- Top utilisateurs : %s
+            Objectif :
+            - Évaluer l’intensité d’utilisation de l’outil
+            - Identifier une sur-utilisation ou sous-utilisation éventuelle
+            - Mentionner une piste d’optimisation si pertinente",
+                    $totalTime,
+                    $avgTime,
+                    $users,
+                    $costTotal,
+                    $topUsersStr ?: 'Aucun'
+                ));
 
-Objectif :
-- Évaluer l’intensité d’utilisation de l’outil
-- Identifier une sur-utilisation ou sous-utilisation éventuelle
-- Mentionner une piste d’optimisation si pertinente",
-        $totalTime,
-        $avgTime,
-        $users,
-        $costTotal,
-        $topUsersStr ?: 'Aucun'
-    ));
+        // =========================
+        // 7. Call Groq API
+        // =========================
+        try {
+            $client = HttpClient::create();
 
-    // =========================
-    // 7. Call Groq API
-    // =========================
-    try {
-        $client = HttpClient::create();
-
-        $response = $client->request('POST', 'https://api.groq.com/openai/v1/chat/completions', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $_ENV['GROQ_API_KEY'],
-                'Content-Type' => 'application/json',
-            ],
-            'json' => [
-                'model' => 'llama-3.3-70b-versatile',
-                'messages' => [
-                    [
-                        'role' => 'user',
-                        'content' => $prompt
-                    ]
+            $response = $client->request('POST', 'https://api.groq.com/openai/v1/chat/completions', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $_ENV['GROQ_API_KEY'],
+                    'Content-Type' => 'application/json',
                 ],
-                'max_tokens' => 100
+                'json' => [
+                    'model' => 'llama-3.3-70b-versatile',
+                    'messages' => [
+                        [
+                            'role' => 'user',
+                            'content' => $prompt
+                        ]
+                    ],
+                    'max_tokens' => 100
+                ],
+            ]);
+
+            $data = $response->toArray();
+
+            $summary = $data['choices'][0]['message']['content'] ?? 'Résumé indisponible';
+
+            // Clean formatting
+            $summary = preg_replace('/\*\*/', '', $summary);
+            $summary = trim($summary);
+
+        } catch (\Exception $e) {
+            $summary = 'Résumé non disponible.';
+        }
+
+        // =========================
+        // 8. Render
+        // =========================
+        return $this->render('Gestion Administrative/fiche_outil.html.twig', [
+            'tool' => $tool,
+            'stats' => [
+                'avgTime' => $avgTime,
+                'users' => $users,
+                'costTotal' => $costTotal
             ],
+            'employees' => $employeesData,
+            'topUsers' => $topUsers,
+            'departements' => $departementDistribution,
+            'summary' => $summary
         ]);
-
-        $data = $response->toArray();
-
-        $summary = $data['choices'][0]['message']['content'] ?? 'Résumé indisponible';
-
-        // Clean formatting
-        $summary = preg_replace('/\*\*/', '', $summary);
-        $summary = trim($summary);
-
-    } catch (\Exception $e) {
-        $summary = 'Résumé non disponible.';
     }
-
-    // =========================
-    // 8. Render
-    // =========================
-    return $this->render('Gestion Administrative/fiche_outil.html.twig', [
-        'tool' => $tool,
-        'stats' => [
-            'avgTime' => $avgTime,
-            'users' => $users,
-            'costTotal' => $costTotal
-        ],
-        'employees' => $employeesData,
-        'topUsers' => $topUsers,
-        'departements' => $departementDistribution,
-        'summary' => $summary
-    ]);
-}
 
     // ========== End Outil Controller ==========  //
 

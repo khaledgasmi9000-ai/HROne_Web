@@ -16,28 +16,37 @@ class WorkSessionRepository extends ServiceEntityRepository
         parent::__construct($registry, WorkSession::class);
     }
 
-//    /**
-//     * @return WorkSession[] Returns an array of WorkSession objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('w')
-//            ->andWhere('w.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('w.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function getTimeStats(): array
+    {
+        $result = $this->createQueryBuilder('ws')
+            ->select(
+                'SUM(ws.activeTime) as totalActive',
+                'SUM(ws.sessionDuration) as totalSession'
+            )
+            ->getQuery()
+            ->getSingleResult();
 
-//    public function findOneBySomeField($value): ?WorkSession
-//    {
-//        return $this->createQueryBuilder('w')
-//            ->andWhere('w.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        return [
+            'totalActive' => (float) ($result['totalActive'] ?? 0),
+            'totalSession' => (float) ($result['totalSession'] ?? 0),
+        ];
+    }
+
+    public function getProductivityBreakdown(): array
+    {
+        $result = $this->createQueryBuilder('ws')
+            ->select(
+                'SUM(ws.activeTime) as active',
+                'SUM(ws.afkTime) as afk',
+                'SUM(ws.unknownTime) as unknown'
+            )
+            ->getQuery()
+            ->getSingleResult();
+
+        return [
+            'active' => (float) ($result['active'] ?? 0),
+            'afk' => (float) ($result['afk'] ?? 0),
+            'unknown' => (float) ($result['unknown'] ?? 0),
+        ];
+    }
 }

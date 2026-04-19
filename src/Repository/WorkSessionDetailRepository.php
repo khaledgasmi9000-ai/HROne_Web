@@ -16,4 +16,14 @@ class WorkSessionDetailRepository extends ServiceEntityRepository
         parent::__construct($registry, WorkSessionDetail::class);
     }
 
+    public function getGlobalToolUsage(): array
+    {
+        return $this->createQueryBuilder('d')
+            ->select('LOWER(d.app) as app, SUM(d.duration) as totalDuration')
+            ->groupBy('app')
+            ->orderBy('totalDuration', 'DESC')
+            ->getQuery()
+            ->getArrayResult();
+    }
+
 }

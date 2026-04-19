@@ -88,4 +88,13 @@ class OutilsDeTravailRepository extends ServiceEntityRepository
         return $tool;
     }
 
+    public function getTotalCost(): float
+    {
+        $result = $this->createQueryBuilder('o')
+            ->select('SUM(o.Monthly_Cost)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (float) ($result ?? 0);
+    }
 }

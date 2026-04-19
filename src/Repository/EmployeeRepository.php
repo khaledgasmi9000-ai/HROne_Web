@@ -156,4 +156,15 @@ class EmployeeRepository extends ServiceEntityRepository
             ->getArrayResult();
     }
 
+    public function getDepartmentProductivity(): array
+    {
+        return $this->createQueryBuilder('e')
+            ->join('e.departement', 'd')
+            ->join('e.workSessions', 'ws')
+            ->select('d.Nom as departement, AVG(ws.activeTime) as avgActive')
+            ->groupBy('d.ID_Departement')
+            ->getQuery()
+            ->getArrayResult();
+    }
+
 }

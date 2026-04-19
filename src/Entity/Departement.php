@@ -17,7 +17,7 @@ class Departement
     #[ORM\Column(name: 'ID_Departement', type: 'integer')]
     private ?int $ID_Departement = null;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    #[ORM\Column(name:'Nom',type: 'string', length: 255)]
     private ?string $Nom = null;
 
     #[ORM\OneToMany(mappedBy: 'departement', targetEntity: Employee::class)]
