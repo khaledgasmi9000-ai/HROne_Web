@@ -7,9 +7,7 @@ use App\Repository\OutilsDeTravailRepository;
 use App\Repository\UtilisateurRepository;
 use App\Repository\DepartementRepository;
 
-use App\Entity\Employee;
 use App\Entity\Utilisateur;
-use App\Entity\Ordre;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Doctrine\ORM\EntityManagerInterface;

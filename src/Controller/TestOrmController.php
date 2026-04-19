@@ -10,11 +10,7 @@ use App\Entity\WorkSessionDetail;
 use App\Repository\EmployeeRepository;
 use App\Repository\OutilsDeTravailRepository;
 use App\Repository\DemandeCongeRepository;
-use App\Repository\WorkSessionDetailRepository;
-use App\Repository\WorkSessionRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -273,58 +269,6 @@ class TestOrmController extends AbstractController
         }
     }
 
-    // #[Route('/ai/test-summary', name: 'ai_test_summary')]
-    // public function testSummary(): Response
-    // {
-    //     $client = HttpClient::create();
 
-    //     $prompt = sprintf(
-    //         "Résumé professionnel RH (2-3 phrases maximum).
-
-    //         Données :
-    //         - Temps total : %s h
-    //         - Nombre d’outils : %d
-    //         - Coût total : %s TND
-    //         - Temps productif : %s h
-    //         - Temps non productif : %s h
-    //         - Temps idle : %s h
-    //         - Outils principaux : %s
-
-    //         Instructions :
-    //         - Ton neutre et professionnel
-    //         - Identifier le niveau de productivité
-    //         - Mentionner un point d’amélioration si pertinent",
-    //             $stats['totalTime'],
-    //             $stats['toolsCount'],
-    //             $stats['totalCost'],
-    //             $breakdown['productif'],
-    //             $breakdown['nonProductif'],
-    //             $breakdown['idle'],
-    //             $topToolsStr ?: 'Aucun'
-    //         );
-
-    //     $response = $client->request('POST', 'https://api.groq.com/openai/v1/chat/completions', [
-    //         'headers' => [
-    //             'Authorization' => 'Bearer ' . $_ENV['GROQ_API_KEY'],
-    //             'Content-Type' => 'application/json',
-    //         ],
-    //         'json' => [
-    //             'model' => 'llama-3.3-70b-versatile',
-    //             'messages' => [
-    //                 [
-    //                     'role' => 'user',
-    //                     'content' => $prompt
-    //                 ]
-    //             ],
-    //             'max_tokens' => 100
-    //         ],
-    //     ]);
-
-    //     $data = $response->toArray();
-
-    //     $summary = $data['choices'][0]['message']['content'] ?? 'Erreur génération';
-
-    //     return new Response('<pre>' . $summary . '</pre>');
-    // }
 
 }

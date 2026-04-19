@@ -2,15 +2,12 @@
 
 namespace App\Controller;
 
-use App\Entity\WorkSession;
-use App\Repository\DemandeCongeRepository;
 use App\Repository\EmployeeRepository;
 use App\Repository\WorkSessionRepository;
 use App\Repository\OutilsDeTravailRepository;
 use App\Repository\WorkSessionDetailRepository;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 

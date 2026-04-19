@@ -15,6 +15,7 @@ use App\Services\ActivityWatchService;
 use App\Entity\WorkSession;
 use App\Entity\WorkSessionDetail;
 
+use App\Repository\EmployeeRepository;
 
 class ActivityWatchController extends AbstractController
 {
@@ -78,17 +79,32 @@ class ActivityWatchController extends AbstractController
     #[Route('/api/session/start', methods: ['POST'])]
     public function startSession(
         Request $request,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        EmployeeRepository $employeeRepo
     ): JsonResponse {
 
         $session = $request->getSession();
 
         $employeeId = $session->get('ID_Employee') ?? 22;
 
+        if (!$employeeId) {
+            return $this->json([
+                'error' => 'No employee in session'
+            ], 400);
+        }
+
+        $employee = $employeeRepo->find($employeeId);
+
+        if (!$employee) {
+            return $this->json([
+                'error' => 'Employee not found'
+            ], 404);
+        }
+
         $start = new \DateTime();
         
         $workSession = new WorkSession();
-        $workSession->setEmployeeId($employeeId);
+        $workSession->setEmployee($employee);
         $workSession->setStartTime($start);
         $workSession->setStatus('running');
 
