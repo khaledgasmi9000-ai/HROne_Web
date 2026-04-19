@@ -14,7 +14,7 @@ class Profil
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name : "ID_Profil",type: 'integer')]
     private ?int $ID_Profil = null;
 
     public function getID_Profil(): ?int
