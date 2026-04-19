@@ -34,17 +34,21 @@ class FormationMailer
             ->to($recipientEmail)
             ->subject('Confirmation d inscription - ' . $title)
             ->text($this->buildRegistrationBody($participantName, $formation))
-            ->htmlTemplate('emails/formation_registration.html.twig')
-            ->context([
-                'participant_name' => trim($participantName) !== '' ? $participantName : 'participant',
-                'formation_title' => $title,
-                'formation_mode' => $formation->getMode() ?: 'Non defini',
-                'formation_level' => $formation->getNiveau() ?: 'Non defini',
-                'formation_start' => $this->formatStoredDate($formation->getDateDebut()),
-                'formation_end' => $this->formatStoredDate($formation->getDateFin()),
-                'ticket_reference' => $ticketReference,
-                'qr_code_url' => 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' . rawurlencode($qrPayload),
-            ]);
+            ->htmlTemplate('emails/formation_registration.html.twig');
+
+        $logoCid = $this->attachLogo($email);
+
+        $email->context([
+            'participant_name' => trim($participantName) !== '' ? $participantName : 'participant',
+            'formation_title' => $title,
+            'formation_mode' => $formation->getMode() ?: 'Non defini',
+            'formation_level' => $formation->getNiveau() ?: 'Non defini',
+            'formation_start' => $this->formatStoredDate($formation->getDateDebut()),
+            'formation_end' => $this->formatStoredDate($formation->getDateFin()),
+            'ticket_reference' => $ticketReference,
+            'qr_code_url' => 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' . rawurlencode($qrPayload),
+            'logo_cid' => $logoCid,
+        ]);
 
         $this->mailer->send($email);
     }
@@ -61,8 +65,12 @@ class FormationMailer
             ->from($this->fromAddress)
             ->to($recipientEmail)
             ->subject('Certificat de formation - ' . $title)
-            ->text($this->buildCertificateBody($participantName, $formation))
-            ->html($this->buildCertificateHtml($participantName, $formation))
+            ->text($this->buildCertificateBody($participantName, $formation));
+
+        $logoCid = $this->attachLogo($email);
+
+        $email
+            ->html($this->buildCertificateHtml($participantName, $formation, $logoCid))
             ->attach($pdfContent, $filename, 'application/pdf');
 
         $this->mailer->send($email);
@@ -107,10 +115,22 @@ class FormationMailer
         ]);
     }
 
-    private function buildCertificateHtml(string $participantName, Formation $formation): string
+    private function buildCertificateHtml(string $participantName, Formation $formation, string $logoCid): string
     {
         $participantName = htmlspecialchars(trim($participantName) !== '' ? $participantName : 'participant', ENT_QUOTES, 'UTF-8');
         $formationTitle = htmlspecialchars($formation->getTitre() ?: 'Formation', ENT_QUOTES, 'UTF-8');
+        $headerLogoCell = '';
+
+        if ($logoCid !== '') {
+            $safeLogoCid = htmlspecialchars($logoCid, ENT_QUOTES, 'UTF-8');
+            $headerLogoCell = <<<HTML
+      <td style="width:88px;vertical-align:middle;padding-right:16px;">
+        <div style="width:72px;height:72px;background:#ffffff;border-radius:18px;padding:8px;box-sizing:border-box;border:1px solid rgba(203,213,225,0.35);">
+          <img src="{$safeLogoCid}" alt="HR One" style="display:block;width:100%;height:100%;object-fit:contain;border:0;">
+        </div>
+      </td>
+HTML;
+        }
 
         return <<<HTML
 <!DOCTYPE html>
@@ -119,8 +139,15 @@ class FormationMailer
 <body style="margin:0;padding:24px;background:#f4f7fb;font-family:Arial,sans-serif;color:#1f2937;">
   <div style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #dbe4f0;border-radius:16px;overflow:hidden;">
     <div style="background:#0f172a;padding:22px 28px;color:#ffffff;">
-      <div style="font-size:24px;font-weight:700;">HR One</div>
-      <div style="margin-top:6px;font-size:14px;color:#cbd5e1;">Certificat de formation</div>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
+        <tr>
+{$headerLogoCell}
+          <td style="vertical-align:middle;">
+            <div style="font-size:24px;font-weight:700;line-height:1.2;color:#ffffff;">HR One</div>
+            <div style="margin-top:6px;font-size:14px;line-height:1.5;color:#cbd5e1;">Certificat de formation</div>
+          </td>
+        </tr>
+      </table>
     </div>
     <div style="padding:28px;">
       <p style="margin:0 0 16px;font-size:16px;line-height:1.7;">Bonjour <strong>{$participantName}</strong>,</p>
@@ -131,6 +158,20 @@ class FormationMailer
 </body>
 </html>
 HTML;
+    }
+
+    private function attachLogo(TemplatedEmail $email): string
+    {
+        $logoPath = dirname(__DIR__, 2) . '/public/images/logo-rh.png';
+
+        if (!is_file($logoPath)) {
+            return '';
+        }
+
+        $contentId = 'logo-rh';
+        $email->embedFromPath($logoPath, $contentId);
+
+        return 'cid:' . $contentId;
     }
 
     private function generateTicketReference(Formation $formation, string $recipientEmail): string

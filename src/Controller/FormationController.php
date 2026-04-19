@@ -284,6 +284,7 @@ final class FormationController extends AbstractController
             'selected_employee'       => $selectedEmployee,
             'email'                   => $email,
             'participations'          => $rows,
+            'calendar_events'         => $this->buildParticipationCalendarEvents($rows, $selectedParticipantId),
         ]);
     }
 
@@ -468,6 +469,7 @@ final class FormationController extends AbstractController
             $errors = $this->validateFormData($formData);
 
             if ($errors === []) {
+                $formData['image'] = $this->resolveStoredImagePath($request, $formData['image']);
                 $this->hydrateFormation($formation, $formData);
                 $entityManager->persist($formation);
                 $entityManager->flush();
@@ -498,6 +500,7 @@ final class FormationController extends AbstractController
             $errors = $this->validateFormData($formData);
 
             if ($errors === []) {
+                $formData['image'] = $this->resolveStoredImagePath($request, $formData['image']);
                 $this->hydrateFormation($formation, $formData);
                 $entityManager->flush();
 
@@ -662,6 +665,89 @@ final class FormationController extends AbstractController
         }
 
         return $raw;
+    }
+
+    /**
+     * @param array<int, array{participation: ParticipationFormation, formation: array<string, mixed>}> $rows
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildParticipationCalendarEvents(array $rows, ?int $participantId): array
+    {
+        if ($participantId === null) {
+            return [];
+        }
+
+        $events = [];
+
+        foreach ($rows as $row) {
+            $formation = $row['formation'];
+            $start = $this->createDateFromStoredValue($formation['date_start'] ?? null);
+            $endInclusive = $this->createDateFromStoredValue($formation['date_end'] ?? null) ?? $start;
+
+            if (!$start instanceof \DateTimeImmutable || !$endInclusive instanceof \DateTimeImmutable) {
+                continue;
+            }
+
+            $events[] = [
+                'title' => (string) ($formation['title'] ?? 'Formation'),
+                'start' => $start->format('Y-m-d'),
+                'end' => $endInclusive->modify('+1 day')->format('Y-m-d'),
+                'allDay' => true,
+                'url' => $this->generateUrl('app_formation_show', [
+                    'id' => $formation['id'] ?? 0,
+                    'employee' => $participantId,
+                ]),
+                'backgroundColor' => '#dbeafe',
+                'borderColor' => '#60a5fa',
+                'textColor' => '#0f172a',
+                'classNames' => ['participation-calendar-event'],
+                'extendedProps' => [
+                    'mode' => (string) ($formation['mode_label'] ?? ''),
+                    'level' => (string) ($formation['level'] ?? ''),
+                    'status' => (string) ($row['participation']->getStatut() ?? 'inscrit'),
+                ],
+            ];
+        }
+
+        return $events;
+    }
+
+    private function createDateFromStoredValue(mixed $value): ?\DateTimeImmutable
+    {
+        $raw = preg_replace('/\D/', '', (string) $value) ?? '';
+
+        if ($raw === '') {
+            return null;
+        }
+
+        if (strlen($raw) === 8) {
+            $date = \DateTimeImmutable::createFromFormat('d/m/Y', (string) $value);
+
+            if ($date instanceof \DateTimeImmutable) {
+                return $date->setTime(0, 0, 0);
+            }
+
+            $date = \DateTimeImmutable::createFromFormat('Ymd', $raw);
+
+            if ($date instanceof \DateTimeImmutable) {
+                return $date->setTime(0, 0, 0);
+            }
+        }
+
+        if (strlen($raw) >= 14) {
+            $date = \DateTimeImmutable::createFromFormat('YmdHis', substr($raw, 0, 14));
+
+            if ($date instanceof \DateTimeImmutable) {
+                return $date;
+            }
+        }
+
+        if (strlen($raw) === 10 || strlen($raw) === 9) {
+            return (new \DateTimeImmutable())->setTimestamp((int) $raw)->setTime(0, 0, 0);
+        }
+
+        return null;
     }
     /**
      * @return array<string, string>
@@ -1003,8 +1089,6 @@ final class FormationController extends AbstractController
         return $response;
     }
 }
-
-
 
 
 
