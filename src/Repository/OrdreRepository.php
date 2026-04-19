@@ -11,6 +11,8 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class OrdreRepository extends ServiceEntityRepository
 {
+    private const MAX_INT_32 = 2147483647;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Ordre::class);
@@ -20,10 +22,18 @@ class OrdreRepository extends ServiceEntityRepository
     {
         $maxValue = $this->createQueryBuilder('o')
             ->select('MAX(o.Num_Ordre)')
+            ->andWhere('o.Num_Ordre < :maxInt32')
+            ->setParameter('maxInt32', self::MAX_INT_32)
             ->getQuery()
             ->getSingleScalarResult();
 
-        return ((int) $maxValue) + 1;
+        $nextValue = ((int) ($maxValue ?? 0)) + 1;
+
+        if ($nextValue >= self::MAX_INT_32) {
+            throw new \RuntimeException('Impossible de generer un nouveau numero d ordre valide.');
+        }
+
+        return $nextValue;
     }
 
 //    /**

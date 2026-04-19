@@ -1,0 +1,466 @@
+{% extends 'Topnavbar/base.html.twig' %}
+
+{% set page_title = 'HR One - Mes candidatures' %}
+{% set page_class = 'page-mes-candidatures' %}
+{% set page_css = 'mes-candidatures.css' %}
+{% set page_key = 'mes-candidatures' %}
+
+{% block content_title %}{% endblock %}
+
+{% block content_body %}
+  <main class="page">
+    <header class="hero">
+      <div class="hero__text">
+        <p class="eyebrow">Tableau de suivi</p>
+        <h1>Mes candidatures</h1>
+        <p class="subtitle">Consulte les offres postulees, mets a jour ta candidature ou supprime-la.</p>
+      </div>
+      <div class="hero__meta">
+        <div class="pill">Total: {{ candidaturesTotal|default(0) }}</div>
+        <div class="pill pill--accent">En cours: {{ candidaturesInProgress|default(0) }}</div>
+      </div>
+    </header>
+
+    <section class="toolbar">
+      <form class="search" method="get" action="{{ path('topnav_mes_candidatures') }}">
+        <input id="candidatureSearch" name="q" type="search" placeholder="Rechercher une offre, une entreprise..." aria-label="Rechercher" value="{{ filters.search|default('') }}" />
+        <button class="btn btn--ghost" type="submit">Filtrer</button>
+        <a class="btn btn--ghost" href="{{ path('topnav_mes_candidatures') }}">Reinitialiser</a>
+      </form>
+      <div class="toolbar__actions">
+        <button id="btnNouvelleCandidature" class="btn" type="button" data-href="{{ path('topnav_offres') }}">Nouvelle candidature</button>
+      </div>
+    </section>
+
+    <section class="grid">
+      {% for candidaturesItem in candidatures %}
+        <article
+          class="card"
+          data-candidature-id="{{ candidaturesItem.id }}"
+          data-offer-id="{{ candidaturesItem.offerId }}"
+          data-offer-title="{{ candidaturesItem.title|e('html_attr') }}"
+          data-status="{{ candidaturesItem.statusLabel|e('html_attr') }}"
+          data-contract="{{ candidaturesItem.contract|e('html_attr') }}"
+          data-work-type="{{ candidaturesItem.workType|e('html_attr') }}"
+          data-location="{{ candidaturesItem.location|e('html_attr') }}"
+          data-experience="{{ candidaturesItem.experience|e('html_attr') }}"
+          data-candidate-name="{{ candidaturesItem.candidateName|e('html_attr') }}"
+          data-candidate-email="{{ candidaturesItem.candidateEmail|e('html_attr') }}"
+          data-cv="{{ candidaturesItem.cvFileName|e('html_attr') }}"
+          data-portfolio="{{ candidaturesItem.portfolioUrl|e('html_attr') }}"
+          data-motivation="{{ candidaturesItem.motivationLetter|e('html_attr') }}"
+          data-recommendation="{{ candidaturesItem.recommendationFileName|e('html_attr') }}"
+        >
+          <div class="card__head">
+            <div>
+              <h2>{{ candidaturesItem.title }}</h2>
+              <p class="muted">{{ candidaturesItem.location }}</p>
+            </div>
+            <span class="status {{ candidaturesItem.statusClass }}">{{ candidaturesItem.statusLabel }}</span>
+          </div>
+          <div class="card__body">
+            <p class="muted">Ref candidature: CND-{{ candidaturesItem.id }}</p>
+            <div class="tags">
+              <span>{{ candidaturesItem.contract }}</span>
+              <span>{{ candidaturesItem.workType }}</span>
+              <span>{{ candidaturesItem.experience }}</span>
+            </div>
+            {% if candidaturesItem.interviewComment is defined and candidaturesItem.interviewComment %}
+              <p class="interview-note">{{ candidaturesItem.interviewComment }}</p>
+            {% endif %}
+          </div>
+          <div class="card__actions">
+            <button class="btn btn--ghost btn-edit-candidature" type="button" data-id="{{ candidaturesItem.id }}">Modifier</button>
+            <button class="btn btn--danger btn-delete-candidature" type="button" data-id="{{ candidaturesItem.id }}">Supprimer</button>
+          </div>
+        </article>
+      {% else %}
+        <article class="card" id="emptyCandidaturesCard">
+          <div class="card__body">
+            <p class="muted">Vous n'avez encore aucune candidature.</p>
+          </div>
+        </article>
+      {% endfor %}
+    </section>
+
+    <section class="card edit-panel" id="editCandidaturePanel" style="display:none;">
+      <div class="card__head edit-panel__head">
+        <div>
+          <p class="eyebrow">Edition</p>
+          <h2>Modifier ma candidature</h2>
+          <p class="muted">Mettez a jour les informations et conservez vos fichiers existants si besoin.</p>
+        </div>
+      </div>
+      <div class="card__body">
+        <form id="editCandidatureForm" class="edit-form">
+          <input type="hidden" id="editCandidatureId" />
+          <div class="edit-form__grid">
+            <div class="field field--full">
+              <label for="editOfferId">Offre</label>
+              <select id="editOfferId"></select>
+            </div>
+            <div class="field">
+              <label for="editCandidateName">Nom complet</label>
+              <input id="editCandidateName" type="text" />
+            </div>
+            <div class="field">
+              <label for="editCandidateEmail">Email</label>
+              <input id="editCandidateEmail" type="email" />
+            </div>
+            <div class="field field--full">
+              <label for="editPortfolioUrl">Lien du portfolio</label>
+              <input id="editPortfolioUrl" type="url" />
+            </div>
+            <div class="field">
+              <label for="editCvFile">CV</label>
+              <input id="editCvFile" type="file" accept=".pdf,.docx" />
+              <small id="currentCvFile" class="file-hint muted"></small>
+            </div>
+            <div class="field">
+              <label for="editRecommendationLetter">Lettre de recommandation</label>
+              <input id="editRecommendationLetter" type="file" accept=".pdf,.docx" />
+              <small id="currentRecommendationFile" class="file-hint muted"></small>
+            </div>
+            <div class="field field--full">
+              <label for="editMotivationLetter">Lettre de motivation</label>
+              <textarea id="editMotivationLetter" rows="4"></textarea>
+            </div>
+          </div>
+          <small id="editFeedback" class="muted" role="alert" aria-live="polite"></small>
+          <div class="card__actions edit-form__actions">
+            <button id="saveCandidatureBtn" class="btn" type="button">Enregistrer</button>
+            <button id="cancelCandidatureEditBtn" class="btn btn--ghost" type="button">Annuler</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <div class="delete-modal" id="deleteCandidatureModal" hidden>
+      <div class="delete-modal__backdrop" data-close-delete-modal="true"></div>
+      <section class="delete-modal__panel" role="dialog" aria-modal="true" aria-labelledby="deleteCandidatureTitle">
+        <header class="delete-modal__header">
+          <h2 id="deleteCandidatureTitle">Confirmer la suppression</h2>
+        </header>
+        <p class="delete-modal__text" id="deleteCandidatureText">Voulez-vous vraiment supprimer cette candidature ? Cette action est irreversible.</p>
+        <div class="delete-modal__actions">
+          <button class="btn btn--ghost" id="cancelDeleteCandidatureBtn" type="button">Annuler</button>
+          <button class="btn btn--danger" id="confirmDeleteCandidatureBtn" type="button">Supprimer definitivement</button>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const btnNouvelleCandidature = document.getElementById("btnNouvelleCandidature");
+      const grid = document.querySelector(".grid");
+      const editPanel = document.getElementById("editCandidaturePanel");
+      const editForm = document.getElementById("editCandidatureForm");
+      const editCandidatureId = document.getElementById("editCandidatureId");
+      const editOfferId = document.getElementById("editOfferId");
+      const editCandidateName = document.getElementById("editCandidateName");
+      const editCandidateEmail = document.getElementById("editCandidateEmail");
+      const editPortfolioUrl = document.getElementById("editPortfolioUrl");
+      const editCvFile = document.getElementById("editCvFile");
+      const currentCvFile = document.getElementById("currentCvFile");
+      const editMotivationLetter = document.getElementById("editMotivationLetter");
+      const editRecommendationLetter = document.getElementById("editRecommendationLetter");
+      const currentRecommendationFile = document.getElementById("currentRecommendationFile");
+      const editFeedback = document.getElementById("editFeedback");
+      const saveCandidatureBtn = document.getElementById("saveCandidatureBtn");
+      const cancelCandidatureEditBtn = document.getElementById("cancelCandidatureEditBtn");
+      const deleteCandidatureModal = document.getElementById("deleteCandidatureModal");
+      const deleteCandidatureText = document.getElementById("deleteCandidatureText");
+      const cancelDeleteCandidatureBtn = document.getElementById("cancelDeleteCandidatureBtn");
+      const confirmDeleteCandidatureBtn = document.getElementById("confirmDeleteCandidatureBtn");
+      const updateApiPattern = "{{ path('topnav_candidatures_api_update', {id: '__ID__'}) }}";
+      const deleteApiPattern = "{{ path('topnav_candidatures_api_delete', {id: '__ID__'}) }}";
+      let pendingDeleteCandidatureId = null;
+
+      const parseApiResponse = async (response) => {
+        const rawText = await response.text();
+        let data = null;
+        try {
+          data = rawText ? JSON.parse(rawText) : {};
+        } catch (error) {
+          data = null;
+        }
+
+        if (!response.ok) {
+          const validationErrors = data?.errors && typeof data.errors === "object" ? Object.values(data.errors) : [];
+          const message = data?.message || rawText.split("\n")[0] || "Erreur serveur.";
+          const details = data?.details ? [data.details] : [];
+          throw new Error([message, ...validationErrors, ...details].filter(Boolean).join("\n"));
+        }
+
+        return data || {};
+      };
+
+      const showEditFeedback = (messages, success = false) => {
+        if (!editFeedback) {
+          return;
+        }
+
+        if (!messages || messages.length === 0) {
+          editFeedback.textContent = "";
+          editFeedback.style.color = "";
+          return;
+        }
+
+        editFeedback.style.color = success ? "#0f7a45" : "#b42318";
+        editFeedback.innerHTML = messages.map((item) => `- ${item}`).join("<br>");
+      };
+
+      const buildOfferOptions = () => {
+        if (!editOfferId) {
+          return;
+        }
+
+        const unique = new Map();
+        grid.querySelectorAll(".card[data-candidature-id]").forEach((card) => {
+          const id = Number(card.dataset.offerId || "");
+          const title = card.dataset.offerTitle || "";
+          if (id && !unique.has(id)) {
+            unique.set(id, title);
+          }
+        });
+
+        editOfferId.innerHTML = "";
+        unique.forEach((title, id) => {
+          const option = document.createElement("option");
+          option.value = String(id);
+          option.textContent = title;
+          editOfferId.appendChild(option);
+        });
+      };
+
+      const openEditPanel = (card) => {
+        if (!card || !editPanel) {
+          return;
+        }
+        buildOfferOptions();
+        editCandidatureId.value = card.dataset.candidatureId || "";
+        editOfferId.value = card.dataset.offerId || "";
+        editCandidateName.value = card.dataset.candidateName || "";
+        editCandidateEmail.value = card.dataset.candidateEmail || "";
+        editPortfolioUrl.value = card.dataset.portfolio || "";
+        editMotivationLetter.value = card.dataset.motivation || "";
+        editForm.dataset.currentCv = card.dataset.cv || "";
+        editForm.dataset.currentRecommendation = card.dataset.recommendation || "";
+        if (currentCvFile) {
+          currentCvFile.textContent = editForm.dataset.currentCv
+            ? `CV actuel: ${editForm.dataset.currentCv}`
+            : "Aucun CV enregistre.";
+        }
+        if (currentRecommendationFile) {
+          currentRecommendationFile.textContent = editForm.dataset.currentRecommendation
+            ? `Lettre actuelle: ${editForm.dataset.currentRecommendation}`
+            : "Aucune lettre enregistree.";
+        }
+        showEditFeedback([]);
+        editPanel.style.display = "block";
+        editPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+
+      const validateEditPayload = (payload) => {
+        const errors = [];
+        if (!payload.offerId) errors.push("Selectionnez une offre.");
+        if (!payload.candidateName) errors.push("Le nom complet est obligatoire.");
+        if (!payload.candidateEmail) errors.push("L'email est obligatoire.");
+        if (!payload.portfolioUrl) errors.push("Le portfolio est obligatoire.");
+        if (!payload.cvFileName) errors.push("Le CV est obligatoire.");
+        if (!payload.motivationLetter) errors.push("La lettre de motivation est obligatoire.");
+        if (!payload.recommendationFileName) errors.push("La lettre de recommandation est obligatoire.");
+        return errors;
+      };
+
+      const readFileAsBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+          if (!file) {
+            reject(new Error("Fichier introuvable."));
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = typeof reader.result === "string" ? reader.result : "";
+            const parts = result.split(",");
+            resolve(parts.length > 1 ? parts[1] : result);
+          };
+          reader.onerror = () => reject(new Error("Impossible de lire le fichier CV."));
+          reader.readAsDataURL(file);
+        });
+      };
+
+      const openDeleteCandidatureModal = (card) => {
+        if (!card || !deleteCandidatureModal) {
+          return;
+        }
+
+        const id = Number(card.dataset.candidatureId || "0");
+        if (!id) {
+          return;
+        }
+
+        pendingDeleteCandidatureId = id;
+        const title = (card.dataset.offerTitle || "cette offre").trim();
+        if (deleteCandidatureText) {
+          deleteCandidatureText.textContent = `Voulez-vous vraiment supprimer votre candidature pour \"${title}\" ? Cette action est irreversible.`;
+        }
+        deleteCandidatureModal.hidden = false;
+      };
+
+      const closeDeleteCandidatureModal = () => {
+        if (!deleteCandidatureModal) {
+          return;
+        }
+        deleteCandidatureModal.hidden = true;
+        pendingDeleteCandidatureId = null;
+      };
+
+      const confirmDeleteCandidature = async () => {
+        if (!pendingDeleteCandidatureId) {
+          closeDeleteCandidatureModal();
+          return;
+        }
+
+        confirmDeleteCandidatureBtn.disabled = true;
+        try {
+          const response = await fetch(deleteApiPattern.replace("__ID__", String(pendingDeleteCandidatureId)), {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+          await parseApiResponse(response);
+
+          const card = grid?.querySelector(`.card[data-candidature-id="${pendingDeleteCandidatureId}"]`);
+          if (card) {
+            card.remove();
+          }
+
+          closeDeleteCandidatureModal();
+          setTimeout(() => window.location.reload(), 250);
+        } catch (error) {
+          closeDeleteCandidatureModal();
+          showEditFeedback((error?.message || "Suppression impossible.").split("\n").filter(Boolean));
+        } finally {
+          confirmDeleteCandidatureBtn.disabled = false;
+        }
+      };
+
+      btnNouvelleCandidature.addEventListener("click", () => {
+        window.location.href = btnNouvelleCandidature.dataset.href;
+      });
+
+      grid.querySelectorAll(".btn-edit-candidature").forEach((button) => {
+        button.addEventListener("click", () => {
+          const card = button.closest(".card[data-candidature-id]");
+          openEditPanel(card);
+        });
+      });
+
+      grid.querySelectorAll(".btn-delete-candidature").forEach((button) => {
+        button.addEventListener("click", () => {
+          const card = button.closest(".card[data-candidature-id]");
+          openDeleteCandidatureModal(card);
+        });
+      });
+
+      cancelDeleteCandidatureBtn?.addEventListener("click", closeDeleteCandidatureModal);
+      confirmDeleteCandidatureBtn?.addEventListener("click", confirmDeleteCandidature);
+      deleteCandidatureModal?.addEventListener("click", (event) => {
+        if (event.target instanceof HTMLElement && event.target.dataset.closeDeleteModal === "true") {
+          closeDeleteCandidatureModal();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && deleteCandidatureModal && !deleteCandidatureModal.hidden) {
+          closeDeleteCandidatureModal();
+        }
+      });
+
+      cancelCandidatureEditBtn?.addEventListener("click", () => {
+        if (editPanel) {
+          editPanel.style.display = "none";
+        }
+        editForm?.reset();
+        if (currentCvFile) {
+          currentCvFile.textContent = "";
+        }
+        if (currentRecommendationFile) {
+          currentRecommendationFile.textContent = "";
+        }
+        showEditFeedback([]);
+      });
+
+      saveCandidatureBtn?.addEventListener("click", async () => {
+        const id = editCandidatureId.value;
+        if (!id) {
+          showEditFeedback(["Candidature introuvable."]);
+          return;
+        }
+
+        const cvSelectedFile = editCvFile.files?.[0] || null;
+        let cvFileContentBase64 = "";
+        if (cvSelectedFile) {
+          try {
+            cvFileContentBase64 = await readFileAsBase64(cvSelectedFile);
+          } catch (error) {
+            showEditFeedback([(error?.message || "Impossible de lire le CV.").toString()]);
+            return;
+          }
+        }
+
+        const payload = {
+          offerId: editOfferId.value ? Number(editOfferId.value) : null,
+          candidateName: editCandidateName.value.trim(),
+          candidateEmail: editCandidateEmail.value.trim(),
+          portfolioUrl: editPortfolioUrl.value.trim(),
+          cvFileName: cvSelectedFile?.name || editForm.dataset.currentCv || "",
+          cvMimeType: cvSelectedFile?.type || "",
+          cvFileContentBase64,
+          motivationLetter: editMotivationLetter.value.trim(),
+          recommendationFileName:
+            editRecommendationLetter.files?.[0]?.name || editForm.dataset.currentRecommendation || "",
+        };
+
+        const localErrors = validateEditPayload(payload);
+        if (localErrors.length > 0) {
+          showEditFeedback(localErrors);
+          return;
+        }
+
+        saveCandidatureBtn.disabled = true;
+        try {
+          const response = await fetch(updateApiPattern.replace("__ID__", String(id)), {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          const result = await parseApiResponse(response);
+          const aiStatus = result?.aiStatus || null;
+          const messages = ["Candidature mise a jour avec succes."];
+          let success = true;
+
+          if (aiStatus?.status === "success") {
+            messages.push("Analyse IA terminee.");
+          } else if (aiStatus?.status === "failed") {
+            const reason = (aiStatus?.message || "Analyse IA indisponible.").toString();
+            messages.push(`Analyse IA echouee: ${reason}`);
+            success = false;
+          }
+
+          showEditFeedback(messages, success);
+          setTimeout(() => window.location.reload(), 600);
+        } catch (error) {
+          showEditFeedback((error?.message || "Modification impossible.").split("\n").filter(Boolean));
+        } finally {
+          saveCandidatureBtn.disabled = false;
+        }
+      });
+    </script>
+  </main>
+{% endblock %}

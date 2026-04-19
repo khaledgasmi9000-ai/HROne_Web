@@ -14,7 +14,7 @@ class TypeNiveauEtude
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'Code_Type_Niveau_Etude', type: 'integer')]
     private ?int $Code_Type_Niveau_Etude = null;
 
     public function getCode_Type_Niveau_Etude(): ?int

@@ -14,7 +14,7 @@ class TypeAction
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'Code_Type_Action', type: 'integer')]
     private ?int $Code_Type_Action = null;
 
     public function getCode_Type_Action(): ?int
@@ -42,16 +42,7 @@ class TypeAction
         return $this;
     }
 
-    #[ORM\ManyToMany(targetEntity: Ordre::class, inversedBy: 'typeActions')]
-    #[ORM\JoinTable(
-        name: 'action_utilisateur',
-        joinColumns: [
-            new ORM\JoinColumn(name: 'Code_Type_Action', referencedColumnName: 'Code_Type_Action')
-        ],
-        inverseJoinColumns: [
-            new ORM\JoinColumn(name: 'Num_Ordre', referencedColumnName: 'Num_Ordre')
-        ]
-    )]
+    #[ORM\ManyToMany(targetEntity: Ordre::class, mappedBy: 'typeActions')]
     private Collection $ordres;
 
     public function __construct()

@@ -14,7 +14,7 @@ class DemandeConge
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'ID_Demende', type: 'integer')]
     private ?int $ID_Demende = null;
 
     public function getID_Demende(): ?int
@@ -57,7 +57,7 @@ class DemandeConge
         return $this;
     }
 
-    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'demandeConges')]
+    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'demandeCongesDebut')]
     #[ORM\JoinColumn(name: 'Num_Ordre_Debut_Conge', referencedColumnName: 'Num_Ordre')]
     private ?Ordre $ordreDebut = null;
 
@@ -72,7 +72,7 @@ class DemandeConge
         return $this;
     }
 
-    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'demandeConges')]
+    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'demandeCongesFin')]
     #[ORM\JoinColumn(name: 'Num_Ordre_Fin_Conge', referencedColumnName: 'Num_Ordre')]
     private ?Ordre $ordreFin = null;
 

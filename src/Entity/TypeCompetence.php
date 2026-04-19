@@ -14,7 +14,7 @@ class TypeCompetence
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'Code_Type_Competence', type: 'integer')]
     private ?int $Code_Type_Competence = null;
 
     public function getCode_Type_Competence(): ?int
@@ -42,16 +42,7 @@ class TypeCompetence
         return $this;
     }
 
-    #[ORM\ManyToMany(targetEntity: Offre::class, inversedBy: 'typeCompetences')]
-    #[ORM\JoinTable(
-        name: 'detail_offre_competence',
-        joinColumns: [
-            new ORM\JoinColumn(name: 'Code_Type_Competence', referencedColumnName: 'Code_Type_Competence')
-        ],
-        inverseJoinColumns: [
-            new ORM\JoinColumn(name: 'ID_Offre', referencedColumnName: 'ID_Offre')
-        ]
-    )]
+    #[ORM\ManyToMany(targetEntity: Offre::class, mappedBy: 'typeCompetences')]
     private Collection $offres;
 
     public function __construct()

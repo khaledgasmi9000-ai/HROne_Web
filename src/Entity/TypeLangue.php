@@ -14,7 +14,7 @@ class TypeLangue
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'Code_Type_Langue', type: 'integer')]
     private ?int $Code_Type_Langue = null;
 
     public function getCode_Type_Langue(): ?int
@@ -42,16 +42,7 @@ class TypeLangue
         return $this;
     }
 
-    #[ORM\ManyToMany(targetEntity: Offre::class, inversedBy: 'typeLangues')]
-    #[ORM\JoinTable(
-        name: 'detail_offre_langue',
-        joinColumns: [
-            new ORM\JoinColumn(name: 'Code_Type_Langue', referencedColumnName: 'Code_Type_Langue')
-        ],
-        inverseJoinColumns: [
-            new ORM\JoinColumn(name: 'ID_Offre', referencedColumnName: 'ID_Offre')
-        ]
-    )]
+    #[ORM\ManyToMany(targetEntity: Offre::class, mappedBy: 'typeLangues')]
     private Collection $offres;
 
     public function __construct()

@@ -1,0 +1,63 @@
+{% extends 'base_back.html.twig' %}
+
+{% block title %}HR One - Gestion des offres{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/admin-formations.css">
+{% endblock %}
+
+{% block body %}
+    <section class="interface-shell">
+        <div class="section-header">
+            <div>
+                <h1>Gestion des offres d'emploi</h1>
+                <p>Vue RH consolidee des offres disponibles dans la base.</p>
+            </div>
+        </div>
+
+        <form method="get" class="toolbar">
+            <div class="toolbar-row">
+                <input type="text" name="q" value="{{ search }}" placeholder="Rechercher par titre, entreprise, contrat...">
+                <button type="submit">Rechercher</button>
+                <a href="{{ path('app_rh_offres') }}">Reinitialiser</a>
+            </div>
+        </form>
+
+        <div class="table-shell">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Titre</th>
+                    <th>Entreprise</th>
+                    <th>Contrat</th>
+                    <th>Mode</th>
+                    <th>Salaire</th>
+                    <th>Experience</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in rows %}
+                    <tr>
+                        <td>{{ row.titre ?: '-' }}</td>
+                        <td>{{ row.entreprise ?: '-' }}</td>
+                        <td>{{ row.contrat ?: '-' }}</td>
+                        <td>{{ row.work_type ?: '-' }}</td>
+                        <td>
+                            {% if row.min_salaire is not null and row.max_salaire is not null %}
+                                {{ row.min_salaire }} - {{ row.max_salaire }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ row.nbr_annee_experience is not null ? row.nbr_annee_experience ~ ' an(s)' : '-' }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6">Aucune offre trouvee.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endblock %}

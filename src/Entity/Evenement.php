@@ -15,7 +15,7 @@ class Evenement
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'ID_Evenement', type: 'integer')]
     private ?int $ID_Evenement = null;
 
     public function getID_Evenement(): ?int
@@ -57,7 +57,7 @@ class Evenement
         return $this;
     }
 
-    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'evenements')]
+    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'evenementsCreation')]
     #[ORM\JoinColumn(name: 'Num_Ordre_Creation', referencedColumnName: 'Num_Ordre')]
     private ?Ordre $ordreCreation = null;
 
@@ -72,7 +72,7 @@ class Evenement
         return $this;
     }
 
-    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'evenements')]
+    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'evenementsDebut')]
     #[ORM\JoinColumn(name: 'Num_Ordre_Debut_Evenement', referencedColumnName: 'Num_Ordre')]
     private ?Ordre $ordreDebut = null;
 
@@ -87,7 +87,7 @@ class Evenement
         return $this;
     }
 
-    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'evenements')]
+    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'evenementsFin')]
     #[ORM\JoinColumn(name: 'Num_Ordre_Fin_Evenement', referencedColumnName: 'Num_Ordre')]
     private ?Ordre $ordreFin = null;
 
@@ -144,7 +144,7 @@ class Evenement
         return $this;
     }
 
-    #[ORM\Column(type: 'decimal', nullable: true)]
+    #[ORM\Column(type: 'float', nullable: true)]
     private ?float $prix = null;
 
     public function getPrix(): ?float

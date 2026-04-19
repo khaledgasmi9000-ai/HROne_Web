@@ -14,7 +14,7 @@ class TypeContrat
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'Code_Type_Contrat', type: 'integer')]
     private ?int $Code_Type_Contrat = null;
 
     public function getCode_Type_Contrat(): ?int

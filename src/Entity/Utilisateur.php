@@ -259,7 +259,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Email::class, mappedBy: 'utilisateur')]
+    #[ORM\OneToMany(targetEntity: Email::class, mappedBy: 'utilisateurReceiver')]
     private Collection $emailsEmployee;
 
     /**
@@ -287,7 +287,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Email::class, mappedBy: 'utilisateur')]
+    #[ORM\OneToMany(targetEntity: Email::class, mappedBy: 'utilisateurSender')]
     private Collection $emailsCandidat;
 
     /**
@@ -427,16 +427,6 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    #[ORM\ManyToMany(targetEntity: Ordre::class, inversedBy: 'utilisateurs')]
-    #[ORM\JoinTable(
-        name: 'action_utilisateur',
-        joinColumns: [
-            new ORM\JoinColumn(name: 'ID_UTILISATEUR', referencedColumnName: 'ID_UTILISATEUR')
-        ],
-        inverseJoinColumns: [
-            new ORM\JoinColumn(name: 'Num_Ordre', referencedColumnName: 'Num_Ordre')
-        ]
-    )]
     private Collection $ordres;
 
     public function __construct()

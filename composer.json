@@ -11,14 +11,21 @@
         "doctrine/doctrine-migrations-bundle": "^3.7",
         "doctrine/orm": "^3.6",
         "easycorp/easyadmin-bundle": "^4.10",
+        "endroid/qr-code-bundle": "6.0",
         "knplabs/knp-paginator-bundle": "^6.0",
         "liip/imagine-bundle": "^2.8",
+        "nucleos/dompdf-bundle": "4.3",
+        "phpoffice/phpword": "*",
+        "smalot/pdfparser": "*",
         "stichoza/google-translate-php": "*",
+        "symfony/asset": "6.4",
         "symfony/console": "6.4.*",
         "symfony/dotenv": "6.4.*",
         "symfony/flex": "^2",
         "symfony/framework-bundle": "6.4.*",
-        "symfony/runtime": "6.4.*",
+        "symfony/mailer": "6.4",
+        "symfony/messenger": "6.4",
+        "symfony/runtime": "*",
         "symfony/twig-bundle": "6.4.*",
         "symfony/yaml": "6.4.*",
         "vich/uploader-bundle": "^1.22"
@@ -30,7 +37,8 @@
         "allow-plugins": {
             "php-http/discovery": true,
             "symfony/flex": true,
-            "symfony/runtime": true
+            "symfony/runtime": true,
+            "endroid/installer": true
         },
         "sort-packages": true
     },

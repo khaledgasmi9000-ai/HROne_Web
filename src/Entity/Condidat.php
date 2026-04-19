@@ -15,7 +15,7 @@ class Condidat
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'ID_Condidat', type: 'integer')]
     private ?int $ID_Condidat = null;
 
     public function getID_Condidat(): ?int

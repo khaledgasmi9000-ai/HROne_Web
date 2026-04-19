@@ -1,0 +1,627 @@
+.page-gestion-offres .interface-shell,
+.page-gestion-entretiens .interface-shell {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.page-gestion-offres .main,
+.page-gestion-entretiens .main {
+  display: grid;
+  gap: 20px;
+}
+
+.page-gestion-offres .topbar,
+.page-gestion-entretiens .topbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.page-gestion-offres .user,
+.page-gestion-entretiens .user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid #dbe5f2;
+  border-radius: 14px;
+  padding: 8px 12px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.page-gestion-offres .avatar,
+.page-gestion-entretiens .avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.page-gestion-offres .page-title,
+.page-gestion-entretiens .page-title {
+  background: #ffffff;
+  border: 1px solid #dbe5f2;
+  border-radius: 24px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+  padding: 24px;
+}
+
+.page-gestion-offres .page-title h1,
+.page-gestion-entretiens .page-title h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.8rem;
+}
+
+.page-gestion-offres .page-title p,
+.page-gestion-entretiens .page-title p {
+  margin: 8px 0 0;
+  color: #475569;
+  line-height: 1.55;
+}
+
+.page-gestion-offres .stats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.page-gestion-offres .stat {
+  padding: 16px;
+  border: 1px solid #dbe7fb;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
+}
+
+.page-gestion-offres .stat-value {
+  color: #1d4ed8;
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.page-gestion-offres .stat-label {
+  margin-top: 4px;
+  color: #334155;
+  font-size: 0.84rem;
+}
+
+.page-gestion-offres .grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+.page-gestion-offres .card,
+.page-gestion-entretiens .card {
+  border: 1px solid #dbe5f2;
+  border-radius: 24px;
+  padding: 22px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+
+.page-gestion-offres .card h2,
+.page-gestion-entretiens .card h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.1rem;
+}
+
+.page-gestion-offres .muted,
+.page-gestion-entretiens .muted {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 0.92rem;
+}
+
+.page-gestion-offres .card-header,
+.page-gestion-entretiens .card-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-gestion-offres .offer-form {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.page-gestion-offres .field,
+.page-gestion-entretiens .field {
+  display: grid;
+  gap: 6px;
+}
+
+.page-gestion-offres .field.full {
+  grid-column: 1 / -1;
+}
+
+.page-gestion-offres label,
+.page-gestion-entretiens label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.page-gestion-offres input,
+.page-gestion-offres select,
+.page-gestion-offres textarea,
+.page-gestion-entretiens input,
+.page-gestion-entretiens select,
+.page-gestion-entretiens textarea {
+  width: 100%;
+  border: 1px solid #d6dfef;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #162033;
+  padding: 11px 12px;
+  font: inherit;
+}
+
+.page-gestion-offres input:focus,
+.page-gestion-offres select:focus,
+.page-gestion-offres textarea:focus,
+.page-gestion-entretiens input:focus,
+.page-gestion-entretiens select:focus,
+.page-gestion-entretiens textarea:focus {
+  outline: 0;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+
+.page-gestion-offres .choice-panel {
+  border: 1px solid #d6dfef;
+  border-radius: 14px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.page-gestion-offres .choice-toolbar {
+  padding: 10px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.page-gestion-offres .choice-list {
+  max-height: 220px;
+  overflow: auto;
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.page-gestion-offres .choice-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 10px;
+  background: #f8fbff;
+  border: 1px solid #e3edf8;
+  font-size: 0.88rem;
+}
+
+.page-gestion-offres .choice-item input {
+  width: auto;
+  margin: 0;
+}
+
+.page-gestion-offres .range-field {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.page-gestion-offres .range-sep {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.page-gestion-offres .offer-list,
+.page-gestion-entretiens .resource-list {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.page-gestion-offres .offer-item,
+.page-gestion-entretiens .resource-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px;
+  background: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-gestion-offres .offer-title,
+.page-gestion-entretiens .resource-title {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.page-gestion-offres .offer-meta,
+.page-gestion-entretiens .resource-meta {
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 0.83rem;
+}
+
+.page-gestion-offres .list-item-actions,
+.page-gestion-entretiens .list-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-gestion-offres .status,
+.page-gestion-entretiens .status {
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.page-gestion-offres .status-live,
+.page-gestion-entretiens .status-live {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.page-gestion-offres .status-review,
+.page-gestion-entretiens .status-review {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.page-gestion-offres .status-draft,
+.page-gestion-entretiens .status-draft {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.page-gestion-offres .btn,
+.page-gestion-entretiens .btn {
+  border: 1px solid #cfe0ff;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.page-gestion-offres .btn-primary,
+.page-gestion-entretiens .btn-primary {
+  border: 0;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.28);
+}
+
+.page-gestion-offres .btn-ghost,
+.page-gestion-entretiens .btn-ghost,
+.page-gestion-offres .btn-small,
+.page-gestion-entretiens .btn-small {
+  background: #eff5ff;
+  color: #1d4ed8;
+}
+
+.page-gestion-offres .btn-danger,
+.page-gestion-entretiens .btn-danger {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.page-gestion-entretiens .filter-form {
+  margin-top: 14px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(180px, 1fr)) auto;
+  align-items: end;
+}
+
+.page-gestion-entretiens .filter-pill,
+.page-gestion-entretiens .table-count {
+  border-radius: 999px;
+  border: 1px solid #bfdbfe;
+  background: #eef4ff;
+  color: #1d4ed8;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 7px 12px;
+}
+
+.page-gestion-entretiens .input-with-icon {
+  position: relative;
+}
+
+.page-gestion-entretiens .input-icon {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: #64748b;
+}
+
+.page-gestion-entretiens .input-with-icon input {
+  padding-left: 34px;
+}
+
+.page-gestion-entretiens .input-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+.page-gestion-offres .delete-modal__panel,
+.page-gestion-entretiens .interview-modal__panel,
+.page-gestion-entretiens .details-modal__panel,
+.page-gestion-entretiens .final-decision-modal__panel {
+  border: 1px solid #dbe5f2;
+  border-radius: 18px;
+  box-shadow: 0 20px 48px -26px rgba(15, 23, 42, 0.9);
+}
+
+@media (max-width: 1240px) {
+  .page-gestion-offres .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-gestion-offres .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .page-gestion-entretiens .filter-form {
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .page-gestion-offres .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .page-gestion-offres .offer-form,
+  .page-gestion-entretiens .filter-form {
+    grid-template-columns: 1fr;
+  }
+
+  .page-gestion-offres .offer-item,
+  .page-gestion-entretiens .resource-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.page-gestion-entretiens .page-title {
+  background: linear-gradient(120deg, #ffffff 0%, #f3f8ff 100%);
+  border-color: #d6e3f7;
+}
+
+.page-gestion-entretiens .page-title h1 {
+  letter-spacing: -0.02em;
+}
+
+.page-gestion-entretiens .filter-card {
+  background: linear-gradient(180deg, #fdfefe 0%, #f6faff 100%);
+  border-color: #d9e5f8;
+}
+
+.page-gestion-entretiens .filter-form {
+  grid-template-columns: minmax(220px, 1fr) minmax(180px, 0.8fr) minmax(260px, 1.2fr) auto;
+  padding: 12px;
+  border: 1px solid #e2eaf8;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.page-gestion-entretiens .filter-pill,
+.page-gestion-entretiens .table-count {
+  background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+
+.page-gestion-entretiens .resource-list {
+  gap: 12px;
+}
+
+.page-gestion-entretiens .resource-item {
+  padding: 14px;
+  border-color: #dbe5f3;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.page-gestion-entretiens .resource-item:hover {
+  transform: translateY(-2px);
+  border-color: #cbdcf4;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.09);
+}
+
+.page-gestion-entretiens .resource-title {
+  font-size: 1.03rem;
+}
+
+.page-gestion-entretiens .resource-meta {
+  line-height: 1.45;
+}
+
+.page-gestion-entretiens .list-item-actions {
+  justify-content: flex-end;
+}
+
+.page-gestion-entretiens .btn {
+  min-height: 38px;
+}
+
+.page-gestion-entretiens .btn-small {
+  border-color: #d4e3fb;
+  background: #eff5ff;
+  color: #1d4ed8;
+}
+
+.page-gestion-entretiens .btn-small:hover {
+  background: #e2edff;
+}
+
+.page-gestion-entretiens .status {
+  letter-spacing: 0.01em;
+}
+
+.page-gestion-entretiens .status-live {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.page-gestion-entretiens .status-review {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.page-gestion-entretiens .status-draft {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.page-gestion-entretiens .interview-modal,
+.page-gestion-entretiens .details-modal,
+.page-gestion-entretiens .final-decision-modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 1400;
+  padding: 18px;
+}
+
+.page-gestion-entretiens .interview-modal[hidden],
+.page-gestion-entretiens .details-modal[hidden],
+.page-gestion-entretiens .final-decision-modal[hidden] {
+  display: none;
+}
+
+.page-gestion-entretiens .interview-modal__backdrop,
+.page-gestion-entretiens .details-modal__backdrop,
+.page-gestion-entretiens .final-decision-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.page-gestion-entretiens .interview-modal__panel,
+.page-gestion-entretiens .details-modal__panel,
+.page-gestion-entretiens .final-decision-modal__panel {
+  position: relative;
+  width: min(920px, 96vw);
+  max-height: min(88vh, 940px);
+  overflow: auto;
+  background: #ffffff;
+  border: 1px solid #d6e3f6;
+  border-radius: 20px;
+  box-shadow: 0 26px 60px -30px rgba(15, 23, 42, 0.85);
+  padding: 20px;
+}
+
+.page-gestion-entretiens .interview-modal__header,
+.page-gestion-entretiens .details-modal__header,
+.page-gestion-entretiens .final-decision-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 12px;
+}
+
+.page-gestion-entretiens .details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.page-gestion-entretiens .details-card {
+  border: 1px solid #dbe5f2;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  padding: 14px;
+}
+
+.page-gestion-entretiens .details-card h3 {
+  margin: 0 0 10px;
+  font-size: 0.96rem;
+  color: #0f2740;
+}
+
+.page-gestion-entretiens .details-card dl {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.page-gestion-entretiens .details-card dl div {
+  border-bottom: 1px dashed #d9e3f1;
+  padding-bottom: 6px;
+}
+
+.page-gestion-entretiens .details-card dl div:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.page-gestion-entretiens .details-card dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #5b6d84;
+  font-weight: 700;
+}
+
+.page-gestion-entretiens .details-card dd {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #102238;
+  word-break: break-word;
+}
+
+.page-gestion-entretiens .field-error {
+  color: #b42318;
+  font-size: 0.79rem;
+  font-weight: 600;
+}
+
+.page-gestion-entretiens .is-invalid {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+@media (max-width: 1240px) {
+  .page-gestion-entretiens .filter-form {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  .page-gestion-entretiens .details-grid {
+    grid-template-columns: 1fr;
+  }
+}

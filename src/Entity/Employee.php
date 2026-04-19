@@ -14,7 +14,7 @@ class Employee
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'ID_Employe', type: 'integer')]
     private ?int $ID_Employe = null;
 
     public function getID_Employe(): ?int

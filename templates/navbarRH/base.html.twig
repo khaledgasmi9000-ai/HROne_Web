@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ page_title|default('HR One') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/navbarRH/logo.png') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/navbarRH/navbarRH.css?v=2') }}" />
+    <link rel="stylesheet" href="/styles/admin-sidebar.css?v=3" />
+    {% block stylesheets %}{% endblock %}
+    {% if page_css is defined and page_css %}
+      <link rel="stylesheet" href="{{ asset('assets/navbarRH/' ~ page_css) }}" />
+    {% endif %}
+  </head>
+  <body class="{{ page_class|default('') }}">
+    <div class="layout">
+      {% include 'partials/rh_sidebar.html.twig' %}
+
+      <main class="content">
+        <section class="interface-shell">
+          <h1>{% block content_title %}{% endblock %}</h1>
+          {% block content_body %}{% endblock %}
+        </section>
+      </main>
+    </div>
+    <script src="{{ asset('assets/navbarRH/navbarRH.js') }}"></script>
+  </body>
+</html>

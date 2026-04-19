@@ -15,7 +15,7 @@ class Activite
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'ID_Activite', type: 'integer')]
     private ?int $ID_Activite = null;
 
     public function getID_Activite(): ?int
@@ -99,16 +99,7 @@ class Activite
         return $this;
     }
 
-    #[ORM\ManyToMany(targetEntity: Evenement::class, inversedBy: 'activites')]
-    #[ORM\JoinTable(
-        name: 'detail_evenement',
-        joinColumns: [
-            new ORM\JoinColumn(name: 'ID_Activite', referencedColumnName: 'ID_Activite')
-        ],
-        inverseJoinColumns: [
-            new ORM\JoinColumn(name: 'ID_Evenement', referencedColumnName: 'ID_Evenement')
-        ]
-    )]
+    #[ORM\ManyToMany(targetEntity: Evenement::class, mappedBy: 'activites')]
     private Collection $evenements;
 
     public function __construct()

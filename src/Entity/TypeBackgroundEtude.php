@@ -14,7 +14,7 @@ class TypeBackgroundEtude
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'Code_Type_Background_Etude', type: 'integer')]
     private ?int $Code_Type_Background_Etude = null;
 
     public function getCode_Type_Background_Etude(): ?int
@@ -70,16 +70,7 @@ class TypeBackgroundEtude
         return $this;
     }
 
-    #[ORM\ManyToMany(targetEntity: Offre::class, inversedBy: 'typeBackgroundEtudes')]
-    #[ORM\JoinTable(
-        name: 'detail_offre_background',
-        joinColumns: [
-            new ORM\JoinColumn(name: 'Code_Type_Background_Etude', referencedColumnName: 'Code_Type_Background_Etude')
-        ],
-        inverseJoinColumns: [
-            new ORM\JoinColumn(name: 'ID_Offre', referencedColumnName: 'ID_Offre')
-        ]
-    )]
+    #[ORM\ManyToMany(targetEntity: Offre::class, mappedBy: 'typeBackgroundEtudes')]
     private Collection $offres;
 
     public function __construct()

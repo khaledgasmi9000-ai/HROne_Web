@@ -282,15 +282,9 @@
                 </div>
             </a>
 
-            {% if app.user and is_granted('ROLE_CANDIDAT') and not is_granted('ROLE_EMPLOYEE') and not is_granted('ROLE_RH') %}
-                <a class="nav-link {% if current_route == 'app_offres_index' %}active{% endif %}" href="{{ path('app_offres_index') }}">Offres d'emploi</a>
-            {% endif %}
-
-            {% if app.user and is_granted('ROLE_EMPLOYEE') and not is_granted('ROLE_RH') %}
-                <a class="nav-link {% if current_route starts with 'community_' %}active{% endif %}" href="{{ path('community_index') }}">Communauté</a>
-                <a class="nav-link {% if current_route == 'app_offres_index' %}active{% endif %}" href="{{ path('app_offres_index') }}">Offres d'emploi</a>
-                <a class="nav-link {% if current_route starts with 'app_formation_' and current_route != 'app_my_participations' %}active{% endif %}" href="{{ path('app_formation_index') }}">Formations</a>
-                <a class="nav-link {% if current_route == 'app_my_participations' %}active{% endif %}" href="{{ path('app_my_participations') }}">Mes participations</a>
+            {% if app.user and not is_granted('ROLE_RH') and (is_granted('ROLE_CANDIDAT') or is_granted('ROLE_EMPLOYEE')) %}
+                <a class="nav-link {% if current_route in ['topnav_offres', 'app_offres_index'] %}active{% endif %}" href="{{ path('topnav_offres') }}">Offres d'emploi</a>
+                <a class="nav-link {% if current_route == 'topnav_mes_candidatures' %}active{% endif %}" href="{{ path('topnav_mes_candidatures') }}">Mes candidatures</a>
             {% endif %}
 
             {% if app.user and is_granted('ROLE_RH') %}
@@ -336,10 +330,9 @@
             <div class="footer-section">
                 <h3>Navigation</h3>
                 <ul class="footer-links">
-                    {% if app.user and is_granted('ROLE_EMPLOYEE') %}
-                        <li><a href="{{ path('community_index') }}">Communauté</a></li>
-                        <li><a href="{{ path('app_formation_index') }}">Formations</a></li>
-                        <li><a href="{{ path('app_offres_index') }}">Offres d'emploi</a></li>
+                    {% if app.user and not is_granted('ROLE_RH') and (is_granted('ROLE_CANDIDAT') or is_granted('ROLE_EMPLOYEE')) %}
+                        <li><a href="{{ path('topnav_offres') }}">Offres d'emploi</a></li>
+                        <li><a href="{{ path('topnav_mes_candidatures') }}">Mes candidatures</a></li>
                     {% endif %}
                     {% if app.user and is_granted('ROLE_RH') %}
                         <li><a href="{{ path('community_admin_dashboard') }}">Dashboard</a></li>

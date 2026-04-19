@@ -15,7 +15,7 @@ class Email
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'ID_Email', type: 'integer')]
     private ?int $ID_Email = null;
 
     public function getID_Email(): ?int
@@ -29,7 +29,7 @@ class Email
         return $this;
     }
 
-    #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'emails')]
+    #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'emailsEmployee')]
     #[ORM\JoinColumn(name: 'ID_Receiver', referencedColumnName: 'ID_UTILISATEUR')]
     private ?Utilisateur $utilisateurReceiver = null;
 
@@ -44,7 +44,7 @@ class Email
         return $this;
     }
 
-    #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'emails')]
+    #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'emailsCandidat')]
     #[ORM\JoinColumn(name: 'ID_Sender', referencedColumnName: 'ID_UTILISATEUR')]
     private ?Utilisateur $utilisateurSender = null;
 

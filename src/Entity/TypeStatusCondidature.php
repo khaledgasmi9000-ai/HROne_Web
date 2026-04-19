@@ -14,7 +14,7 @@ class TypeStatusCondidature
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'Code_Type_Status_Condidature', type: 'integer')]
     private ?int $Code_Type_Status_Condidature = null;
 
     public function getCode_Type_Status_Condidature(): ?int

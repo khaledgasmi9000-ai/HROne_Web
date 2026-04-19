@@ -81,7 +81,7 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
             }
         }
 
-        if (in_array('ROLE_CANDIDAT', $roles, true)) {
+        if (in_array('ROLE_CANDIDAT', $roles, true) || in_array('ROLE_EMPLOYEE', $roles, true)) {
             if ($this->routeExists('app_offres_index')) {
                 return new RedirectResponse($this->urlGenerator->generate('app_offres_index'));
             }

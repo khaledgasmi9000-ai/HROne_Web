@@ -13,7 +13,6 @@ use App\Repository\OrdreRepository;
 class Ordre
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
     #[ORM\Column(name: 'Num_Ordre', type: 'integer')]
     private ?int $Num_Ordre = null;
 
@@ -112,7 +111,7 @@ class Ordre
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: DemandeConge::class, mappedBy: 'ordre')]
+    #[ORM\OneToMany(targetEntity: DemandeConge::class, mappedBy: 'ordreDebut')]
     private Collection $demandeCongesDebut;
 
     /**
@@ -140,7 +139,7 @@ class Ordre
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: DemandeConge::class, mappedBy: 'ordre')]
+    #[ORM\OneToMany(targetEntity: DemandeConge::class, mappedBy: 'ordreFin')]
     private Collection $demandeCongesFin;
 
     /**
@@ -224,7 +223,7 @@ class Ordre
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Evenement::class, mappedBy: 'ordre')]
+    #[ORM\OneToMany(targetEntity: Evenement::class, mappedBy: 'ordreDebut')]
     private Collection $evenementsDebut;
 
     /**
@@ -252,7 +251,7 @@ class Ordre
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Evenement::class, mappedBy: 'ordre')]
+    #[ORM\OneToMany(targetEntity: Evenement::class, mappedBy: 'ordreFin')]
     private Collection $evenementsFin;
 
     /**
@@ -280,7 +279,7 @@ class Ordre
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Evenement::class, mappedBy: 'ordre')]
+    #[ORM\OneToMany(targetEntity: Evenement::class, mappedBy: 'ordreCreation')]
     private Collection $evenementsCreation;
 
     /**
@@ -308,7 +307,7 @@ class Ordre
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Offre::class, mappedBy: 'ordre')]
+    #[ORM\OneToMany(targetEntity: Offre::class, mappedBy: 'ordreCreation')]
     private Collection $offresCreation;
 
     /**
@@ -336,7 +335,7 @@ class Ordre
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Offre::class, mappedBy: 'ordre')]
+    #[ORM\OneToMany(targetEntity: Offre::class, mappedBy: 'ordreExpiration')]
     private Collection $offresExpiration;
 
     /**
@@ -457,16 +456,6 @@ class Ordre
         return $this;
     }
 
-    #[ORM\ManyToMany(targetEntity: Activite::class, inversedBy: 'ordres')]
-    #[ORM\JoinTable(
-        name: 'detail_evenement',
-        joinColumns: [
-            new ORM\JoinColumn(name: 'Num_Ordre_Debut_Activite', referencedColumnName: 'Num_Ordre')
-        ],
-        inverseJoinColumns: [
-            new ORM\JoinColumn(name: 'ID_Activite', referencedColumnName: 'ID_Activite')
-        ]
-    )]
     private Collection $activites;
 
     public function __construct()

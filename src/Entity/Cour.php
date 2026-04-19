@@ -15,7 +15,7 @@ class Cour
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'ID_Cours', type: 'integer')]
     private ?int $ID_Cours = null;
 
     public function getID_Cours(): ?int

@@ -15,7 +15,7 @@ class Offre
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'ID_Offre', type: 'integer')]
     private ?int $ID_Offre = null;
 
     public function getID_Offre(): ?int
@@ -158,7 +158,7 @@ class Offre
         return $this;
     }
 
-    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'offres')]
+    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'offresCreation')]
     #[ORM\JoinColumn(name: 'Num_Ordre_Creation', referencedColumnName: 'Num_Ordre')]
     private ?Ordre $ordreCreation = null;
 
@@ -173,7 +173,7 @@ class Offre
         return $this;
     }
 
-    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'offres')]
+    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'offresExpiration')]
     #[ORM\JoinColumn(name: 'Num_Ordre_Expiration', referencedColumnName: 'Num_Ordre')]
     private ?Ordre $ordreExpiration = null;
 
