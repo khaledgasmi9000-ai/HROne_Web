@@ -145,7 +145,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'utilisateurs')]
+    #[ORM\ManyToOne(targetEntity: Ordre::class, inversedBy: 'utilisateurs', cascade: ['persist'])]
     #[ORM\JoinColumn(name: 'Num_Ordre_Sign_In', referencedColumnName: 'Num_Ordre')]
     private ?Ordre $ordre = null;
 

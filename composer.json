@@ -13,6 +13,7 @@
         "easycorp/easyadmin-bundle": "^4.10",
         "endroid/qr-code-bundle": "6.0",
         "knplabs/knp-paginator-bundle": "^6.0",
+        "knplabs/knp-snappy-bundle": "*",
         "liip/imagine-bundle": "^2.8",
         "nucleos/dompdf-bundle": "4.3",
         "phpoffice/phpword": "*",
@@ -26,7 +27,9 @@
         "symfony/mailer": "6.4",
         "symfony/messenger": "6.4",
         "symfony/runtime": "*",
+        "symfony/stimulus-bundle": "^2.35",
         "symfony/twig-bundle": "6.4.*",
+        "symfony/ux-chartjs": "^2.35",
         "symfony/yaml": "6.4.*",
         "vich/uploader-bundle": "^1.22"
     },

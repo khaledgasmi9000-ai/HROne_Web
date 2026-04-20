@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Demande de congé{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/Employee FrontEnd/demande_conge.css') }}">
+{% endblock %}
+
+{% block body %}
+
+    <div class="conge-page">
+
+        <div class="conge-card">
+
+            <h2>Demande de congé</h2>
+
+            <form id="congeForm">
+
+                <div class="form-group">
+                    <label>Date début</label>
+                    <input type="date" id="startDate" class="input-field">
+                </div>
+
+                <div class="form-group">
+                    <label>Date fin</label>
+                    <input type="date" id="endDate" class="input-field">
+                </div>
+
+                <div class="conge-info">
+                    <div>Jours demandés : <span id="daysCount">0</span></div>
+                    <div>Solde restant : <span id="remainingSolde">{{ soldeRestant|default(0) }}</span></div>
+                </div>
+
+                <div id="congeError" class="error hidden"></div>
+
+                <div class="conge-actions">
+                    <button type="submit" class="btn success">Envoyer la demande</button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ asset('js/Employee FrontEnd/demande_conge.js') }}"></script>
+{% endblock %}

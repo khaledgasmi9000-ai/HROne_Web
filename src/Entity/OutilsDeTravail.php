@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use App\Entity\Categorie;
+
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -70,6 +72,36 @@ class OutilsDeTravail
         return $this;
     }
 
+    #[ORM\Column(name: 'Monthly_Cost', type: 'float', nullable: true)]
+    private ?float $Monthly_Cost = 0;
+
+    public function getMonthlyCost(): ?float
+    {
+        return $this->Monthly_Cost;
+    }
+
+    public function setMonthly_Cost(?float $cost) : self
+    {
+        $this->Monthly_Cost = $cost ?? 0;
+        return $this;
+        
+    }
+
+    #[ORM\ManyToOne(targetEntity: Categorie::class, inversedBy: 'outils')]
+    #[ORM\JoinColumn(name: 'ID_Categorie', referencedColumnName: 'ID_Categorie', nullable: true)]
+    private ?Categorie $categorie = null;
+
+    public function getCategorie(): ?Categorie
+    {
+        return $this->categorie;
+    }
+
+    public function setCategorie(?Categorie $categorie): self
+    {
+        $this->categorie = $categorie;
+        return $this;
+    }
+
     #[ORM\ManyToMany(targetEntity: Employee::class, mappedBy: 'outilsDeTravails')]
     private Collection $employees;
 
@@ -102,43 +134,6 @@ class OutilsDeTravail
         $this->getEmployees()->removeElement($employee);
         return $this;
     }
-
-    // #[ORM\ManyToMany(targetEntity: Employee::class, inversedBy: 'outilsDeTravails')]
-    // #[ORM\JoinTable(
-    //     name: 'performance',
-    //     joinColumns: [
-    //         new ORM\JoinColumn(name: 'ID_Outil', referencedColumnName: 'ID_Outil')
-    //     ],
-    //     inverseJoinColumns: [
-    //         new ORM\JoinColumn(name: 'ID_Employe', referencedColumnName: 'ID_Employe')
-    //     ]
-    // )]
-    // private Collection $employees;
-
-    // /**
-    //  * @return Collection<int, Employee>
-    //  */
-    // public function getEmployees(): Collection
-    // {
-    //     if (!$this->employees instanceof Collection) {
-    //         $this->employees = new ArrayCollection();
-    //     }
-    //     return $this->employees;
-    // }
-
-    // public function addEmployee(Employee $employee): self
-    // {
-    //     if (!$this->getEmployees()->contains($employee)) {
-    //         $this->getEmployees()->add($employee);
-    //     }
-    //     return $this;
-    // }
-
-    // public function removeEmployee(Employee $employee): self
-    // {
-    //     $this->getEmployees()->removeElement($employee);
-    //     return $this;
-    // }
 
     public function getIDOutil(): ?int
     {
