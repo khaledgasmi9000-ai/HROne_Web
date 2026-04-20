@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HR One - Formations{% endblock %}</title>
+    <link rel="icon" type="image/png" href="/images/logo-rh.png">
+    <link rel="stylesheet" href="/styles/front-shared.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .app-shell {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        /* Header avec Logo */
+        .top-navbar {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .top-nav {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            height: 70px;
+        }
+
+        .logo-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: #2563eb;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .logo-svg {
+            width: 40px;
+            height: 40px;
+            filter: drop-shadow(0 4px 12px rgba(37, 99, 235, 0.2));
+        }
+
+        .logo-text-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0px;
+        }
+
+        .logo-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #2563eb;
+            line-height: 1;
+        }
+
+        .logo-subtitle {
+            font-size: 0.65rem;
+            color: #64748b;
+            font-weight: 500;
+            line-height: 1;
+        }
+
+        .nav-link {
+            color: #475569;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            white-space: nowrap;
+            font-size: 0.95rem;
+        }
+
+        .nav-link:hover {
+            color: #2563eb;
+            background: #f0f4ff;
+        }
+
+        .nav-link.active {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .nav-spacer {
+            margin-left: auto;
+        }
+
+        .page-content {
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 40px 20px;
+        }
+
+        /* Footer */
+        .footer {
+            background: #f9fafb;
+            border-top: 1px solid #e2e8f0;
+            margin-top: 60px;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .footer-section h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .footer-logo-svg {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+        }
+
+        .footer-logo-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #2563eb;
+            line-height: 1;
+        }
+
+        .footer-logo-subtitle {
+            font-size: 0.7rem;
+            color: #64748b;
+            font-weight: 500;
+            line-height: 1;
+        }
+
+        .footer-description {
+            color: #64748b;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .footer-links a {
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #2563eb;
+            padding-left: 4px;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #e2e8f0;
+            margin-top: 30px;
+            padding-top: 20px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .top-nav {
+                gap: 16px;
+                padding: 0 12px;
+                height: 65px;
+            }
+
+            .logo-brand {
+                font-size: 1rem;
+                margin-right: 12px;
+            }
+
+            .logo-brand-circle {
+                width: 28px;
+                height: 28px;
+                font-size: 11px;
+            }
+
+            .page-content {
+                padding: 24px 16px;
+            }
+
+            .footer-content {
+                padding: 30px 16px;
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .nav-link {
+                padding: 6px 10px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .top-nav {
+                gap: 8px;
+                padding: 0 8px;
+                height: 60px;
+            }
+
+            .page-content {
+                padding: 16px 12px;
+            }
+
+            .footer-content {
+                padding: 24px 12px;
+                gap: 20px;
+            }
+
+            .nav-link {
+                padding: 6px 8px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+{% block stylesheets %}{% endblock %}
+</head>
+<body class="{% block body_class %}page-formations{% endblock %}">
+{% set current_route = app.request.attributes.get('_route') %}
+{% set workspace_label = 'Plateforme RH' %}
+{% if is_granted('ROLE_ADMIN') or is_granted('ROLE_RH') %}
+    {% set workspace_label = 'Espace RH' %}
+{% elseif is_granted('ROLE_EMPLOYEE') %}
+    {% set workspace_label = 'Espace Employe' %}
+{% elseif is_granted('ROLE_CANDIDAT') %}
+    {% set workspace_label = 'Espace Candidat' %}
+{% endif %}
+<div class="app-shell">
+    <header class="top-navbar">
+        <nav class="top-nav">
+            <a href="{{ path('community_index') }}" class="logo-brand">
+                <svg class="logo-svg" width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="4" width="32" height="32" rx="6" fill="white" stroke="#2563eb" stroke-width="2"/>
+                    <rect x="10" y="10" width="6" height="6" fill="#2563eb" rx="1"/>
+                    <rect x="24" y="10" width="6" height="6" fill="#2563eb" rx="1"/>
+                    <line x1="10" y1="20" x2="30" y2="20" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
+                    <rect x="10" y="26" width="6" height="6" fill="#2563eb" rx="1"/>
+                    <rect x="24" y="26" width="6" height="6" fill="#2563eb" rx="1"/>
+                </svg>
+                <div class="logo-text-group">
+                    <div class="logo-title">HR One</div>
+                    <div class="logo-subtitle">{{ workspace_label }}</div>
+                </div>
+            </a>
+
+            {% if app.user and is_granted('ROLE_CANDIDAT') and not is_granted('ROLE_EMPLOYEE') and not is_granted('ROLE_RH') %}
+                <a class="nav-link {% if current_route in ['topnav_offres', 'app_offres_index'] %}active{% endif %}" href="{{ path('topnav_offres') }}">Offres d'emploi</a>
+                <a class="nav-link {% if current_route == 'topnav_mes_candidatures' %}active{% endif %}" href="{{ path('topnav_mes_candidatures') }}">Mes candidatures</a>
+            {% endif %}
+
+            {% if app.user and is_granted('ROLE_EMPLOYEE') and not is_granted('ROLE_RH') %}
+                <a class="nav-link {% if current_route starts with 'community_' %}active{% endif %}" href="{{ path('community_index') }}">Communaute</a>
+                <a class="nav-link {% if current_route in ['topnav_offres', 'app_offres_index'] %}active{% endif %}" href="{{ path('topnav_offres') }}">Offres d'emploi</a>
+                <a class="nav-link {% if current_route starts with 'app_formation_' and current_route != 'app_my_participations' %}active{% endif %}" href="{{ path('app_formation_index') }}">Formations</a>
+                <a class="nav-link {% if current_route == 'app_my_participations' %}active{% endif %}" href="{{ path('app_my_participations') }}">Mes participations</a>
+            {% endif %}
+
+            {% if app.user and is_granted('ROLE_RH') %}
+                <a class="nav-link {% if current_route starts with 'community_admin' %}active{% endif %}" href="{{ path('community_admin_dashboard') }}">Dashboard RH</a>
+                <a class="nav-link {% if current_route starts with 'app_user_' %}active{% endif %}" href="{{ path('app_user_module') }}">Utilisateurs</a>
+            {% endif %}
+
+            {% if not app.user %}
+                <a class="nav-link {% if current_route == 'app_login' %}active{% endif %}" href="{{ path('app_login') }}">Connexion</a>
+            {% endif %}
+
+            {% if app.user %}
+                <div class="nav-spacer"></div>
+                <a class="nav-link" href="{{ path('app_logout') }}">Déconnexion</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main class="page-content">
+        {% block body %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <svg class="footer-logo-svg" width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="4" y="4" width="32" height="32" rx="6" fill="white" stroke="#2563eb" stroke-width="2"/>
+                        <rect x="10" y="10" width="6" height="6" fill="#2563eb" rx="1"/>
+                        <rect x="24" y="10" width="6" height="6" fill="#2563eb" rx="1"/>
+                        <line x1="10" y1="20" x2="30" y2="20" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
+                        <rect x="10" y="26" width="6" height="6" fill="#2563eb" rx="1"/>
+                        <rect x="24" y="26" width="6" height="6" fill="#2563eb" rx="1"/>
+                </svg>
+                <div>
+                    <div class="footer-logo-title">HR One</div>
+                    <div class="footer-logo-subtitle">{{ workspace_label }}</div>
+                </div>
+            </div>
+                <p class="footer-description">Plateforme RH complète pour gérer formations, communauté et flux RH en une interface unique.</p>
+            </div>
+
+            <div class="footer-section">
+                <h3>Navigation</h3>
+                <ul class="footer-links">
+                    {% if app.user and is_granted('ROLE_CANDIDAT') and not is_granted('ROLE_EMPLOYEE') and not is_granted('ROLE_RH') %}
+                        <li><a href="{{ path('topnav_offres') }}">Offres d'emploi</a></li>
+                        <li><a href="{{ path('topnav_mes_candidatures') }}">Mes candidatures</a></li>
+                    {% endif %}
+                    {% if app.user and is_granted('ROLE_EMPLOYEE') and not is_granted('ROLE_RH') %}
+                        <li><a href="{{ path('community_index') }}">Communaute</a></li>
+                        <li><a href="{{ path('app_formation_index') }}">Formations</a></li>
+                        <li><a href="{{ path('app_my_participations') }}">Mes participations</a></li>
+                        <li><a href="{{ path('topnav_offres') }}">Offres d'emploi</a></li>
+                    {% endif %}
+                    {% if app.user and is_granted('ROLE_RH') %}
+                        <li><a href="{{ path('community_admin_dashboard') }}">Dashboard</a></li>
+                        <li><a href="{{ path('app_user_module') }}">Utilisateurs</a></li>
+                    {% endif %}
+                    {% if not app.user %}
+                        <li><a href="{{ path('app_login') }}">Connexion</a></li>
+                        <li><a href="{{ path('app_register') }}">Inscription</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h3>Ressources</h3>
+                <ul class="footer-links">
+                    <li><a href="#help">Centre d'aide</a></li>
+                    <li><a href="#contact">Nous contacter</a></li>
+                    <li><a href="#privacy">Politique de confidentialité</a></li>
+                    <li><a href="#terms">Conditions d'utilisation</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2024-2026 HR One. Tous droits réservés. | Plateforme RH Intégrée</p>
+        </div>
+    </footer>
+</div>
+{% block javascripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,97 @@
+{% extends 'base_back.html.twig' %}
+
+{% block title %}HR One - Participants formation{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/admin-formations.css">
+{% endblock %}
+
+{% block body %}
+    {% for message in app.flashes('success') %}
+        <div class="flash-success">{{ message }}</div>
+    {% endfor %}
+
+    <section class="dashboard-hero">
+        <div>
+            <p class="eyebrow">Back office</p>
+            <h1>Participants de la formation</h1>
+            <p>Consultez les employes inscrits a la formation <strong>{{ formation.title }}</strong>.</p>
+            <div class="hero-actions">
+                <a class="primary-action" href="{{ path('app_admin_formation_index') }}">Retour a la gestion RH</a>
+            </div>
+        </div>
+        <div class="dashboard-stats">
+            <div class="stat-box">
+                <span>#{{ formation.id }}</span>
+                <small>Formation</small>
+            </div>
+            <div class="stat-box">
+                <span>{{ participants|length }}</span>
+                <small>Participants</small>
+            </div>
+            <div class="stat-box">
+                <span>{{ formation.remaining_places }}</span>
+                <small>Places restantes</small>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="table-shell">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID participant</th>
+                    <th>Nom utilisateur</th>
+                    <th>Email</th>
+                    <th>Statut</th>
+                    <th>Ordre</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in participants %}
+                    <tr>
+                        <td>#{{ row.participant.id }}</td>
+                        <td>{{ row.participant.label }}</td>
+                        <td>{{ row.participant.email }}</td>
+                        <td>{{ row.participation.statut }}</td>
+                        <td>{{ row.participation.numOrdreParticipation }}</td>
+                        <td class="actions-cell">
+                            {% if row.participation.statut != 'acheve' %}
+                                <form method="post"
+                                      action="{{ path('app_admin_formation_participant_complete', {
+                                          formationId: formation.id,
+                                          participantId: row.participant.id,
+                                          order: row.participation.numOrdreParticipation
+                                      }) }}"
+                                      target="_blank">
+                                    <button type="submit" class="primary-button small-action">Marquer acheve</button>
+                                </form>
+                            {% else %}
+                                <span class="status-pill status-open">Acheve</span>
+                            {% endif %}
+
+                            {% if row.certificate_path %}
+                                <a class="secondary-button small-action"
+                                   target="_blank"
+                                   href="{{ path('app_admin_formation_participant_certificate', {
+                                       formationId: formation.id,
+                                       participantId: row.participant.id,
+                                       order: row.participation.numOrdreParticipation
+                                   }) }}">
+                                    Voir certificat
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="empty-row">Aucun participant n est encore inscrit a cette formation.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endblock %}

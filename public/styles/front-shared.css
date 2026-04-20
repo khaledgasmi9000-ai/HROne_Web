@@ -1,0 +1,78 @@
+:root {
+  --primary-blue: #2563eb;
+  --primary-blue-dark: #1d4ed8;
+  --text-main: #0f172a;
+  --text-soft: #334155;
+  --surface: #ffffff;
+  --surface-border: #e2e8f0;
+  --surface-hover: #eff6ff;
+  --page-bg: #dbe4f0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(180deg, #edf2f7 0%, #dbe4f0 100%);
+  color: var(--text-main);
+}
+
+.app-shell {
+  width: min(1240px, 95vw);
+  margin: 0 auto;
+  padding: 34px 0 48px;
+}
+
+.top-nav {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--surface-border);
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+  overflow-x: auto;
+}
+
+.top-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-link {
+  flex: 1;
+  min-width: max-content;
+  padding: 14px 22px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.nav-link:hover {
+  background: var(--surface-hover);
+  color: var(--primary-blue-dark);
+}
+
+.nav-link.active {
+  background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
+  color: #fff;
+}
+
+.page-content {
+  padding-top: 28px;
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    width: min(1240px, 92vw);
+    padding-top: 20px;
+  }
+
+  .nav-link {
+    flex: 0 0 auto;
+  }
+}

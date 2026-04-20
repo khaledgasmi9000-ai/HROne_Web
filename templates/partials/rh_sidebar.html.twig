@@ -1,0 +1,31 @@
+{% set current_route = app.request.attributes.get('_route') ?? '' %}
+<aside class="sidebar">
+    <div class="brand">
+        <div class="logo">
+            <img src="/images/logo-rh.png" alt="HR One" />
+        </div>
+        <div>
+            <div class="brand-name">HR One</div>
+            <div class="brand-sub">Espace RH</div>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <a class="nav-link {{ current_route starts with 'app_user_' or current_route == 'rh_users' ? 'active' : '' }}" href="{{ path('app_user_module') }}">Gestion des utilisateurs</a>
+        <a class="nav-link {{ current_route in ['app_rh_history', 'rh_history'] ? 'active' : '' }}" href="{{ path('app_rh_history') }}">Historique des actions</a>
+        <a class="nav-link {{ current_route == 'rh_activity_watch' ? 'active' : '' }}" href="{{ path('rh_activity_watch') }}">Activity Watch</a>
+        <a class="nav-link {{ current_route == 'rh_conges' ? 'active' : '' }}" href="{{ path('rh_conges') }}">Gestion des conges</a>
+        <a class="nav-link {{ current_route == 'rh_admin' ? 'active' : '' }}" href="{{ path('rh_admin') }}">Gestion administrative</a>
+        <a class="nav-link {{ current_route in ['rh_outils', 'rh_outils_des'] ? 'active' : '' }}" href="{{ path('rh_outils') }}">Gestion des outils</a>
+        <a class="nav-link {{ current_route in ['rh_entretiens', 'rh_entretiens_des'] ? 'active' : '' }}" href="{{ path('rh_entretiens') }}">Gestion des entretiens</a>
+        <a class="nav-link {{ current_route in ['rh_offres', 'rh_offres_slash', 'rh_offres_des'] ? 'active' : '' }}" href="{{ path('rh_offres') }}">Gestion des offres d'emploi</a>
+        <a class="nav-link {{ current_route in ['rh_evenements', 'rh_evenements_des'] ? 'active' : '' }}" href="{{ path('rh_evenements') }}">Gestion des evenements</a>
+        <a class="nav-link {{ current_route in ['rh_formations', 'rh_formations_des', 'app_admin_formation_index', 'app_admin_formation_new', 'app_admin_formation_edit', 'app_admin_formation_participants'] ? 'active' : '' }}" href="{{ path('app_admin_formation_index') }}">Gestion des formations</a>
+        <a class="nav-link {{ current_route starts with 'community_admin' ? 'active' : '' }}" href="{{ path('community_admin_dashboard') }}">Gestion des communautes</a>
+        {% if app.user %}
+            <a class="nav-link" href="{{ path('app_logout') }}">Deconnexion</a>
+        {% else %}
+            <a class="nav-link" href="{{ path('app_login') }}">Connexion</a>
+        {% endif %}
+    </nav>
+</aside>

@@ -1,0 +1,55 @@
+{% extends 'base_back.html.twig' %}
+
+{% block title %}HR One - Historique des actions{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/admin-formations.css">
+{% endblock %}
+
+{% block body %}
+    <section class="interface-shell">
+        <div class="section-header">
+            <div>
+                <h1>Historique des actions</h1>
+                <p>Journal des actions enregistrees dans la table <code>action_utilisateur</code>.</p>
+            </div>
+        </div>
+
+        <form method="get" class="toolbar">
+            <div class="toolbar-row">
+                <input type="text" name="q" value="{{ search }}" placeholder="Rechercher par utilisateur, email ou action">
+                <button type="submit">Rechercher</button>
+                <a href="{{ path('app_rh_history') }}">Reinitialiser</a>
+            </div>
+        </form>
+
+        <div class="table-shell">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Utilisateur</th>
+                    <th>Email</th>
+                    <th>Action</th>
+                    <th>Date</th>
+                    <th>Num ordre</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in rows %}
+                    <tr>
+                        <td>{{ row.Nom_Utilisateur ?: '-' }}</td>
+                        <td>{{ row.Email ?: '-' }}</td>
+                        <td>{{ row.Description_Action ?: '-' }}</td>
+                        <td>{{ '%04d-%02d-%02d %02d:%02d:%02d'|format(row.AAAA ?: 0, row.MM ?: 0, row.JJ ?: 0, row.HH ?: 0, row.MN ?: 0, row.SS ?: 0) }}</td>
+                        <td>{{ row.Num_Ordre ?: '-' }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5">Aucune action trouvee.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endblock %}

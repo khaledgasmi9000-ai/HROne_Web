@@ -1,0 +1,24 @@
+{% extends 'registration/register.html.twig' %}
+
+{% block title %}HR One - Inscription Employe{% endblock %}
+
+{% block auth_hero_title %}Inscription Employe{% endblock %}
+
+{% block auth_hero_copy %}Creez un compte employe pour acceder aux modules front HR One: communaute, offres, formations et participations.{% endblock %}
+
+{% block auth_hero_features %}
+    <li>Profil cible: employe (ID_Profil = 3)</li>
+    <li>Navigation front complete sur les modules metier</li>
+    <li>Connexion centralisee avec la meme interface</li>
+{% endblock %}
+
+{% block auth_role_label %}Compte employe{% endblock %}
+
+{% block auth_form_title %}Creation du compte employe{% endblock %}
+
+{% block auth_form_copy %}Remplissez vos informations de base pour activer votre session employee.{% endblock %}
+
+{% block auth_chips %}
+    <span class="auth-chip">Role employe</span>
+    <span class="auth-chip">Modules front</span>
+{% endblock %}

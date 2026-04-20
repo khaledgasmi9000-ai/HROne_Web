@@ -1,0 +1,262 @@
+{% extends 'base_back.html.twig' %}
+
+{% block title %}HR One - Gestion communaute{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/admin-formations.css">
+    <style>
+        .status-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #eef4ff;
+            color: #1d4ed8;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .table-meta {
+            margin: 8px 0 0;
+            color: #64748b;
+            line-height: 1.45;
+            max-width: 520px;
+        }
+
+        .inline-form {
+            display: inline;
+        }
+
+        .table-pagination {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-top: 16px;
+        }
+
+        .table-pagination a,
+        .table-pagination span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 38px;
+            height: 36px;
+            padding: 0 12px;
+            border-radius: 10px;
+            border: 1px solid #d6dfef;
+            background: #fff;
+            color: #334155;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .table-pagination a.is-active {
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+            color: #fff;
+        }
+
+        .table-pagination .meta {
+            background: #eef4ff;
+            border-color: #bfdbfe;
+            color: #1d4ed8;
+        }
+
+        .hidden-edit-row {
+            display: none;
+            background: #f8fbff;
+        }
+
+        .edit-grid {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 1.4fr 2fr 0.8fr 1.5fr auto;
+            margin: 8px 0;
+        }
+
+        .edit-grid input {
+            width: 100%;
+            min-width: 0;
+            padding: 12px 14px;
+            border: 1px solid #d6dfef;
+            border-radius: 12px;
+            background: #fff;
+            color: #162033;
+            font: inherit;
+        }
+
+        .flash-error {
+            margin-bottom: 20px;
+            padding: 14px 18px;
+            border-radius: 14px;
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 700;
+        }
+
+        @media (max-width: 1200px) {
+            .edit-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    {% for message in app.flashes('success') %}
+        <div class="flash-success">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="flash-error">{{ message }}</div>
+    {% endfor %}
+
+    <section class="dashboard-hero">
+        <div>
+            <p class="eyebrow">MODULE COMMUNAUTE</p>
+            <h1>Gestion des publications</h1>
+            <p>Supervisez les posts de la communaute, moderez leur statut et pilotez l activite avec les memes composants que le dashboard Formation.</p>
+            <div class="hero-actions">
+                <a class="primary-action primary-action-hero" href="{{ path('community_index') }}">
+                    <span class="action-icon" aria-hidden="true">+</span>
+                    <span>Aller au front communaute</span>
+                </a>
+            </div>
+        </div>
+        <div class="dashboard-stats">
+            <div class="stat-box">
+                <span>{{ totalPosts }}</span>
+                <small>Total posts</small>
+            </div>
+            <div class="stat-box">
+                <span>{{ activeCount }}</span>
+                <small>Actifs</small>
+            </div>
+            <div class="stat-box">
+                <span>{{ inactiveCount }}</span>
+                <small>Masques</small>
+            </div>
+            <div class="stat-box">
+                <span>{{ tagCounts|length }}</span>
+                <small>Tags utilises</small>
+            </div>
+            <div class="stat-box">
+                <span>{{ totalPages }}</span>
+                <small>Pages</small>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <form method="get" action="{{ path('community_admin_dashboard') }}" class="toolbar">
+            <input name="q" value="{{ currentSearch }}" placeholder="Rechercher par titre ou description">
+            <select name="tag">
+                <option value="">Tous les tags</option>
+                {% for tag in tags %}
+                    <option value="{{ tag }}" {% if tag == currentTag %}selected{% endif %}>{{ tag }}</option>
+                {% endfor %}
+            </select>
+            <select name="per_page">
+                {% for n in [5,10,15,20,30,50] %}
+                    <option value="{{ n }}" {% if perPage == n %}selected{% endif %}>{{ n }} / page</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Filtrer</button>
+            <a href="{{ path('community_admin_dashboard') }}">Reinitialiser</a>
+        </form>
+
+        <div class="table-shell">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Publication</th>
+                    <th>Tag</th>
+                    <th>Commentaires</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for post in posts %}
+                    <tr>
+                        <td>#{{ post.id }}</td>
+                        <td>
+                            <strong>{{ post.title }}</strong>
+                            <p class="table-meta">{{ post.description }}</p>
+                        </td>
+                        <td>
+                            {% if post.tag %}
+                                <span class="status-tag">#{{ post.tag }}</span>
+                            {% else %}
+                                <span class="status-tag">Sans tag</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ commentCounts[post.id]|default(0) }}</td>
+                        <td>
+                            <span class="status-pill {% if post.isActive %}status-open{% else %}status-full{% endif %}">
+                                {% if post.isActive %}Actif{% else %}Masque{% endif %}
+                            </span>
+                        </td>
+                        <td class="actions-cell">
+                            <button type="button" class="text-action" onclick="toggleEditRow({{ post.id }})">Modifier</button>
+                            <form method="post" class="inline-form" action="{{ path('community_admin_post_toggle', {id: post.id}) }}">
+                                <button type="submit" class="text-action">{% if post.isActive %}Masquer{% else %}Approuver{% endif %}</button>
+                            </form>
+                            <form method="post" class="inline-form" action="{{ path('community_post_delete', {id: post.id}) }}" onsubmit="return confirm('Supprimer cette publication ?');">
+                                <input type="hidden" name="redirect_route" value="community_admin_dashboard">
+                                <button type="submit" class="danger-action">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr id="edit-row-{{ post.id }}" class="hidden-edit-row">
+                        <td colspan="6">
+                            <form method="post" action="{{ path('community_post_update', {id: post.id}) }}" enctype="multipart/form-data">
+                                <input type="hidden" name="redirect_route" value="community_admin_dashboard">
+                                <div class="edit-grid">
+                                    <input type="text" name="title" value="{{ post.title }}" placeholder="Titre">
+                                    <input type="text" name="description" value="{{ post.description }}" placeholder="Description">
+                                    <input type="text" name="tag" value="{{ post.tag }}" placeholder="Tag">
+                                    <input type="file" name="image_file" accept="image/*">
+                                    <button type="submit" class="primary-button">Enregistrer</button>
+                                </div>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="empty-row">Aucune publication ne correspond aux filtres.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if totalPages > 1 %}
+            <div class="table-pagination">
+                {% if page > 1 %}
+                    <a href="{{ path('community_admin_dashboard', {'page': page - 1, 'per_page': perPage, 'q': currentSearch, 'tag': currentTag}) }}">Precedent</a>
+                {% endif %}
+
+                {% for p in 1..totalPages %}
+                    <a class="{% if p == page %}is-active{% endif %}" href="{{ path('community_admin_dashboard', {'page': p, 'per_page': perPage, 'q': currentSearch, 'tag': currentTag}) }}">{{ p }}</a>
+                {% endfor %}
+
+                {% if page < totalPages %}
+                    <a href="{{ path('community_admin_dashboard', {'page': page + 1, 'per_page': perPage, 'q': currentSearch, 'tag': currentTag}) }}">Suivant</a>
+                {% endif %}
+                <span class="meta">Total: {{ totalPosts }}</span>
+            </div>
+        {% endif %}
+    </section>
+
+    <script>
+        function toggleEditRow(postId) {
+            const row = document.getElementById('edit-row-' + postId);
+            if (!row) {
+                return;
+            }
+            row.style.display = row.style.display === 'table-row' ? 'none' : 'table-row';
+        }
+    </script>
+{% endblock %}

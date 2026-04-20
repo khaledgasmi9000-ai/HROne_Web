@@ -1,0 +1,57 @@
+{% extends 'base_back.html.twig' %}
+
+{% block title %}HR One - Gestion des entretiens{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/admin-formations.css">
+{% endblock %}
+
+{% block body %}
+    <section class="interface-shell">
+        <div class="section-header">
+            <div>
+                <h1>Gestion des entretiens</h1>
+                <p>Suivi RH des entretiens enregistres dans la table entretien.</p>
+            </div>
+        </div>
+
+        <form method="get" class="toolbar">
+            <div class="toolbar-row">
+                <input type="text" name="q" value="{{ search }}" placeholder="Rechercher par candidat, RH, localisation...">
+                <button type="submit">Rechercher</button>
+                <a href="{{ path('app_rh_entretiens') }}">Reinitialiser</a>
+            </div>
+        </form>
+
+        <div class="table-shell">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Candidat</th>
+                    <th>RH</th>
+                    <th>Localisation</th>
+                    <th>Status</th>
+                    <th>Evaluation</th>
+                    <th>Num ordre</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in rows %}
+                    <tr>
+                        <td>{{ row.candidat_nom ?: '-' }}</td>
+                        <td>{{ row.rh_nom ?: '-' }}</td>
+                        <td>{{ row.localisation ?: '-' }}</td>
+                        <td>{{ row.status_entretien is not null ? row.status_entretien : '-' }}</td>
+                        <td>{{ row.evaluation ?: '-' }}</td>
+                        <td>{{ row.num_ordre_entretien ?: '-' }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6">Aucun entretien trouve.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endblock %}

@@ -1,0 +1,219 @@
+{% extends 'base_back.html.twig' %}
+
+{% block title %}HR One - Detail Utilisateur{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/formations.css?v=4">
+    <style>
+      .detail-shell {
+        display: grid;
+        gap: 18px;
+      }
+
+      .identity-card {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .identity-main h2 {
+        margin: 6px 0 4px;
+      }
+
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-size: .85rem;
+        font-weight: 700;
+      }
+
+      .status-active {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .status-inactive {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .detail-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .detail-box {
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 12px;
+        background: #f8fafc;
+      }
+
+      .detail-box span {
+        color: #64748b;
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .detail-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .btn-soft {
+        border: 0;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .btn-toggle {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+
+      .btn-admin {
+        background: #ede9fe;
+        color: #6d28d9;
+      }
+
+      .btn-delete {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .completion {
+        min-width: 180px;
+      }
+
+      .completion-bar {
+        width: 100%;
+        height: 10px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        overflow: hidden;
+      }
+
+      .completion-bar span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, #2563eb, #14b8a6);
+      }
+
+      @media (max-width: 900px) {
+        .detail-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <section class="hero-card hero-card-catalog">
+        <div class="hero-copy-block">
+            <p class="eyebrow">Module Utilisateur</p>
+            <h1>Detail utilisateur</h1>
+            <p class="hero-copy">Vue complete du compte avec actions RH/Admin: statut, role admin et suppression.</p>
+        </div>
+        <div class="hero-stats hero-stats-catalog">
+            <div class="stat-box stat-box-catalog">
+                <small>ID</small>
+                <span>#{{ userItem.IDUTILISATEUR }}</span>
+                <p>identifiant</p>
+            </div>
+            <div class="stat-box stat-box-catalog">
+                <small>Profil</small>
+                <span>{{ userItem.profil ? userItem.profil.nomProfil : '-' }}</span>
+                <p>role metier</p>
+            </div>
+            <div class="stat-box stat-box-catalog">
+                <small>Completude</small>
+                <span>{{ userItem.profileCompletionScore }}%</span>
+                <p>fiche profil</p>
+            </div>
+        </div>
+    </section>
+
+    {% for message in app.flashes('success') %}
+        <div class="flash-success">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="flash-error">{{ message }}</div>
+    {% endfor %}
+
+    <section class="catalog-shell detail-shell">
+        <article class="detail-card identity-card">
+            <div class="identity-main">
+                <p class="eyebrow">Compte</p>
+                <h2>{{ userItem.nomUtilisateur ?? '-' }}</h2>
+                <p style="margin:0;color:#64748b;">{{ userItem.email ?? 'Email non renseigne' }}</p>
+            </div>
+            <div>
+                <span class="status-chip {{ userItem.active ? 'status-active' : 'status-inactive' }}">
+                    {{ userItem.active ? 'Compte actif' : 'Compte inactif' }}
+                </span>
+            </div>
+        </article>
+
+        <article class="detail-card">
+            <div class="detail-grid">
+                <div class="detail-box"><span>ID_Entreprise</span><strong>{{ userItem.entreprise ? userItem.entreprise.IDEntreprise : '-' }}</strong></div>
+                <div class="detail-box"><span>ID_Profil</span><strong>{{ userItem.profil ? userItem.profil.IDProfil : '-' }}</strong></div>
+                <div class="detail-box"><span>Num_Ordre_Sign_In</span><strong>{{ userItem.ordre ? userItem.ordre.numOrdre : '-' }}</strong></div>
+                <div class="detail-box"><span>Adresse</span><strong>{{ userItem.adresse ?? '-' }}</strong></div>
+                <div class="detail-box"><span>Num_Tel</span><strong>{{ userItem.numTel ?? '-' }}</strong></div>
+                <div class="detail-box"><span>CIN</span><strong>{{ userItem.CIN ?? '-' }}</strong></div>
+                <div class="detail-box"><span>Date_Naissance</span><strong>{{ userItem.dateNaissance ? userItem.dateNaissance|date('Y-m-d') : '-' }}</strong></div>
+                <div class="detail-box"><span>Gender</span><strong>{{ userItem.gender ?? '-' }}</strong></div>
+                <div class="detail-box"><span>first_login / firstLogin</span><strong>{{ userItem.first_login ?? '-' }} / {{ userItem.firstLogin ?? '-' }}</strong></div>
+            </div>
+        </article>
+
+        <article class="detail-card">
+            <h3>Completude du profil</h3>
+            <div class="completion">
+                <div class="completion-bar">
+                    <span style="width: {{ userItem.profileCompletionScore }}%"></span>
+                </div>
+                <small>{{ userItem.profileCompletionScore }}% - {{ userItem.profileComplete ? 'Profil complet' : 'Profil a completer' }}</small>
+            </div>
+        </article>
+
+        <article class="detail-card">
+            <h3>Actions</h3>
+            <div class="detail-actions">
+                <a class="primary-link" href="{{ path('app_user_module') }}">Retour a la liste</a>
+
+                {% if currentEntityUserId != userItem.IDUTILISATEUR %}
+                    <form method="post" action="{{ path('app_user_toggle_status', {id: userItem.IDUTILISATEUR}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('toggle_user_status_' ~ userItem.IDUTILISATEUR) }}">
+                        <button class="btn-soft btn-toggle" type="submit">
+                            {{ userItem.active ? 'Desactiver compte' : 'Activer compte' }}
+                        </button>
+                    </form>
+                {% endif %}
+
+                {% if isAdmin and currentEntityUserId != userItem.IDUTILISATEUR %}
+                    <form method="post" action="{{ path('app_user_toggle_admin', {id: userItem.IDUTILISATEUR}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('toggle_admin_user_' ~ userItem.IDUTILISATEUR) }}">
+                        <button class="btn-soft btn-admin" type="submit">
+                            {{ 'ROLE_ADMIN' in userItem.roles ? 'Retirer admin' : 'Rendre admin' }}
+                        </button>
+                    </form>
+
+                    <form method="post" action="{{ path('app_user_delete', {id: userItem.IDUTILISATEUR}) }}" onsubmit="return confirm('Supprimer cet utilisateur ?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ userItem.IDUTILISATEUR) }}">
+                        <button class="btn-soft btn-delete" type="submit">Supprimer utilisateur</button>
+                    </form>
+                {% endif %}
+            </div>
+        </article>
+    </section>
+{% endblock %}

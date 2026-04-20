@@ -1,0 +1,68 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}HR One - Offres d'emploi{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/formations.css?v=4">
+{% endblock %}
+
+{% block body %}
+    <section class="hero-card hero-card-catalog">
+        <div class="hero-copy-block">
+            <p class="eyebrow">Module Recrutement</p>
+            <h1>Offres d'emploi</h1>
+            <p class="hero-copy">Consulte les offres disponibles et leurs details principaux.</p>
+        </div>
+        <div class="hero-stats hero-stats-catalog">
+            <div class="stat-box stat-box-catalog">
+                <small>Total</small>
+                <span>{{ totalOffers }}</span>
+                <p>offres disponibles</p>
+            </div>
+            <div class="stat-box stat-box-catalog">
+                <small>Profil</small>
+                <span>{% if is_granted('ROLE_CANDIDAT') %}Candidat{% else %}Employe{% endif %}</span>
+                <p>session active</p>
+            </div>
+            <div class="stat-box stat-box-catalog">
+                <small>Acces</small>
+                <span>Lecture</span>
+                <p>consultation offres</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="catalog-shell">
+        <div class="formation-grid">
+            {% for offer in offers %}
+                <article class="formation-card">
+                    <div class="card-top">
+                        <span class="mode-pill">{{ offer.contrat }}</span>
+                        <span class="status-pill status-open">{{ offer.work_type|default('Standard') }}</span>
+                    </div>
+                    <h3>{{ offer.titre }}</h3>
+                    <p>{{ offer.description ?: 'Description indisponible' }}</p>
+                    <dl class="meta-list">
+                        <div>
+                            <dt>Entreprise</dt>
+                            <dd>{{ offer.entreprise }}</dd>
+                        </div>
+                        <div>
+                            <dt>Salaire</dt>
+                            <dd>{{ offer.salaire }}</dd>
+                        </div>
+                        <div>
+                            <dt>Experience</dt>
+                            <dd>{{ offer.experience }}</dd>
+                        </div>
+                    </dl>
+                </article>
+            {% else %}
+                <div class="empty-state">
+                    <h3>Aucune offre disponible</h3>
+                    <p>Aucune offre n est enregistree pour le moment.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}

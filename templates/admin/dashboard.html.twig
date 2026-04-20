@@ -1,0 +1,9 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content %}
+  <h1>Tableau de bord</h1>
+  <ul>
+    <li><a href="{{ ea_url().setController('App\\\\Controller\\\\Admin\\\\PostCrudController') }}">Posts</a></li>
+    <li><a href="{{ ea_url().setController('App\\\\Controller\\\\Admin\\\\CommentCrudController') }}">Commentaires</a></li>
+  </ul>
+{% endblock %}

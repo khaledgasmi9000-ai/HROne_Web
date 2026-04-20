@@ -1,0 +1,553 @@
+{% extends 'Topnavbar/base.html.twig' %}
+
+{% set page_title = "HR One - Offres d'emploi" %}
+{% set page_class = 'page-offres' %}
+{% set page_css = 'offres.css' %}
+{% set page_key = 'offres' %}
+
+{% block content_title %}{% endblock %}
+
+{% block content_body %}
+  <section class="hero">
+    <div>
+      <h1>Trouvez l'offre qui vous correspond</h1>
+      <p>Parcourez les offres actives, filtrez par localisation et postulez en quelques clics.</p>
+    </div>
+    <form class="hero-search" method="get" action="{{ path('topnav_offres') }}">
+      <input id="offerSearch" name="q" type="text" placeholder="Rechercher un poste, une competence..." value="{{ filters.search|default('') }}" />
+      <input id="offerLocation" name="location" type="text" placeholder="Ville (ex: Casablanca)" value="{{ filters.location|default('') }}" />
+      <div class="hero-search-actions">
+        <button class="btn btn-primary" type="submit">Rechercher</button>
+        <a class="btn btn-ghost" href="{{ path('topnav_offres') }}">Reinitialiser</a>
+        <button id="btnMesCandidatures" class="btn btn-ghost" type="button" data-href="{{ path('topnav_mes_candidatures') }}">Mes candidatures</button>
+      </div>
+    </form>
+  </section>
+
+  <main class="content">
+    <section class="offers">
+      <div class="offers-header">
+        <h2>Offres disponibles</h2>
+        {% set externalOffersValue = externalOffers|default([]) %}
+        {% set offerCountValue = offers|length + externalOffersValue|length %}
+        <span class="count" id="offerCount">{{ offerCountValue }} offre{{ offerCountValue > 1 ? 's' : '' }}</span>
+      </div>
+      <div class="offers-grid" id="offersGrid">
+        {% for offer in offers %}
+          <article
+            class="offer-card"
+            data-location="{{ offer.location|default('')|e('html_attr') }}"
+            data-offer-id="{{ offer.id }}"
+            data-offer-title="{{ offer.title|e('html_attr') }}"
+            data-offer-contract="{{ offer.contract|default('-')|e('html_attr') }}"
+            data-offer-work-type="{{ offer.workType|default('-')|e('html_attr') }}"
+            data-offer-experience="{{ offer.experience|default('-')|e('html_attr') }}"
+            data-offer-description="{{ (offer.description ?: 'Aucune description disponible pour cette offre.')|e('html_attr') }}"
+            data-offer-min-salary="{{ offer.minSalary is not null ? offer.minSalary : '' }}"
+            data-offer-max-salary="{{ offer.maxSalary is not null ? offer.maxSalary : '' }}"
+            data-offer-expiration-date="{{ offer.expirationDate|default('')|e('html_attr') }}"
+            data-offer-status="{{ offer.status|default('-')|e('html_attr') }}"
+            data-offer-source="Interne"
+            data-offer-url=""
+          >
+            <div class="offer-card-header">
+              <h3>{{ offer.title }}</h3>
+              <span class="tag">{{ offer.contract }}</span>
+            </div>
+            <p class="offer-meta">{{ offer.location }} - {{ offer.experience }} - {{ offer.workType }}</p>
+            <p class="offer-desc">{{ offer.description ?: 'Aucune description disponible pour cette offre.' }}</p>
+            <div class="offer-footer">
+              <button class="btn btn-ghost btn-offer-details" type="button">Voir details</button>
+              <button class="btn btn-ghost btn-offer-qr" type="button" data-offer-id="{{ offer.id }}" data-offer-title="{{ offer.title|e('html_attr') }}">QR Code</button>
+              <button class="btn btn-primary btn-apply-offer" type="button" data-offer-id="{{ offer.id }}" data-offer-title="{{ offer.title|e('html_attr') }}">Postuler</button>
+            </div>
+          </article>
+        {% endfor %}
+
+        {% for offer in externalOffersValue %}
+          <article
+            class="offer-card offer-card-external"
+            data-location="{{ offer.location|default('')|e('html_attr') }}"
+            data-offer-id="{{ offer.id|e('html_attr') }}"
+            data-offer-title="{{ offer.title|e('html_attr') }}"
+            data-offer-contract="{{ offer.contract|default('-')|e('html_attr') }}"
+            data-offer-work-type="{{ offer.workType|default('-')|e('html_attr') }}"
+            data-offer-experience="{{ offer.experience|default('-')|e('html_attr') }}"
+            data-offer-description="{{ (offer.description ?: 'Aucune description disponible pour cette offre.')|e('html_attr') }}"
+            data-offer-min-salary=""
+            data-offer-max-salary=""
+            data-offer-expiration-date=""
+            data-offer-status="{{ offer.status|default('Externe')|e('html_attr') }}"
+            data-offer-source="{{ offer.source|default('Arbeitnow')|e('html_attr') }}"
+            data-offer-url="{{ offer.externalUrl|default('')|e('html_attr') }}"
+          >
+            <div class="offer-card-header">
+              <h3>{{ offer.title }}</h3>
+              <span class="tag tag-external">{{ offer.source|default('Arbeitnow') }}</span>
+            </div>
+            <p class="offer-meta">{{ offer.location }} - {{ offer.experience }} - {{ offer.workType }}</p>
+            <p class="offer-desc">{{ offer.description ?: 'Aucune description disponible pour cette offre.' }}</p>
+            <div class="offer-footer">
+              <button class="btn btn-ghost btn-offer-details" type="button">Voir details</button>
+              <button class="btn btn-primary btn-open-external" type="button" data-offer-url="{{ offer.externalUrl|default('')|e('html_attr') }}">Voir sur {{ offer.source|default('site externe') }}</button>
+            </div>
+          </article>
+        {% endfor %}
+
+        {% if offers|length == 0 and externalOffersValue|length == 0 %}
+          <article class="offer-card">
+            <p class="offer-desc">Aucune offre disponible pour le moment.</p>
+          </article>
+        {% endif %}
+      </div>
+    </section>
+
+    <aside class="apply-panel">
+      <h3>Postuler rapidement</h3>
+      <p class="muted">Selectionnez une offre et envoyez votre candidature.</p>
+      <form class="apply-form">
+        <div class="field">
+          <label for="selectedOffer">Offre selectionnee</label>
+          <select id="selectedOffer">
+            <option value="">Choisir une offre</option>
+            {% for offer in offers %}
+              <option value="{{ offer.id }}">{{ offer.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="candidateName">Nom complet</label>
+          <input id="candidateName" type="text" placeholder="Votre nom" />
+        </div>
+        <div class="field">
+          <label for="candidateEmail">Email</label>
+          <input id="candidateEmail" type="email" placeholder="email@exemple.com" />
+        </div>
+        <div class="field">
+          <label for="portfolioUrl">Lien du portfolio</label>
+          <input id="portfolioUrl" type="url" placeholder="https://" />
+        </div>
+        <div class="field">
+          <label for="cvFile">CV</label>
+          <input id="cvFile" type="file" accept=".pdf,.docx" />
+        </div>
+        <div class="field">
+          <label for="motivationLetter">Lettre de motivation</label>
+          <textarea id="motivationLetter" rows="4" placeholder="Expliquez brievement votre motivation..."></textarea>
+        </div>
+        <div class="field">
+          <label for="recommendationLetter">Lettre de recommandation</label>
+          <input id="recommendationLetter" type="file" accept=".pdf,.docx" />
+        </div>
+        <small id="applyFeedback" class="muted" role="alert" aria-live="polite"></small>
+        <button id="submitCandidatureBtn" class="btn btn-primary" type="button">Envoyer ma candidature</button>
+      </form>
+    </aside>
+  </main>
+
+  <div id="offerDetailsModal" class="offer-modal" hidden>
+    <div class="offer-modal-backdrop" data-close-offer-modal="true"></div>
+    <section class="offer-modal-panel" role="dialog" aria-modal="true" aria-labelledby="offerModalTitle">
+      <header class="offer-modal-header">
+        <div>
+          <h3 id="offerModalTitle">Details de l'offre</h3>
+          <p id="offerModalSubtitle" class="muted">Consultez les informations completes de cette offre.</p>
+        </div>
+        <button id="closeOfferDetailsModal" class="btn btn-ghost" type="button">Fermer</button>
+      </header>
+
+      <div class="offer-modal-content">
+        <div class="offer-modal-grid">
+          <div class="offer-modal-item">
+            <span class="offer-modal-label">Titre</span>
+            <strong id="modalOfferTitle">-</strong>
+          </div>
+          <div class="offer-modal-item">
+            <span class="offer-modal-label">Type de contrat</span>
+            <strong id="modalOfferContract">-</strong>
+          </div>
+          <div class="offer-modal-item">
+            <span class="offer-modal-label">Lieu</span>
+            <strong id="modalOfferLocation">-</strong>
+          </div>
+          <div class="offer-modal-item">
+            <span class="offer-modal-label">Type de travail</span>
+            <strong id="modalOfferWorkType">-</strong>
+          </div>
+          <div class="offer-modal-item">
+            <span class="offer-modal-label">Experience demandee</span>
+            <strong id="modalOfferExperience">-</strong>
+          </div>
+          <div class="offer-modal-item">
+            <span class="offer-modal-label">Salaire</span>
+            <strong id="modalOfferSalary">-</strong>
+          </div>
+          <div class="offer-modal-item">
+            <span class="offer-modal-label">Date d'expiration</span>
+            <strong id="modalOfferExpiration">-</strong>
+          </div>
+          <div class="offer-modal-item">
+            <span class="offer-modal-label">Statut</span>
+            <strong id="modalOfferStatus">-</strong>
+          </div>
+        </div>
+
+        <div class="offer-modal-description">
+          <span class="offer-modal-label">Description</span>
+          <p id="modalOfferDescription">-</p>
+        </div>
+
+        <div class="offer-modal-actions">
+          <span class="offer-modal-source" id="modalOfferSource">Source: Interne</span>
+          <a id="modalOfferExternalLink" class="btn btn-primary" href="#" target="_blank" rel="noopener" hidden>Voir l'offre externe</a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="offerQrModal" class="offer-modal" hidden>
+    <div class="offer-modal-backdrop" data-close-offer-qr-modal="true"></div>
+    <section class="offer-modal-panel offer-qr-panel" role="dialog" aria-modal="true" aria-labelledby="offerQrModalTitle">
+      <header class="offer-modal-header">
+        <div>
+          <h3 id="offerQrModalTitle">QR Code de l'offre</h3>
+          <p id="offerQrModalSubtitle" class="muted">Scannez ce QR code pour afficher une fiche structuree de l'offre sur votre telephone.</p>
+        </div>
+        <button id="closeOfferQrModal" class="btn btn-ghost" type="button">Fermer</button>
+      </header>
+
+      <div class="offer-qr-content">
+        <img id="offerQrImage" src="" alt="QR Code de l'offre" loading="lazy" />
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const offersGrid = document.getElementById("offersGrid");
+    const btnMesCandidatures = document.getElementById("btnMesCandidatures");
+    const selectedOffer = document.getElementById("selectedOffer");
+    const submitCandidatureBtn = document.getElementById("submitCandidatureBtn");
+    const candidateName = document.getElementById("candidateName");
+    const candidateEmail = document.getElementById("candidateEmail");
+    const portfolioUrl = document.getElementById("portfolioUrl");
+    const cvFile = document.getElementById("cvFile");
+    const motivationLetter = document.getElementById("motivationLetter");
+    const recommendationLetter = document.getElementById("recommendationLetter");
+    const applyFeedback = document.getElementById("applyFeedback");
+    const createCandidatureApiUrl = "{{ path('topnav_candidatures_api_create') }}";
+    const offerDetailsModal = document.getElementById("offerDetailsModal");
+    const closeOfferDetailsModal = document.getElementById("closeOfferDetailsModal");
+    const offerQrModal = document.getElementById("offerQrModal");
+    const closeOfferQrModal = document.getElementById("closeOfferQrModal");
+    const offerQrImage = document.getElementById("offerQrImage");
+    const offerQrModalSubtitle = document.getElementById("offerQrModalSubtitle");
+    const offerQrCodeUrlPattern = "{{ path('topnav_offre_qr_code', {id: '__ID__'}) }}";
+    const modalOfferTitle = document.getElementById("modalOfferTitle");
+    const modalOfferContract = document.getElementById("modalOfferContract");
+    const modalOfferLocation = document.getElementById("modalOfferLocation");
+    const modalOfferWorkType = document.getElementById("modalOfferWorkType");
+    const modalOfferExperience = document.getElementById("modalOfferExperience");
+    const modalOfferSalary = document.getElementById("modalOfferSalary");
+    const modalOfferExpiration = document.getElementById("modalOfferExpiration");
+    const modalOfferStatus = document.getElementById("modalOfferStatus");
+    const modalOfferDescription = document.getElementById("modalOfferDescription");
+    const modalOfferSource = document.getElementById("modalOfferSource");
+    const modalOfferExternalLink = document.getElementById("modalOfferExternalLink");
+
+    const parseApiResponse = async (response) => {
+      const rawText = await response.text();
+      let data = null;
+
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch (error) {
+        data = null;
+      }
+
+      if (!response.ok) {
+        const validationErrors = data?.errors && typeof data.errors === "object" ? Object.values(data.errors) : [];
+        const message = data?.message || rawText.split("\n")[0] || "Erreur serveur.";
+        const details = data?.details ? [data.details] : [];
+        throw new Error([message, ...validationErrors, ...details].filter(Boolean).join("\n"));
+      }
+
+      if (!data || typeof data !== "object") {
+        throw new Error("Reponse serveur invalide.");
+      }
+
+      return data;
+    };
+
+    const showApplyFeedback = (messages, isSuccess = false) => {
+      if (!applyFeedback) {
+        return;
+      }
+
+      if (!messages || messages.length === 0) {
+        applyFeedback.textContent = "";
+        applyFeedback.style.color = "";
+        return;
+      }
+
+      applyFeedback.style.color = isSuccess ? "#0f7a45" : "#b42318";
+      applyFeedback.innerHTML = messages.map((message) => `- ${message}`).join("<br>");
+    };
+
+    const validateApplyPayload = (payload) => {
+      const errors = [];
+
+      if (!payload.offerId) {
+        errors.push("Selectionnez une offre.");
+      }
+      if (!payload.candidateName) {
+        errors.push("Le nom complet est obligatoire.");
+      }
+      if (!payload.candidateEmail) {
+        errors.push("L'email est obligatoire.");
+      }
+      if (!payload.portfolioUrl) {
+        errors.push("Le portfolio est obligatoire.");
+      }
+      if (!payload.cvFileName) {
+        errors.push("Le CV est obligatoire.");
+      }
+      if (!payload.cvMimeType) {
+        errors.push("Le type du CV est obligatoire.");
+      }
+      if (!payload.cvFileContentBase64) {
+        errors.push("Le contenu du CV est obligatoire.");
+      }
+      if (!payload.motivationLetter) {
+        errors.push("La lettre de motivation est obligatoire.");
+      }
+      if (!payload.recommendationFileName) {
+        errors.push("La lettre de recommandation est obligatoire.");
+      }
+
+      return errors;
+    };
+
+    const readFileAsBase64 = (file) => {
+      return new Promise((resolve, reject) => {
+        if (!file) {
+          reject(new Error("Fichier introuvable."));
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = typeof reader.result === "string" ? reader.result : "";
+          const parts = result.split(",");
+          resolve(parts.length > 1 ? parts[1] : result);
+        };
+        reader.onerror = () => reject(new Error("Impossible de lire le fichier CV."));
+        reader.readAsDataURL(file);
+      });
+    };
+
+    const formatSalaryRange = (minSalaryRaw, maxSalaryRaw) => {
+      const minSalary = Number(minSalaryRaw || 0);
+      const maxSalary = Number(maxSalaryRaw || 0);
+      if (Number.isFinite(minSalary) && Number.isFinite(maxSalary) && minSalary > 0 && maxSalary > 0) {
+        return `${minSalary} - ${maxSalary} DTN`;
+      }
+      return "Non precise";
+    };
+
+    const openOfferDetailsModal = (card) => {
+      if (!card || !offerDetailsModal) {
+        return;
+      }
+
+      modalOfferTitle.textContent = card.dataset.offerTitle || "-";
+      modalOfferContract.textContent = card.dataset.offerContract || "-";
+      modalOfferLocation.textContent = card.dataset.location || "-";
+      modalOfferWorkType.textContent = card.dataset.offerWorkType || "-";
+      modalOfferExperience.textContent = card.dataset.offerExperience || "-";
+      modalOfferSalary.textContent = formatSalaryRange(card.dataset.offerMinSalary, card.dataset.offerMaxSalary);
+      modalOfferExpiration.textContent = card.dataset.offerExpirationDate || "Non precisee";
+      modalOfferStatus.textContent = card.dataset.offerStatus || "-";
+      modalOfferDescription.textContent = card.dataset.offerDescription || "Aucune description disponible pour cette offre.";
+
+      const offerSource = card.dataset.offerSource || "Interne";
+      const offerUrl = (card.dataset.offerUrl || "").trim();
+      if (modalOfferSource) {
+        modalOfferSource.textContent = `Source: ${offerSource}`;
+      }
+
+      if (modalOfferExternalLink) {
+        if (offerUrl) {
+          modalOfferExternalLink.hidden = false;
+          modalOfferExternalLink.href = offerUrl;
+        } else {
+          modalOfferExternalLink.hidden = true;
+          modalOfferExternalLink.href = "#";
+        }
+      }
+
+      offerDetailsModal.hidden = false;
+    };
+
+    const closeOfferModal = () => {
+      if (offerDetailsModal) {
+        offerDetailsModal.hidden = true;
+      }
+    };
+
+    const replaceIdInUrlPattern = (pattern, offerId) => pattern.replace("__ID__", String(offerId));
+
+    const openOfferQrModal = (button) => {
+      if (!button || !offerQrModal || !offerQrImage) {
+        return;
+      }
+
+      const offerId = Number(button.dataset.offerId || 0);
+      if (!Number.isFinite(offerId) || offerId <= 0) {
+        return;
+      }
+
+      const offerTitle = (button.dataset.offerTitle || "Offre").trim();
+      const qrImageUrl = replaceIdInUrlPattern(offerQrCodeUrlPattern, offerId);
+
+      offerQrImage.src = `${qrImageUrl}?t=${Date.now()}`;
+      if (offerQrModalSubtitle) {
+        offerQrModalSubtitle.textContent = `Scannez ce QR code pour afficher la fiche structuree de "${offerTitle}" sur votre telephone.`;
+      }
+
+      offerQrModal.hidden = false;
+    };
+
+    const closeOfferQrCodeModal = () => {
+      if (!offerQrModal || !offerQrImage) {
+        return;
+      }
+
+      offerQrModal.hidden = true;
+      offerQrImage.src = "";
+    };
+
+    btnMesCandidatures.addEventListener("click", () => {
+      window.location.href = btnMesCandidatures.dataset.href;
+    });
+
+    offersGrid.querySelectorAll(".btn-apply-offer").forEach((button) => {
+      button.addEventListener("click", () => {
+        const offerId = button.dataset.offerId || "";
+        if (selectedOffer && offerId !== "") {
+          selectedOffer.value = offerId;
+          selectedOffer.focus();
+        }
+      });
+    });
+
+    offersGrid.querySelectorAll(".btn-offer-details").forEach((button) => {
+      button.addEventListener("click", () => {
+        const card = button.closest(".offer-card");
+        openOfferDetailsModal(card);
+      });
+    });
+
+    offersGrid.querySelectorAll(".btn-offer-qr").forEach((button) => {
+      button.addEventListener("click", () => {
+        openOfferQrModal(button);
+      });
+    });
+
+    offersGrid.querySelectorAll(".btn-open-external").forEach((button) => {
+      button.addEventListener("click", () => {
+        const url = (button.dataset.offerUrl || "").trim();
+        if (url) {
+          window.open(url, "_blank", "noopener");
+        }
+      });
+    });
+
+    closeOfferDetailsModal?.addEventListener("click", closeOfferModal);
+    closeOfferQrModal?.addEventListener("click", closeOfferQrCodeModal);
+    offerDetailsModal?.addEventListener("click", (event) => {
+      if (event.target instanceof HTMLElement && event.target.dataset.closeOfferModal === "true") {
+        closeOfferModal();
+      }
+    });
+    offerQrModal?.addEventListener("click", (event) => {
+      if (event.target instanceof HTMLElement && event.target.dataset.closeOfferQrModal === "true") {
+        closeOfferQrCodeModal();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && offerDetailsModal && !offerDetailsModal.hidden) {
+        closeOfferModal();
+      }
+      if (event.key === "Escape" && offerQrModal && !offerQrModal.hidden) {
+        closeOfferQrCodeModal();
+      }
+    });
+
+    submitCandidatureBtn?.addEventListener("click", async () => {
+      const cvSelectedFile = cvFile?.files?.[0] || null;
+      let cvFileContentBase64 = "";
+
+      if (cvSelectedFile) {
+        try {
+          cvFileContentBase64 = await readFileAsBase64(cvSelectedFile);
+        } catch (error) {
+          showApplyFeedback([(error?.message || "Impossible de lire le CV.").toString()]);
+          return;
+        }
+      }
+
+      const payload = {
+        offerId: selectedOffer?.value ? Number(selectedOffer.value) : null,
+        candidateName: candidateName?.value.trim() || "",
+        candidateEmail: candidateEmail?.value.trim() || "",
+        portfolioUrl: portfolioUrl?.value.trim() || "",
+        cvFileName: cvSelectedFile?.name || "",
+        cvMimeType: cvSelectedFile?.type || "",
+        cvFileContentBase64,
+        motivationLetter: motivationLetter?.value.trim() || "",
+        recommendationFileName: recommendationLetter?.files?.[0]?.name || "",
+      };
+
+      const localErrors = validateApplyPayload(payload);
+      if (localErrors.length > 0) {
+        showApplyFeedback(localErrors);
+        return;
+      }
+
+      showApplyFeedback([]);
+      submitCandidatureBtn.disabled = true;
+
+      try {
+        const response = await fetch(createCandidatureApiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await parseApiResponse(response);
+        const aiStatus = result?.aiStatus || null;
+        const messages = ["Candidature envoyee avec succes."];
+        let success = true;
+
+        if (aiStatus?.status === "success") {
+          messages.push("Analyse IA terminee.");
+        } else if (aiStatus?.status === "skipped") {
+          const reason = (aiStatus?.message || "Analyse IA non configuree.").toString();
+          messages.push(reason);
+        } else if (aiStatus?.status === "failed") {
+          const reason = (aiStatus?.message || "Analyse IA indisponible.").toString();
+          messages.push(`Analyse IA echouee: ${reason}`);
+          success = false;
+        }
+
+        showApplyFeedback(messages, success);
+      } catch (error) {
+        showApplyFeedback((error?.message || "Impossible d'envoyer la candidature.").split("\n").filter(Boolean));
+      } finally {
+        submitCandidatureBtn.disabled = false;
+      }
+    });
+  </script>
+{% endblock %}

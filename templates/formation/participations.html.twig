@@ -1,0 +1,211 @@
+{% extends 'base_front.html.twig' %}
+{% block title %}HR One - Mes participations{% endblock %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/formations.css">
+{% endblock %}
+{% block body %}
+    <section class="detail-shell detail-shell-pro">
+        {% for message in app.flashes('success') %}
+            <div class="flash-success">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="flash-error">{{ message }}</div>
+        {% endfor %}
+
+        <section class="detail-card participation-shell">
+            <div class="detail-card-head">
+                <div>
+                    <p class="eyebrow">Espace employe</p>
+                    <h1>Mes participations</h1>
+                    <p>Consultez ici les formations auxquelles votre compte est inscrit.</p>
+                </div>
+                <a class="text-link" href="{{ path('app_formation_index') }}">Retour au catalogue</a>
+            </div>
+
+            {% if not selected_employee %}
+                <div class="flash-error" style="margin-bottom:1rem;">
+                    Aucun compte employe connecte n a ete detecte pour afficher vos participations.
+                </div>
+            {% endif %}
+
+            <section class="detail-card participation-calendar-card">
+                <div class="participation-calendar-head">
+                    <div class="participation-calendar-copy">
+                        <p class="eyebrow">Planning</p>
+                        <h2>Calendrier des participations</h2>
+                    </div>
+                    {% if selected_employee %}
+                        <div class="calendar-chip-stack">
+                            <span class="calendar-chip">{{ selected_employee.label }}</span>
+                            <span class="calendar-chip calendar-chip-soft">{{ participations|length }} formation{% if participations|length > 1 %}s{% endif %}</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if selected_employee %}
+                    <div class="participation-filter-row" data-participation-filters>
+                        <button type="button" class="participation-filter-button is-active" data-filter="formation">Formations</button>
+                    </div>
+                    <div
+                        id="participation-calendar"
+                        class="participation-calendar"
+                        data-events='{{ calendar_events|default([])|json_encode|e('html_attr') }}'
+                    ></div>
+                    <div class="calendar-legend">
+                        <span class="calendar-legend-item">
+                            <span class="calendar-legend-dot"></span>
+                            Formation inscrite
+                        </span>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <h3>Calendrier indisponible</h3>
+                        <p>Le calendrier s affichera ici des qu une inscription sera associee a votre compte employe.</p>
+                    </div>
+                {% endif %}
+            </section>
+
+            <div class="participation-list">
+                {% for row in participations %}
+                    <article class="participation-card">
+                        <div class="participation-content">
+                            <p class="participation-status">{{ row.participation.statut ?: 'inscrit' }}</p>
+                            <h3>{{ row.formation.title }}</h3>
+                            <p>{{ row.formation.excerpt }}</p>
+                            <div class="participation-meta">
+                                <span>{{ row.formation.mode_label }}</span>
+                                <span>{{ row.formation.level }}</span>
+                                <span>{{ row.formation.date_start }} - {{ row.formation.date_end }}</span>
+                                <span>{{ row.formation.occupancy_label }}</span>
+                            </div>
+                        </div>
+                        <div class="participation-actions">
+                            <a class="text-link" href="{{ path('app_formation_show', {id: row.formation.id}) }}">Voir la fiche</a>
+                            {% if row.participation.statut == 'inscrit' %}
+                                <form method="post" action="{{ path('app_formation_cancel', {id: row.formation.id}) }}">
+                                    <input type="hidden" name="participant_id" value="{{ selected_participant_id }}">
+                                    <button type="submit" class="secondary-cta">Annuler</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </article>
+                {% else %}
+                    <div class="empty-state">
+                        {% if selected_employee %}
+                            <h3>Aucune participation pour le moment</h3>
+                            <p>Choisissez une formation dans le catalogue puis lancez une inscription.</p>
+                        {% else %}
+                            <h3>Compte employe requis</h3>
+                            <p>Connectez-vous avec un compte employe pour consulter vos inscriptions formation.</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+        </section>
+    </section>
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    {% if selected_employee %}
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const calendarElement = document.getElementById('participation-calendar');
+                const filterButtons = Array.from(document.querySelectorAll('[data-participation-filters] [data-filter]'));
+
+                if (!calendarElement || typeof FullCalendar === 'undefined') {
+                    return;
+                }
+
+                const allEvents = JSON.parse(calendarElement.dataset.events || '[]');
+                let currentFilter = 'formation';
+
+                const filterEvents = function (events, type) {
+                    return events.filter(function (item) {
+                        return (item.extendedProps?.typeLabel || '').toLowerCase() === type;
+                    });
+                };
+
+                const calendar = new FullCalendar.Calendar(calendarElement, {
+                    locale: 'fr',
+                    timeZone: 'local',
+                    initialView: 'dayGridMonth',
+                    firstDay: 1,
+                    height: 'auto',
+                    fixedWeekCount: false,
+                    dayMaxEvents: true,
+                    eventDisplay: 'block',
+                    headerToolbar: {
+                        start: 'prev,next today',
+                        center: 'title',
+                        end: 'dayGridMonth,timeGridWeek,listMonth'
+                    },
+                    buttonText: {
+                        today: 'Aujourd hui',
+                        month: 'Mois',
+                        week: 'Semaine',
+                        list: 'Liste'
+                    },
+                    events: filterEvents(allEvents, currentFilter),
+                    noEventsContent: 'Aucune formation a afficher sur cette periode.',
+                    viewDidMount: function () {
+                        calendarElement.setAttribute('data-calendar-view', calendar.view.type);
+                    },
+                    eventContent: function (arg) {
+                        const props = arg.event.extendedProps || {};
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'fc-event-card';
+
+                        const title = document.createElement('div');
+                        title.className = 'fc-event-card-title';
+                        title.textContent = arg.event.title;
+                        wrapper.appendChild(title);
+
+                        const meta = [props.mode, props.level].filter(Boolean).join(' | ');
+
+                        if (meta !== '') {
+                            const metaLine = document.createElement('div');
+                            metaLine.className = 'fc-event-card-meta';
+                            metaLine.textContent = meta;
+                            wrapper.appendChild(metaLine);
+                        }
+
+                        return { domNodes: [wrapper] };
+                    },
+                    eventDidMount: function (info) {
+                        const props = info.event.extendedProps || {};
+                        const details = [props.mode, props.level].filter(Boolean).join(' - ');
+
+                        if (details !== '') {
+                            info.el.title = info.event.title + ' - ' + details;
+                        }
+                    },
+                    eventClick: function (info) {
+                        if (!info.event.url) {
+                            return;
+                        }
+
+                        info.jsEvent.preventDefault();
+                        window.location.href = info.event.url;
+                    }
+                });
+
+                calendar.render();
+
+                filterButtons.forEach(function (button) {
+                    button.addEventListener('click', function () {
+                        currentFilter = button.dataset.filter || 'formation';
+
+                        filterButtons.forEach(function (item) {
+                            item.classList.toggle('is-active', item === button);
+                        });
+
+                        calendar.removeAllEvents();
+                        calendar.addEventSource(filterEvents(allEvents, currentFilter));
+                    });
+                });
+            });
+        </script>
+    {% endif %}
+{% endblock %}

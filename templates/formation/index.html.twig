@@ -1,0 +1,222 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}HR One - Catalogue des formations{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/styles/formations.css?v=4">
+{% endblock %}
+
+{% block body %}
+    <section class="hero-card hero-card-catalog">
+        <div class="hero-copy-block">
+            <p class="eyebrow">Module Formation</p>
+            <h1>Catalogue des formations</h1>
+            <p class="hero-copy">
+                Consultez les sessions disponibles, filtrez par mode ou niveau, puis accedez rapidement au detail de chaque formation.
+            </p>
+           
+        </div>
+        <div class="hero-stats hero-stats-catalog">
+            <div class="stat-box stat-box-catalog">
+                <small>Total</small>
+                <span>{{ stats.total }}</span>
+                <p>formations</p>
+            </div>
+            <div class="stat-box stat-box-catalog">
+                <small>Disponibles</small>
+                <span>{{ stats.available }}</span>
+                <p>sessions ouvertes</p>
+            </div>
+            <div class="stat-box stat-box-catalog">
+                <small>En ligne</small>
+                <span>{{ stats.online }}</span>
+                <p>formations distantes</p>
+            </div>
+            <div class="stat-box stat-box-catalog">
+                <small>Presentiel</small>
+                <span>{{ stats.presentiel }}</span>
+                <p>formations sur site</p>
+            </div>
+        </div>
+    </section>
+
+    {% if featured %}
+        <section class="featured-card">
+            <div class="featured-main">
+                <p class="eyebrow">Formation mise en avant</p>
+                <h2>{{ featured.title }}</h2>
+                <p>{{ featured.excerpt }}</p>
+                <div class="badge-row">
+                    <span class="badge">{{ featured.mode_label }}</span>
+                    <span class="badge">{{ featured.level }}</span>
+                    <span class="badge badge-strong">{{ featured.status_label }}</span>
+                </div>
+            </div>
+            <div class="featured-meta">
+                <div>
+                    <strong>Debut</strong>
+                    <span>{{ featured.date_start }}</span>
+                </div>
+                <div>
+                    <strong>Fin</strong>
+                    <span>{{ featured.date_end }}</span>
+                </div>
+                <div>
+                    <strong>Capacite</strong>
+                    <span>{{ featured.occupancy_label }}</span>
+                </div>
+                <a class="primary-link" href="{{ path('app_formation_show', {id: featured.id}) }}">Voir le detail</a>
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="catalog-shell">
+        <form method="get" class="filters-card filters-card-inline">
+            <div class="field-group field-group-wide">
+                <label for="q">Recherche</label>
+                <input id="q" type="text" name="q" value="{{ filters.q }}" placeholder="Titre, description, niveau...">
+            </div>
+            <div class="field-group">
+                <label for="mode">Mode</label>
+                <select id="mode" name="mode">
+                    <option value="">Tous</option>
+                    <option value="presentiel" {% if filters.mode == 'presentiel' %}selected{% endif %}>Presentiel</option>
+                    <option value="en_ligne" {% if filters.mode == 'en_ligne' %}selected{% endif %}>En ligne</option>
+                </select>
+            </div>
+            <div class="field-group">
+                <label for="level">Niveau</label>
+                <select id="level" name="level">
+                    <option value="">Tous</option>
+                    <option value="Debutant" {% if filters.level == 'Debutant' %}selected{% endif %}>Debutant</option>
+                    <option value="Intermediaire" {% if filters.level == 'Intermediaire' %}selected{% endif %}>Intermediaire</option>
+                    <option value="Avance" {% if filters.level == 'Avance' %}selected{% endif %}>Avance</option>
+                </select>
+            </div>
+            <div class="field-actions">
+                <button type="submit">Filtrer</button>
+                <a href="{{ path('app_formation_index') }}">Reinitialiser</a>
+            </div>
+        </form>
+
+        {% if selected_employee %}
+            <section class="recommendation-panel">
+                <div class="recommendation-head">
+                    <div>
+                        <p class="eyebrow">Recommandation intelligente</p>
+                        <h2>Formations conseillees pour {{ selected_employee.label }}</h2>
+                        <p class="recommendation-copy">
+                            Suggestions basees sur les participations passees, la similarite entre formations, la popularite et la disponibilite.
+                        </p>
+                    </div>
+                    {% if recommendation_profile %}
+                        <div class="recommendation-summary">
+                            <span class="badge">{{ recommendation_profile.strategy }}</span>
+                            <span class="badge">{{ recommendation_profile.history_count }} participation{{ recommendation_profile.history_count > 1 ? 's' : '' }}</span>
+                            {% if recommendation_profile.history_count > 0 %}
+                                <span class="badge">Niveau prefere {{ recommendation_profile.preferred_level }}</span>
+                            {% endif %}
+                            {% if recommendation_profile.preferred_mode %}
+                                <span class="badge">Preference {{ recommendation_profile.preferred_mode }}</span>
+                            {% endif %}
+                            {% for keyword in recommendation_profile.interest_keywords %}
+                                <span class="badge badge-soft">{{ keyword }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if recommended_formations is not empty %}
+                    <div class="formation-grid recommendation-grid">
+                        {% for formation in recommended_formations %}
+                            <article class="formation-card recommendation-card">
+                                <div class="card-top">
+                                    <span class="mode-pill">{{ formation.mode_label }}</span>
+                                    <span class="badge badge-strong">Score {{ formation.recommendation_score }}</span>
+                                </div>
+                                <h3>{{ formation.title }}</h3>
+                                <p>{{ formation.excerpt }}</p>
+                                {% if formation.recommendation_explanation and formation.recommendation_explanation_source == 'ai' %}
+                                    <div class="recommendation-source-row">
+                                        <span class="recommendation-source-badge is-ai">Explication IA</span>
+                                    </div>
+                                    <p class="recommendation-explanation">{{ formation.recommendation_explanation }}</p>
+                                {% endif %}
+                                <div class="badge-row recommendation-reasons">
+                                    {% for reason in formation.recommendation_reasons %}
+                                        <span class="badge badge-soft">{{ reason }}</span>
+                                    {% endfor %}
+                                </div>
+                                <dl class="meta-list">
+                                    <div>
+                                        <dt>Niveau</dt>
+                                        <dd>{{ formation.level }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Debut</dt>
+                                        <dd>{{ formation.date_start }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Places</dt>
+                                        <dd>{{ formation.occupancy_label }}</dd>
+                                    </div>
+                                </dl>
+                                <a class="card-link" href="{{ path('app_formation_show', {id: formation.id}) }}">Consulter la formation</a>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <h3>Aucune recommandation pour le moment</h3>
+                        <p>Les suggestions intelligentes apparaitront ici apres quelques inscriptions ou lorsqu une formation correspondra mieux a votre profil.</p>
+                    </div>
+                {% endif %}
+            </section>
+        {% else %}
+            <section class="recommendation-panel">
+                <div class="recommendation-head">
+                    <div>
+                        <p class="eyebrow">Recommandation intelligente</p>
+                        <h2>Suggestions personnalisees</h2>
+                        <p class="recommendation-copy">
+                            Connectez-vous avec un compte employe pour afficher les formations recommandees selon votre historique.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        {% endif %}
+
+        <div class="formation-grid">
+            {% for formation in formations %}
+                <article class="formation-card">
+                    <div class="card-top">
+                        <span class="mode-pill">{{ formation.mode_label }}</span>
+                        <span class="status-pill {% if formation.is_available %}status-open{% else %}status-full{% endif %}">{{ formation.status_label }}</span>
+                    </div>
+                    <h3>{{ formation.title }}</h3>
+                    <p>{{ formation.excerpt }}</p>
+                    <dl class="meta-list">
+                        <div>
+                            <dt>Niveau</dt>
+                            <dd>{{ formation.level }}</dd>
+                        </div>
+                        <div>
+                            <dt>Debut</dt>
+                            <dd>{{ formation.date_start }}</dd>
+                        </div>
+                        <div>
+                            <dt>Places</dt>
+                            <dd>{{ formation.occupancy_label }}</dd>
+                        </div>
+                    </dl>
+                    <a class="card-link" href="{{ path('app_formation_show', {id: formation.id}) }}">Consulter la formation</a>
+                </article>
+            {% else %}
+                <div class="empty-state">
+                    <h3>Aucune formation trouvee</h3>
+                    <p>Essaie un autre filtre ou ajoute des donnees de test pour le sprint.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}

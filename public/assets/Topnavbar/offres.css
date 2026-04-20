@@ -1,0 +1,364 @@
+/* Interface Offres d'emploi */
+.page-offres .interface-shell {
+	display: grid;
+	gap: 20px;
+}
+
+.page-offres .hero {
+	display: grid;
+	grid-template-columns: 1.2fr 1fr;
+	gap: 16px;
+	align-items: stretch;
+	background: linear-gradient(135deg, #eef5ff, #f8fbff);
+	border: 1px solid #dbe7f3;
+	border-radius: 16px;
+	padding: 18px;
+}
+
+.page-offres .hero h1 {
+	margin: 0;
+	font-size: 1.75rem;
+	color: #0f172a;
+}
+
+.page-offres .hero p {
+	margin: 8px 0 0;
+	color: #4a5d78;
+}
+
+.page-offres .hero-search {
+	display: grid;
+	gap: 10px;
+	align-content: center;
+}
+
+.page-offres .content {
+	display: grid;
+	grid-template-columns: 1.7fr 1fr;
+	gap: 18px;
+	align-items: start;
+}
+
+.page-offres .offers,
+.page-offres .apply-panel {
+	background: #ffffff;
+	border: 1px solid #dce6f2;
+	border-radius: 16px;
+	padding: 18px;
+	box-shadow: 0 8px 28px -20px rgba(15, 23, 42, 0.65);
+}
+
+.page-offres .offers-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 12px;
+}
+
+.page-offres .offers-header h2 {
+	margin: 0;
+	font-size: 1.1rem;
+	color: #0f172a;
+}
+
+.page-offres .count {
+	border-radius: 999px;
+	border: 1px solid #d3e0ef;
+	background: #f3f8fd;
+	padding: 7px 12px;
+	font-size: 0.8rem;
+	font-weight: 700;
+	color: #1c3552;
+}
+
+.page-offres .offers-grid {
+	display: grid;
+	gap: 12px;
+}
+
+.page-offres .offer-card {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	border: 1px solid #dde7f2;
+	border-radius: 12px;
+	padding: 12px;
+	background: #ffffff;
+}
+
+.page-offres .offer-card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 10px;
+}
+
+.page-offres .offer-card-header h3 {
+	margin: 0;
+	font-size: 1rem;
+	color: #0f172a;
+}
+
+.page-offres .tag {
+	border-radius: 999px;
+	padding: 4px 9px;
+	background: #dcfce7;
+	color: #166534;
+	font-size: 0.75rem;
+	font-weight: 700;
+}
+
+.page-offres .tag-external {
+	background: #e0ecff;
+	color: #1e3a8a;
+}
+
+.page-offres .offer-card-external {
+	border-color: #cedcf4;
+	background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.page-offres .offer-meta {
+	margin: 0;
+	color: #5e7088;
+	font-size: 0.82rem;
+}
+
+.page-offres .offer-desc {
+	margin: 0;
+	color: #334155;
+	font-size: 0.9rem;
+}
+
+.page-offres .offer-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 2px;
+}
+
+.page-offres .apply-panel h3 {
+	margin: 0;
+	font-size: 1.05rem;
+	color: #0f172a;
+}
+
+.page-offres .muted {
+	margin-top: 6px;
+	color: #5d6f87;
+	font-size: 0.88rem;
+}
+
+.page-offres .apply-form {
+	display: grid;
+	gap: 10px;
+	margin-top: 12px;
+}
+
+.page-offres .field {
+	display: grid;
+	gap: 6px;
+}
+
+.page-offres label {
+	color: #1f2f46;
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
+.page-offres input,
+.page-offres select,
+.page-offres textarea {
+	width: 100%;
+	border: 1px solid #cad7e6;
+	border-radius: 10px;
+	background: #fbfdff;
+	padding: 9px 10px;
+	font: inherit;
+	color: #0f172a;
+}
+
+.page-offres textarea {
+	resize: vertical;
+	min-height: 96px;
+}
+
+.page-offres input:focus,
+.page-offres select:focus,
+.page-offres textarea:focus {
+	outline: 0;
+	border-color: #0891b2;
+	box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.16);
+}
+
+.page-offres .btn {
+	border: 0;
+	border-radius: 10px;
+	padding: 9px 14px;
+	font-size: 0.88rem;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.page-offres .btn-primary {
+	background: linear-gradient(135deg, #0f766e, #06b6d4);
+	color: #ffffff;
+}
+
+.page-offres .btn-ghost {
+	background: #edf3fa;
+	color: #20324a;
+}
+
+.page-offres .offer-modal {
+	position: fixed;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	z-index: 60;
+	padding: 20px;
+}
+
+.page-offres .offer-modal[hidden] {
+	display: none;
+}
+
+.page-offres .offer-modal-backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(15, 23, 42, 0.42);
+}
+
+.page-offres .offer-modal-panel {
+	position: relative;
+	width: min(760px, 96vw);
+	max-height: min(86vh, 900px);
+	overflow: auto;
+	background: #ffffff;
+	border: 1px solid #dce6f2;
+	border-radius: 16px;
+	padding: 18px;
+	box-shadow: 0 22px 58px -28px rgba(15, 23, 42, 0.85);
+	display: grid;
+	gap: 14px;
+}
+
+.page-offres .offer-modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 12px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #e5edf6;
+}
+
+.page-offres .offer-modal-header h3 {
+	margin: 0;
+	font-size: 1.15rem;
+	color: #0f172a;
+}
+
+.page-offres .offer-modal-header .muted {
+	margin: 6px 0 0;
+}
+
+.page-offres .offer-modal-content {
+	display: grid;
+	gap: 14px;
+}
+
+.page-offres .offer-modal-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+}
+
+.page-offres .offer-modal-item,
+.page-offres .offer-modal-description {
+	border: 1px solid #e1eaf4;
+	background: #f8fbff;
+	border-radius: 10px;
+	padding: 10px;
+	display: grid;
+	gap: 5px;
+}
+
+.page-offres .offer-modal-label {
+	font-size: 0.78rem;
+	font-weight: 700;
+	color: #4f6480;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+}
+
+.page-offres .offer-modal-item strong {
+	font-size: 0.94rem;
+	color: #0f172a;
+}
+
+.page-offres .offer-modal-description p {
+	margin: 0;
+	font-size: 0.93rem;
+	line-height: 1.45;
+	color: #24364d;
+}
+
+.page-offres .offer-modal-actions {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.page-offres .offer-modal-source {
+	font-size: 0.84rem;
+	color: #4b617d;
+	font-weight: 700;
+}
+
+.page-offres .offer-qr-panel {
+	max-width: 460px;
+}
+
+.page-offres .offer-qr-content {
+	display: grid;
+	justify-items: center;
+	gap: 12px;
+	padding-top: 4px;
+}
+
+.page-offres #offerQrImage {
+	width: min(320px, 82vw);
+	height: auto;
+	border: 1px solid #d9e5f3;
+	border-radius: 12px;
+	background: #ffffff;
+	padding: 10px;
+	box-shadow: 0 12px 24px -18px rgba(15, 23, 42, 0.55);
+}
+
+@media (max-width: 1020px) {
+	.page-offres .hero,
+	.page-offres .content {
+		grid-template-columns: 1fr;
+	}
+
+	.page-offres .offer-modal-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 760px) {
+	.page-offres .interface-shell {
+		padding: 14px;
+	}
+
+	.page-offres .offer-card-header,
+	.page-offres .offers-header,
+	.page-offres .offer-footer {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+}

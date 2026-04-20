@@ -1,0 +1,401 @@
+<section class="creation-shell">
+    <div class="creation-card">
+        <div class="creation-head">
+            <div>
+                <h1>{{ page_title }}</h1>
+                <p>Definissez la fiche formation, ajoutez une image et les modules qui la composent.</p>
+            </div>
+            <a class="top-link" href="{{ path('app_admin_formation_index') }}">Formations</a>
+        </div>
+
+        <form method="post" class="creation-form" enctype="multipart/form-data" id="formation-form" novalidate>
+            <div class="field-block field-block-wide">
+                <label for="titre">Titre <span>*</span></label>
+                <input id="titre" name="titre" type="text" value="{{ form_data.titre }}" placeholder="Ex: Bootcamp Gestion RH Digitale" required maxlength="255" minlength="5">
+                {% if errors.titre is defined %}<p class="field-error">{{ errors.titre }}</p>{% endif %}
+                <p class="field-error client-error" data-error-for="titre"></p>
+            </div>
+
+            <div class="field-block field-block-wide">
+                <label for="description">Description <span>*</span></label>
+                <textarea id="description" name="description" rows="4" placeholder="Presentez l'objectif et les benefices de la formation." required minlength="20">{{ form_data.description }}</textarea>
+                {% if errors.description is defined %}<p class="field-error">{{ errors.description }}</p>{% endif %}
+                <p class="field-error client-error" data-error-for="description"></p>
+            </div>
+
+            <div class="field-block field-block-wide">
+                <label for="image">Image ou visuel <span>*</span></label>
+                <div class="file-row">
+                    <input id="image" name="image" type="text" value="{{ form_data.image }}" placeholder="https://exemple.com/visuel.png ou C:\\images\\formation.jpg" required>
+                    <label class="browse-button" for="image_file">Parcourir...</label>
+                    <input id="image_file" name="image_file" type="file" accept=".png,.jpg,.jpeg,.gif,.webp">
+                </div>
+                <p class="field-help">Entrez une URL ou un chemin local, ou cliquez sur Parcourir pour selectionner un fichier local.</p>
+                <div id="image-preview" class="image-preview" hidden>
+                    <p class="image-preview-label">Apercu de l'image selectionnee</p>
+                    <img id="image-preview-tag" src="" alt="Apercu du visuel choisi">
+                    <p id="image-preview-note" class="image-preview-note" hidden>Impossible d'afficher ce chemin local dans le navigateur. Verifiez le chemin saisi.</p>
+                </div>
+                {% if errors.image is defined %}<p class="field-error">{{ errors.image }}</p>{% endif %}
+                <p class="field-error client-error" data-error-for="image"></p>
+            </div>
+
+            <div class="field-block field-block-wide">
+                <label for="mode">Mode de formation <span>*</span></label>
+                <select id="mode" name="mode" required>
+                    <option value="presentiel" {% if form_data.mode == 'presentiel' %}selected{% endif %}>presentiel</option>
+                    <option value="en_ligne" {% if form_data.mode == 'en_ligne' %}selected{% endif %}>en_ligne</option>
+                </select>
+                {% if errors.mode is defined %}<p class="field-error">{{ errors.mode }}</p>{% endif %}
+                <p class="field-error client-error" data-error-for="mode"></p>
+            </div>
+
+            <div class="field-block field-block-wide">
+                <label for="nombre_places">Nombre de places <span>*</span></label>
+                <input id="nombre_places" name="nombre_places" type="number" min="1" value="{{ form_data.nombre_places }}" placeholder="Ex: 30" required>
+                {% if errors.nombre_places is defined %}<p class="field-error">{{ errors.nombre_places }}</p>{% endif %}
+                <p class="field-error client-error" data-error-for="nombre_places"></p>
+            </div>
+
+            <div class="triple-grid">
+                <div class="field-block">
+                    <label for="date_debut">Date de debut <span>*</span></label>
+                    <input id="date_debut" name="date_debut" type="date" value="{{ form_data.date_debut }}" required>
+                    {% if errors.date_debut is defined %}<p class="field-error">{{ errors.date_debut }}</p>{% endif %}
+                    <p class="field-error client-error" data-error-for="date_debut"></p>
+                </div>
+
+                <div class="field-block">
+                    <label for="date_fin">Date de fin <span>*</span></label>
+                    <input id="date_fin" name="date_fin" type="date" value="{{ form_data.date_fin }}" required>
+                    {% if errors.date_fin is defined %}<p class="field-error">{{ errors.date_fin }}</p>{% endif %}
+                    <p class="field-error client-error" data-error-for="date_fin"></p>
+                </div>
+
+                <div class="field-block">
+                    <label for="niveau">Niveau de formation <span>*</span></label>
+                    <select id="niveau" name="niveau" required>
+                        <option value="Debutant" {% if form_data.niveau == 'Debutant' %}selected{% endif %}>Debutant</option>
+                        <option value="Intermediaire" {% if form_data.niveau == 'Intermediaire' %}selected{% endif %}>Intermediaire</option>
+                        <option value="Avance" {% if form_data.niveau == 'Avance' %}selected{% endif %}>Avance</option>
+                    </select>
+                    {% if errors.niveau is defined %}<p class="field-error">{{ errors.niveau }}</p>{% endif %}
+                    <p class="field-error client-error" data-error-for="niveau"></p>
+                </div>
+            </div>
+
+            <div class="field-block field-block-wide">
+                <label for="module_input">Cours / modules</label>
+                <div class="module-row">
+                    <input id="module_input" type="text" placeholder="Ex: Module 1 - Introduction aux outils RH">
+                    <button type="button" id="add-module-btn" class="secondary-button">Ajouter le cours</button>
+                </div>
+                <input id="modules" name="modules" type="hidden" value="{{ form_data.modules|default('') }}">
+                <p class="field-help">Ajoutez autant de modules que necessaire. Ils seront affiches en consultation et en modification.</p>
+                <div id="module-list" class="module-list"></div>
+            </div>
+
+            <div class="form-actions form-actions-end">
+                <button type="reset" class="ghost-button">Reinitialiser</button>
+                <button type="submit" class="primary-button">{{ submit_label == 'Creer la formation' ? 'Publier la formation' : submit_label }}</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<script>
+    (function () {
+        const fileInput = document.getElementById('image_file');
+        const imageInput = document.getElementById('image');
+        const imagePreview = document.getElementById('image-preview');
+        const imagePreviewTag = document.getElementById('image-preview-tag');
+        const imagePreviewNote = document.getElementById('image-preview-note');
+        const form = document.getElementById('formation-form');
+        const titleInput = document.getElementById('titre');
+        const descriptionInput = document.getElementById('description');
+        const modeInput = document.getElementById('mode');
+        const placesInput = document.getElementById('nombre_places');
+        const startInput = document.getElementById('date_debut');
+        const endInput = document.getElementById('date_fin');
+        const levelInput = document.getElementById('niveau');
+        const moduleInput = document.getElementById('module_input');
+        const modulesHiddenInput = document.getElementById('modules');
+        const addModuleButton = document.getElementById('add-module-btn');
+        const moduleList = document.getElementById('module-list');
+        const allowedImageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+        let moduleValues = [];
+
+        function setFieldError(fieldName, message) {
+            const node = document.querySelector('[data-error-for="' + fieldName + '"]');
+
+            if (node) {
+                node.textContent = message || '';
+            }
+        }
+
+        function clearFieldError(fieldName) {
+            setFieldError(fieldName, '');
+        }
+
+        function normalizeImageSource(value) {
+            const trimmed = (value || '').trim();
+
+            if (!trimmed) {
+                return '';
+            }
+
+            if (/^(https?:)?\/\//i.test(trimmed) || trimmed.startsWith('data:') || trimmed.startsWith('blob:') || trimmed.startsWith('/')) {
+                return trimmed;
+            }
+
+            if (/^[A-Za-z]:[\\/]/.test(trimmed)) {
+                const normalized = trimmed.replace(/\\/g, '/');
+                return 'file:///' + normalized.replace(/ /g, '%20');
+            }
+
+            return trimmed;
+        }
+
+        function showImagePreview(src, showNote) {
+            if (!src) {
+                imagePreview.hidden = true;
+                imagePreviewTag.removeAttribute('src');
+                imagePreviewNote.hidden = true;
+                return;
+            }
+
+            imagePreview.hidden = false;
+            imagePreviewTag.src = src;
+            imagePreviewNote.hidden = !showNote;
+        }
+
+        function updateImagePreviewFromInput() {
+            const value = imageInput.value.trim();
+
+            if (!value) {
+                showImagePreview('', false);
+                return;
+            }
+
+            const normalized = normalizeImageSource(value);
+            const isLocalPath = /^[A-Za-z]:[\\/]/.test(value);
+            showImagePreview(normalized, isLocalPath);
+        }
+
+        function validateImageValue() {
+            const value = imageInput.value.trim();
+
+            if (!value) {
+                setFieldError('image', 'L image ou le visuel est obligatoire.');
+                return false;
+            }
+
+            if (fileInput.files && fileInput.files[0]) {
+                const fileName = fileInput.files[0].name.toLowerCase();
+                const extension = fileName.split('.').pop();
+
+                if (!allowedImageExtensions.includes(extension)) {
+                    setFieldError('image', 'Choisissez une image au format png, jpg, jpeg, gif ou webp.');
+                    return false;
+                }
+            }
+
+            clearFieldError('image');
+            return true;
+        }
+
+        function syncModulesField() {
+            modulesHiddenInput.value = moduleValues.join('\n');
+        }
+
+        function renderModules() {
+            moduleList.innerHTML = '';
+
+            moduleValues.forEach(function (value, index) {
+                const item = document.createElement('div');
+                item.className = 'module-item';
+
+                const text = document.createElement('span');
+                text.textContent = value;
+
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'module-remove';
+                remove.textContent = 'Supprimer';
+                remove.addEventListener('click', function () {
+                    moduleValues.splice(index, 1);
+                    syncModulesField();
+                    renderModules();
+                });
+
+                item.appendChild(text);
+                item.appendChild(remove);
+                moduleList.appendChild(item);
+            });
+        }
+
+        function initializeModules() {
+            moduleValues = (modulesHiddenInput.value || '')
+                .split(/\r\n|\r|\n/)
+                .map(function (value) { return value.trim(); })
+                .filter(Boolean);
+
+            syncModulesField();
+            renderModules();
+        }
+
+        function validateForm() {
+            let isValid = true;
+
+            if (!titleInput.value.trim()) {
+                setFieldError('titre', 'Le titre est obligatoire.');
+                isValid = false;
+            } else if (titleInput.value.trim().length < 5) {
+                setFieldError('titre', 'Le titre doit contenir au moins 5 caracteres.');
+                isValid = false;
+            } else {
+                clearFieldError('titre');
+            }
+
+            if (!descriptionInput.value.trim()) {
+                setFieldError('description', 'La description est obligatoire.');
+                isValid = false;
+            } else if (descriptionInput.value.trim().length < 20) {
+                setFieldError('description', 'La description doit contenir au moins 20 caracteres.');
+                isValid = false;
+            } else {
+                clearFieldError('description');
+            }
+
+            if (!modeInput.value) {
+                setFieldError('mode', 'Le mode est obligatoire.');
+                isValid = false;
+            } else {
+                clearFieldError('mode');
+            }
+
+            if (!placesInput.value || Number(placesInput.value) < 1) {
+                setFieldError('nombre_places', 'Le nombre de places doit etre superieur a 0.');
+                isValid = false;
+            } else {
+                clearFieldError('nombre_places');
+            }
+
+            if (!startInput.value) {
+                setFieldError('date_debut', 'La date de debut est obligatoire.');
+                isValid = false;
+            } else {
+                clearFieldError('date_debut');
+            }
+
+            if (!endInput.value) {
+                setFieldError('date_fin', 'La date de fin est obligatoire.');
+                isValid = false;
+            } else if (startInput.value && endInput.value < startInput.value) {
+                setFieldError('date_fin', 'La date de fin doit etre posterieure ou egale a la date de debut.');
+                isValid = false;
+            } else {
+                clearFieldError('date_fin');
+            }
+
+            if (!levelInput.value) {
+                setFieldError('niveau', 'Le niveau est obligatoire.');
+                isValid = false;
+            } else {
+                clearFieldError('niveau');
+            }
+
+            if (!validateImageValue()) {
+                isValid = false;
+            }
+
+            syncModulesField();
+            return isValid;
+        }
+
+        if (fileInput && imageInput && imagePreview && imagePreviewTag) {
+            fileInput.addEventListener('change', function () {
+                if (fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    imageInput.value = file.name;
+                    showImagePreview(URL.createObjectURL(file), false);
+                    clearFieldError('image');
+                }
+            });
+
+            imageInput.addEventListener('input', updateImagePreviewFromInput);
+            imageInput.addEventListener('change', updateImagePreviewFromInput);
+            imagePreviewTag.addEventListener('error', function () {
+                imagePreviewNote.hidden = false;
+            });
+            updateImagePreviewFromInput();
+        }
+
+        if (form) {
+            form.addEventListener('submit', function (event) {
+                if (!validateForm()) {
+                    event.preventDefault();
+                }
+            });
+
+            form.addEventListener('reset', function () {
+                window.setTimeout(function () {
+                    moduleValues = [];
+                    syncModulesField();
+                    renderModules();
+                    updateImagePreviewFromInput();
+                }, 0);
+            });
+        }
+
+        [
+            ['titre', titleInput],
+            ['description', descriptionInput],
+            ['mode', modeInput],
+            ['nombre_places', placesInput],
+            ['date_debut', startInput],
+            ['date_fin', endInput],
+            ['niveau', levelInput],
+            ['image', imageInput]
+        ].forEach(function (entry) {
+            const fieldName = entry[0];
+            const input = entry[1];
+
+            if (input) {
+                input.addEventListener('input', function () {
+                    clearFieldError(fieldName);
+                });
+
+                input.addEventListener('change', function () {
+                    clearFieldError(fieldName);
+                });
+            }
+        });
+
+        if (addModuleButton && moduleInput && moduleList && modulesHiddenInput) {
+            addModuleButton.addEventListener('click', function () {
+                const value = moduleInput.value.trim();
+
+                if (!value) {
+                    return;
+                }
+
+                moduleValues.push(value);
+                syncModulesField();
+                renderModules();
+                moduleInput.value = '';
+                moduleInput.focus();
+            });
+
+            moduleInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    addModuleButton.click();
+                }
+            });
+
+            initializeModules();
+        }
+    }());
+</script>
+
