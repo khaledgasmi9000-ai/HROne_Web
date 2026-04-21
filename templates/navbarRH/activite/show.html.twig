@@ -1,0 +1,55 @@
+{% extends 'navbarRH/base.html.twig' %}
+
+{% set page_title = 'HR One - Détail Activité' %}
+{% set page_class = 'page-detail-activite' %}
+{% set page_css = 'gestion-evenements.css' %}
+
+{% block content_title %}🏃 {{ activite.Titre }}{% endblock %}
+
+{% block content_body %}
+<div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+    <a href="{{ path('rh_activites') }}" style="color: #2563eb; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+        ← Retour à la liste
+    </a>
+    <a href="{{ path('rh_activite_edit', {id: activite.IDActivite}) }}" style="background: #fef3c7; color: #92400e; padding: 0.6rem 1.2rem; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: 600;">
+        ✏️ Modifier
+    </a>
+</div>
+
+<div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div>
+            <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 0.5rem;">Titre</div>
+            <div style="font-size: 1.1rem; font-weight: 600; color: #1e293b;">{{ activite.Titre }}</div>
+        </div>
+        <div>
+            <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 0.5rem;">ID</div>
+            <div style="font-size: 1.1rem; font-weight: 600; color: #2563eb;">#{{ activite.IDActivite }}</div>
+        </div>
+    </div>
+
+    {% if activite.Description %}
+    <div style="margin-bottom: 2rem;">
+        <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 0.5rem;">Description</div>
+        <p style="line-height: 1.6; color: #475569; margin: 0;">{{ activite.Description }}</p>
+    </div>
+    {% endif %}
+
+    <div>
+        <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 0.8rem;">
+            Événements liés ({{ activite.evenements|length }})
+        </div>
+        {% if activite.evenements|length > 0 %}
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            {% for ev in activite.evenements %}
+                <a href="{{ path('app_rh_evenement_show', {id: ev.IDEvenement}) }}" style="display: inline-block; padding: 0.5rem 1rem; background: #dbeafe; color: #1e40af; border-radius: 20px; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
+                    🎉 {{ ev.Titre }}
+                </a>
+            {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: #94a3b8; font-size: 0.9rem; margin: 0;">Pas encore liée à un événement.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

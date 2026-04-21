@@ -16,28 +16,13 @@ class ListeAttenteRepository extends ServiceEntityRepository
         parent::__construct($registry, ListeAttente::class);
     }
 
-//    /**
-//     * @return ListeAttente[] Returns an array of ListeAttente objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('l')
-//            ->andWhere('l.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('l.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function getNextId(): int
+    {
+        $maxId = $this->createQueryBuilder('l')
+            ->select('MAX(l.ID_Attente)')
+            ->getQuery()
+            ->getSingleScalarResult();
 
-//    public function findOneBySomeField($value): ?ListeAttente
-//    {
-//        return $this->createQueryBuilder('l')
-//            ->andWhere('l.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        return ($maxId ?: 0) + 1;
+    }
 }

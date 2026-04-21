@@ -34,8 +34,12 @@ class UserDashboardController extends AbstractController
             return $this->redirectToRoute('app_user_module');
         }
 
-        if (in_array('ROLE_CANDIDAT', $roles, true) || in_array('ROLE_EMPLOYEE', $roles, true)) {
-            return $this->redirectToRoute('app_offres_index');
+        if (in_array('ROLE_CANDIDAT', $roles, true)) {
+            return $this->redirectToRoute('topnav_offres');
+        }
+
+        if (in_array('ROLE_EMPLOYEE', $roles, true)) {
+            return $this->redirectToRoute('topnav_communaute');
         }
 
         try {

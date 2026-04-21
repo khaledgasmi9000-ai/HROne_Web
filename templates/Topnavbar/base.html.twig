@@ -11,11 +11,25 @@
     {% endif %}
   </head>
   <body class="{{ page_class|default('') }}" data-page="{{ page_key|default('') }}">
+    {% set nav_mode = app.user and is_granted('ROLE_EMPLOYEE')
+      ? 'employee'
+      : (app.user and is_granted('ROLE_CANDIDAT')
+        ? 'candidate'
+        : null)
+    %}
     <div class="app-shell">
       <header class="top-navbar">
         <nav class="top-nav">
-          <button id="btnOffres" class="nav-link" type="button" data-page="offres" data-href="{{ path('topnav_offres') }}">Offres d'emploi</button>
-          <button id="btnMesCandidaturesNav" class="nav-link" type="button" data-page="mes-candidatures" data-href="{{ path('topnav_mes_candidatures') }}">Mes candidatures</button>
+          {% if nav_mode == 'employee' %}
+            <button class="nav-link" type="button" data-page="communaute" data-href="{{ path('topnav_communaute') }}">Communaute</button>
+            <button class="nav-link" type="button" data-page="formations" data-href="{{ path('topnav_formations') }}">Formations</button>
+            <button class="nav-link" type="button" data-page="participations" data-href="{{ path('topnav_participations') }}">Mes participations</button>
+            <button class="nav-link" type="button" data-page="evenements" data-href="{{ path('topnav_evenements') }}">Evenement</button>
+            <button class="nav-link" type="button" data-page="demande-conge" data-href="{{ path('topnav_demande_conge') }}">Demande de conges</button>
+          {% elseif nav_mode == 'candidate' %}
+            <button class="nav-link" type="button" data-page="offres" data-href="{{ path('topnav_offres') }}">Offre d'emploi</button>
+            <button class="nav-link" type="button" data-page="mes-candidatures" data-href="{{ path('topnav_mes_candidatures') }}">Mes Condidatures</button>
+          {% endif %}
           <div class="nav-spacer"></div>
           <button id="btnLogoutNav" class="nav-link" type="button" data-href="{{ path('app_logout') }}">Deconnexion</button>
         </nav>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+        }
+        .container {
+            width: 100%;
+            padding: 20px;
+        }
+        .ticket {
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        .header {
+            background-color: #1e3a8a; /* Bleu HROne solide pour PDF */
+            padding: 40px 30px;
+            color: #ffffff;
+            text-align: center;
+        }
+        .header-tag {
+            background-color: rgba(255,255,255,0.2);
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        .content {
+            padding: 40px;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .label {
+            color: #64748b;
+            font-size: 10px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #0f172a;
+        }
+        .divider {
+            border-top: 1px dashed #e2e8f0;
+            margin: 30px 0;
+        }
+        .activity-item {
+            background-color: #f8fafc;
+            border: 1px solid #f1f5f9;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+        }
+        .activity-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #2563eb;
+            display: inline-block;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .qr-section {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8fafc;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <p style="font-size: 24px; font-weight: bold; margin: 0;">Confirmation d'Inscription</p>
+            <p style="color: #64748b;">Merci {{ participation.nomComplet }} d'avoir choisi HR One.</p>
+        </div>
+
+        <div class="ticket">
+            {# Header #}
+            <div class="header">
+                <span class="header-tag">Ticket de Participation</span>
+                <h1 style="margin: 15px 0 5px; font-size: 28px;">{{ participation.evenement.Titre }}</h1>
+                <p style="margin: 0; font-size: 14px; opacity: 0.9;">📍 {{ participation.evenement.Localisation }}</p>
+            </div>
+
+            <div class="content">
+                {# Infos principales #}
+                <table class="info-table">
+                    <tr>
+                        <td width="50%" style="padding-bottom: 25px;">
+                            <span class="label">Participant</span>
+                            <span class="value">{{ participation.nomComplet }}</span>
+                            <div style="font-size: 12px; color: #64748b; margin-top: 3px;">{{ participation.email }}</div>
+                        </td>
+                        <td width="50%" style="padding-bottom: 25px; text-align: right;">
+                            <span class="label">Référence Ticket</span>
+                            <span class="value" style="color: #2563eb;">#HR1-{{ participation.idParticipant }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="label">Coût Global</span>
+                            <span class="value">{{ participation.evenement.prix > 0 ? participation.evenement.prix ~ ' DT' : 'Gratuit' }}</span>
+                        </td>
+                        <td style="text-align: right;">
+                            <span class="label">Mode de Paiement</span>
+                            <span class="value">{{ participation.modePaiement|default('Sur place') }}</span>
+                        </td>
+                    </tr>
+                </table>
+
+                <div class="divider"></div>
+
+                {# Activité #}
+                <span class="label">🎯 Activité de votre programme</span>
+                <div style="margin-top: 15px;">
+                    {% if participation.activite %}
+                        <div class="activity-item">
+                            <span class="activity-dot"></span>
+                            <span style="font-weight: 600;">{{ participation.activite.Titre }}</span>
+                        </div>
+                        {% if participation.activite.Description %}
+                        <p style="color: #64748b; font-size: 12px; margin-top: 10px; line-height: 1.5;">{{ participation.activite.Description }}</p>
+                        {% endif %}
+                    {% else %}
+                        <p style="color: #94a3b8; font-style: italic;">Aucune activité liée.</p>
+                    {% endif %}
+                </div>
+
+                {# QR Code Section #}
+                <div class="qr-section">
+                    <span class="label">QR Code du Ticket</span>
+                    <div style="margin-top: 15px;">
+                        <img src="{{ absolute_url(path('app_front_participation_qr_code', {
+                            idParticipant: participation.idParticipant,
+                            idEvenement: participation.evenement.IDEvenement,
+                            idActivite: participation.activite.IDActivite
+                        })) }}" 
+                             alt="QR code ticket" 
+                             style="width: 180px; height: 180px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; padding: 10px;">
+                    </div>
+                    <p style="font-size: 11px; color: #64748b; margin-top: 10px;">Présentez ce code à l'entrée de l'événement</p>
+                </div>
+            </div>
+
+            {# Footer #}
+            <div style="background-color: #f8fafc; padding: 15px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 10px; color: #64748b;">
+                Présentez ce code de référence à l'entrée. HR One © 2026
+            </div>
+        </div>
+    </div>
+</body>
+</html>

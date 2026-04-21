@@ -1,11 +1,90 @@
 {% extends 'navbarRH/base.html.twig' %}
 
-{% set page_title = 'HR One - Gestion des evenements' %}
+{% set page_title = 'HR One - Gestion des événements' %}
 {% set page_class = 'page-gestion-evenements' %}
 {% set page_css = 'gestion-evenements.css' %}
 
-{% block content_title %}Gestion des evenements{% endblock %}
+{% block content_title %}🎉 Gestion des Événements{% endblock %}
 
 {% block content_body %}
-  <p>Interface vide. Vous pouvez ajouter le contenu plus tard.</p>
+<div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <p style="color: #64748b; margin: 0;">Gérez tous les événements de l'entreprise</p>
+    </div>
+    <a href="{{ path('app_rh_evenement_new') }}" class="btn btn-primary" style="background: #2563eb; color: white; padding: 0.6rem 1.2rem; border-radius: 6px; text-decoration: none; display: inline-block;">
+        ➕ Nouvel événement
+    </a>
+</div>
+
+{% for label, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="alert alert-{{ label }}" style="padding: 1rem; margin-bottom: 1rem; border-radius: 6px; background: {% if label == 'success' %}#d1fae5{% elseif label == 'error' %}#fee2e2{% else %}#fef3c7{% endif %}; color: {% if label == 'success' %}#065f46{% elseif label == 'error' %}#991b1b{% else %}#92400e{% endif %}; border: 1px solid {% if label == 'success' %}#a7f3d0{% elseif label == 'error' %}#fecaca{% else %}#fde68a{% endif %};">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endfor %}
+
+{% if evenements is empty %}
+    <div style="text-align: center; padding: 4rem 2rem; background: #f8fafc; border-radius: 12px; border: 2px dashed #cbd5e1;">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">📭</div>
+        <h3 style="color: #475569; margin-bottom: 0.5rem;">Aucun événement trouvé</h3>
+        <p style="color: #94a3b8; margin-bottom: 1.5rem;">Commencez par créer votre premier événement</p>
+        <a href="{{ path('app_rh_evenement_new') }}" class="btn btn-primary" style="background: #2563eb; color: white; padding: 0.8rem 1.5rem; border-radius: 6px; text-decoration: none; display: inline-block;">
+            Créer le premier événement
+        </a>
+    </div>
+{% else %}
+    <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">#</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">Image</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">Titre</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">Localisation</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">Payant</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">Prix</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">Places</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for ev in evenements %}
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 1rem;"><strong style="color: #2563eb;">#{{ ev.IDEvenement }}</strong></td>
+                    <td style="padding: 1rem;">
+                        {% if ev.Image and ev.Image starts with 'http' %}
+                            <img src="{{ ev.Image }}" alt="{{ ev.Titre }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        {% else %}
+                            <div style="width: 50px; height: 50px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 1.5rem;">🖼️</div>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem;"><strong style="color: #1e293b;">{{ ev.Titre }}</strong></td>
+                    <td style="padding: 1rem; color: #64748b;">{{ ev.Localisation ?? '—' }}</td>
+                    <td style="padding: 1rem;">
+                        {% if ev.estPayant %}
+                            <span style="display: inline-block; padding: 0.25rem 0.75rem; background: #fee2e2; color: #991b1b; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Oui</span>
+                        {% else %}
+                            <span style="display: inline-block; padding: 0.25rem 0.75rem; background: #d1fae5; color: #065f46; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Non</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem; color: #64748b;">{{ ev.prix is not null ? ev.prix ~ ' DT' : '—' }}</td>
+                    <td style="padding: 1rem; color: #64748b;">{{ ev.nbMax ?? '∞' }}</td>
+                    <td style="padding: 1rem;">
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="{{ path('app_rh_evenement_show', {id: ev.IDEvenement}) }}" style="padding: 0.4rem 0.8rem; background: #f1f5f9; color: #475569; border-radius: 6px; text-decoration: none; font-size: 0.875rem;">👁️</a>
+                            <a href="{{ path('app_rh_evenement_inscriptions', {id: ev.IDEvenement}) }}" style="padding: 0.4rem 0.8rem; background: #dbeafe; color: #1e40af; border-radius: 6px; text-decoration: none; font-size: 0.875rem;">👥</a>
+                            <a href="{{ path('app_rh_evenement_edit', {id: ev.IDEvenement}) }}" style="padding: 0.4rem 0.8rem; background: #fef3c7; color: #92400e; border-radius: 6px; text-decoration: none; font-size: 0.875rem;">✏️</a>
+                            <form method="post" action="{{ path('app_rh_evenement_delete', {id: ev.IDEvenement}) }}" onsubmit="return confirm('Supprimer cet événement ?')" style="display: inline;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ ev.IDEvenement) }}">
+                                <button type="submit" style="padding: 0.4rem 0.8rem; background: #fee2e2; color: #991b1b; border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem;">🗑️</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
 {% endblock %}

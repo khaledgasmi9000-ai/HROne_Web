@@ -8,13 +8,13 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 
 use App\Repository\ActiviteRepository;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ActiviteRepository::class)]
 #[ORM\Table(name: 'activite')]
 class Activite
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
     #[ORM\Column(name: 'ID_Activite', type: 'integer')]
     private ?int $ID_Activite = null;
 
@@ -29,7 +29,8 @@ class Activite
         return $this;
     }
 
-    #[ORM\Column(type: 'string', nullable: false)]
+    #[ORM\Column(name: "Titre", type: 'string', nullable: false)]
+    #[Assert\NotBlank(message: "Le titre de l'activité est obligatoire.")] 
     private ?string $Titre = null;
 
     public function getTitre(): ?string
@@ -43,7 +44,9 @@ class Activite
         return $this;
     }
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    #[ORM\Column(name: "Description", type: 'text', nullable: true)]
+    #[Assert\NotBlank(message: "La description de l'activité est obligatoire.")]
+    #[Assert\Length(min: 10, max: 500)]
     private ?string $Description = null;
 
     public function getDescription(): ?string
@@ -57,55 +60,20 @@ class Activite
         return $this;
     }
 
-    #[ORM\Column(type: 'integer', nullable: true)]
-    private ?int $ID_Evenement = null;
-
-    public function getID_Evenement(): ?int
-    {
-        return $this->ID_Evenement;
-    }
-
-    public function setID_Evenement(?int $ID_Evenement): self
-    {
-        $this->ID_Evenement = $ID_Evenement;
-        return $this;
-    }
-
-    #[ORM\OneToMany(targetEntity: ParticipationEvenement::class, mappedBy: 'activite')]
-    private Collection $participationEvenements;
-
-    /**
-     * @return Collection<int, ParticipationEvenement>
-     */
-    public function getParticipationEvenements(): Collection
-    {
-        if (!$this->participationEvenements instanceof Collection) {
-            $this->participationEvenements = new ArrayCollection();
-        }
-        return $this->participationEvenements;
-    }
-
-    public function addParticipationEvenement(ParticipationEvenement $participationEvenement): self
-    {
-        if (!$this->getParticipationEvenements()->contains($participationEvenement)) {
-            $this->getParticipationEvenements()->add($participationEvenement);
-        }
-        return $this;
-    }
-
-    public function removeParticipationEvenement(ParticipationEvenement $participationEvenement): self
-    {
-        $this->getParticipationEvenements()->removeElement($participationEvenement);
-        return $this;
-    }
-
-    #[ORM\ManyToMany(targetEntity: Evenement::class, mappedBy: 'activites')]
-    private Collection $evenements;
+    #[ORM\OneToMany(targetEntity: DetailEvenement::class, mappedBy: 'activite')]
+    private Collection $details;
 
     public function __construct()
     {
-        $this->participationEvenements = new ArrayCollection();
-        $this->evenements = new ArrayCollection();
+        $this->details = new ArrayCollection();
+    }
+
+    /**
+     * @return Collection<int, DetailEvenement>
+     */
+    public function getDetails(): Collection
+    {
+        return $this->details;
     }
 
     /**
@@ -113,41 +81,15 @@ class Activite
      */
     public function getEvenements(): Collection
     {
-        if (!$this->evenements instanceof Collection) {
-            $this->evenements = new ArrayCollection();
+        $evenements = new ArrayCollection();
+        foreach ($this->details as $detail) {
+            $evenements->add($detail->getEvenement());
         }
-        return $this->evenements;
-    }
-
-    public function addEvenement(Evenement $evenement): self
-    {
-        if (!$this->getEvenements()->contains($evenement)) {
-            $this->getEvenements()->add($evenement);
-        }
-        return $this;
-    }
-
-    public function removeEvenement(Evenement $evenement): self
-    {
-        $this->getEvenements()->removeElement($evenement);
-        return $this;
+        return $evenements;
     }
 
     public function getIDActivite(): ?int
     {
         return $this->ID_Activite;
     }
-
-    public function getIDEvenement(): ?int
-    {
-        return $this->ID_Evenement;
-    }
-
-    public function setIDEvenement(?int $ID_Evenement): static
-    {
-        $this->ID_Evenement = $ID_Evenement;
-
-        return $this;
-    }
-
 }

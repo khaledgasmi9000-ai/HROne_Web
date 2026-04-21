@@ -3,16 +3,18 @@
 namespace App\Repository;
 
 use App\Entity\Condidat;
+use App\Entity\Utilisateur;
 use Doctrine\DBAL\Connection;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Bundle\SecurityBundle\Security;
 
 /**
  * @extends ServiceEntityRepository<Condidat>
  */
 class CondidatRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, private readonly Security $security)
     {
         parent::__construct($registry, Condidat::class);
     }
@@ -345,9 +347,29 @@ class CondidatRepository extends ServiceEntityRepository
 
     private function getActiveCandidateId(): int
     {
-        $candidateId = $this->getConnection()->fetchOne('SELECT MIN(ID_Condidat) FROM condidat');
+        $user = $this->security->getUser();
+        if (!$user instanceof Utilisateur) {
+            throw new \RuntimeException('Aucun utilisateur connecte.');
+        }
+
+        $connection = $this->getConnection();
+        $candidateId = $connection->fetchOne(
+            'SELECT ID_Condidat FROM condidat WHERE ID_UTILISATEUR = :userId ORDER BY ID_Condidat DESC LIMIT 1',
+            ['userId' => $user->getIDUTILISATEUR()]
+        );
+
         if ($candidateId === false || $candidateId === null || $candidateId === '') {
-            throw new \RuntimeException('Aucun profil candidat disponible.');
+            $connection->insert('condidat', [
+                'ID_UTILISATEUR' => $user->getIDUTILISATEUR(),
+                'CV' => '',
+            ]);
+            $candidateId = (int) $connection->lastInsertId();
+
+            if ($candidateId <= 0) {
+                throw new \RuntimeException('Aucun profil candidat disponible.');
+            }
+
+            return $candidateId;
         }
 
         return (int) $candidateId;

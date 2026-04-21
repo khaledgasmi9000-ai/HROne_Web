@@ -1,0 +1,83 @@
+{% extends 'navbarRH/base.html.twig' %}
+
+{% set page_title = 'HR One - Gestion des activités' %}
+{% set page_class = 'page-gestion-activites' %}
+{% set page_css = 'gestion-evenements.css' %}
+
+{% block content_title %}🏃 Gestion des Activités{% endblock %}
+
+{% block content_body %}
+<div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <p style="color: #64748b; margin: 0;">Gérez toutes les activités liées aux événements</p>
+    </div>
+    <a href="{{ path('rh_activite_new') }}" class="btn btn-primary" style="background: #2563eb; color: white; padding: 0.6rem 1.2rem; border-radius: 6px; text-decoration: none; display: inline-block;">
+        ➕ Nouvelle activité
+    </a>
+</div>
+
+{% for label, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="alert alert-{{ label }}" style="padding: 1rem; margin-bottom: 1rem; border-radius: 6px; background: {% if label == 'success' %}#d1fae5{% elseif label == 'error' %}#fee2e2{% else %}#fef3c7{% endif %}; color: {% if label == 'success' %}#065f46{% elseif label == 'error' %}#991b1b{% else %}#92400e{% endif %}; border: 1px solid {% if label == 'success' %}#a7f3d0{% elseif label == 'error' %}#fecaca{% else %}#fde68a{% endif %};">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endfor %}
+
+{% if activites is empty %}
+    <div style="text-align: center; padding: 4rem 2rem; background: #f8fafc; border-radius: 12px; border: 2px dashed #cbd5e1;">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">📭</div>
+        <h3 style="color: #475569; margin-bottom: 0.5rem;">Aucune activité trouvée</h3>
+        <p style="color: #94a3b8; margin-bottom: 1.5rem;">Commencez par créer votre première activité</p>
+        <a href="{{ path('rh_activite_new') }}" class="btn btn-primary" style="background: #2563eb; color: white; padding: 0.8rem 1.5rem; border-radius: 6px; text-decoration: none; display: inline-block;">
+            Créer la première activité
+        </a>
+    </div>
+{% else %}
+    <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">#</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">Titre</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">Description</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">Événements liés</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for activite in activites %}
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 1rem;"><strong style="color: #2563eb;">#{{ activite.IDActivite }}</strong></td>
+                    <td style="padding: 1rem;"><strong style="color: #1e293b;">{{ activite.Titre }}</strong></td>
+                    <td style="padding: 1rem; color: #64748b; max-width: 300px;">
+                        {% if activite.Description %}
+                            {{ activite.Description|length > 80 ? activite.Description|slice(0, 80) ~ '…' : activite.Description }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem;">
+                        {% if activite.evenements|length > 0 %}
+                            <span style="display: inline-block; padding: 0.25rem 0.75rem; background: #dbeafe; color: #1e40af; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">{{ activite.evenements|length }} événement(s)</span>
+                        {% else %}
+                            <span style="color: #94a3b8;">Aucun</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem;">
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="{{ path('rh_activite_show', {id: activite.IDActivite}) }}" style="padding: 0.4rem 0.8rem; background: #f1f5f9; color: #475569; border-radius: 6px; text-decoration: none; font-size: 0.875rem;">👁️</a>
+                            <a href="{{ path('rh_activite_edit', {id: activite.IDActivite}) }}" style="padding: 0.4rem 0.8rem; background: #fef3c7; color: #92400e; border-radius: 6px; text-decoration: none; font-size: 0.875rem;">✏️</a>
+                            <form method="post" action="{{ path('rh_activite_delete', {id: activite.IDActivite}) }}" onsubmit="return confirm('Supprimer cette activité ?')" style="display: inline;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ activite.IDActivite) }}">
+                                <button type="submit" style="padding: 0.4rem 0.8rem; background: #fee2e2; color: #991b1b; border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem;">🗑️</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+{% endblock %}

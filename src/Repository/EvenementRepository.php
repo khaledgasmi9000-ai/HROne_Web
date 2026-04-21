@@ -40,4 +40,41 @@ class EvenementRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+
+    public function getNextId(): int
+    {
+        $maxId = $this->createQueryBuilder('e')
+            ->select('MAX(e.ID_Evenement)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return ($maxId ?: 0) + 1;
+    }
+
+    public function findBySearchAndSort(?string $search, ?string $sort): \Doctrine\ORM\Query
+    {
+        $qb = $this->createQueryBuilder('e');
+
+        if ($search) {
+            $qb->andWhere('e.Titre LIKE :query')
+               ->setParameter('query', '%' . $search . '%');
+        }
+
+        switch ($sort) {
+            case 'price_asc':
+                $qb->orderBy('e.prix', 'ASC');
+                break;
+            case 'price_desc':
+                $qb->orderBy('e.prix', 'DESC');
+                break;
+            case 'name_asc':
+                $qb->orderBy('e.Titre', 'ASC');
+                break;
+            default:
+                $qb->orderBy('e.ID_Evenement', 'DESC');
+                break;
+        }
+
+        return $qb->getQuery();
+    }
 }

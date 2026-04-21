@@ -29,7 +29,7 @@ class Evenement
         return $this;
     }
 
-    #[ORM\Column(type: 'string', nullable: false)]
+    #[ORM\Column(name: 'Titre', type: 'string', nullable: false)]
     private ?string $Titre = null;
 
     public function getTitre(): ?string
@@ -43,7 +43,7 @@ class Evenement
         return $this;
     }
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    #[ORM\Column(name: 'Description', type: 'text', nullable: true)]
     private ?string $Description = null;
 
     public function getDescription(): ?string
@@ -102,7 +102,7 @@ class Evenement
         return $this;
     }
 
-    #[ORM\Column(type: 'string', nullable: true)]
+    #[ORM\Column(name: 'Localisation', type: 'string', nullable: true)]
     private ?string $Localisation = null;
 
     public function getLocalisation(): ?string
@@ -116,7 +116,7 @@ class Evenement
         return $this;
     }
 
-    #[ORM\Column(type: 'string', nullable: true)]
+    #[ORM\Column(name: 'Image', type: 'string', nullable: true)]
     private ?string $Image = null;
 
     public function getImage(): ?string
@@ -130,7 +130,7 @@ class Evenement
         return $this;
     }
 
-    #[ORM\Column(type: 'boolean', nullable: true)]
+    #[ORM\Column(name: 'est_payant', type: 'boolean', nullable: true)]
     private ?bool $est_payant = null;
 
     public function isEst_payant(): ?bool
@@ -144,7 +144,7 @@ class Evenement
         return $this;
     }
 
-    #[ORM\Column(type: 'float', nullable: true)]
+    #[ORM\Column(name: 'prix', type: 'float', nullable: true)]
     private ?float $prix = null;
 
     public function getPrix(): ?float
@@ -158,7 +158,7 @@ class Evenement
         return $this;
     }
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    #[ORM\Column(name: 'nbMax', type: 'integer', nullable: true)]
     private ?int $nbMax = null;
 
     public function getNbMax(): ?int
@@ -240,11 +240,40 @@ class Evenement
     )]
     private Collection $activites;
 
+    #[ORM\OneToMany(targetEntity: DetailEvenement::class, mappedBy: 'evenement')]
+    private Collection $details;
+
     public function __construct()
     {
         $this->listeAttentes = new ArrayCollection();
         $this->participationEvenements = new ArrayCollection();
         $this->activites = new ArrayCollection();
+        $this->details = new ArrayCollection();
+    }
+
+    /**
+     * @return Collection<int, DetailEvenement>
+     */
+    public function getDetails(): Collection
+    {
+        if (!$this->details instanceof Collection) {
+            $this->details = new ArrayCollection();
+        }
+        return $this->details;
+    }
+
+    public function addDetail(DetailEvenement $detail): self
+    {
+        if (!$this->getDetails()->contains($detail)) {
+            $this->getDetails()->add($detail);
+        }
+        return $this;
+    }
+
+    public function removeDetail(DetailEvenement $detail): self
+    {
+        $this->getDetails()->removeElement($detail);
+        return $this;
     }
 
     /**
@@ -287,6 +316,30 @@ class Evenement
         $this->est_payant = $est_payant;
 
         return $this;
+    }
+
+    /**
+     * Badge de Prix automatique
+     * OFFERT: < 100 DT
+     * PREMIUM: >= 100 DT
+     */
+    public function getBadgeLabel(): string
+    {
+        if ($this->prix >= 100) {
+            return "PREMIUM";
+        }
+        return "OFFERT";
+    }
+
+    /**
+     * Couleur du Badge selon le type
+     */
+    public function getBadgeColor(): string
+    {
+        if ($this->getBadgeLabel() === "PREMIUM") {
+            return "#fef3c7"; // Or/Ambre
+        }
+        return "#dcfce7"; // Vert
     }
 
 }

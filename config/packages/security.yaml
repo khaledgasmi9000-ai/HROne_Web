@@ -48,11 +48,19 @@ security:
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: PUBLIC_ACCESS }
         - { path: ^/logout, roles: PUBLIC_ACCESS }
+        - { path: ^/top/offres, roles: ROLE_CANDIDAT }
+        - { path: ^/top/mes-candidatures, roles: ROLE_CANDIDAT }
+        - { path: ^/top/candidatures/api, roles: ROLE_CANDIDAT }
+        - { path: ^/top/communaute, roles: ROLE_EMPLOYEE }
+        - { path: ^/top/formations, roles: ROLE_EMPLOYEE }
+        - { path: ^/top/participations, roles: ROLE_EMPLOYEE }
+        - { path: ^/top/evenements, roles: ROLE_EMPLOYEE }
+        - { path: ^/top/demande-conge, roles: ROLE_EMPLOYEE }
         - { path: ^/admin/community, roles: ROLE_RH }
         - { path: ^/admin, roles: ROLE_RH }
         - { path: ^/rh, roles: ROLE_RH }
         - { path: ^/dashboard, roles: ROLE_USER }
-        - { path: ^/offres, roles: ROLE_USER }
+        - { path: ^/offres, roles: ROLE_CANDIDAT }
         - { path: ^/formations, roles: ROLE_EMPLOYEE }
         - { path: ^/mes-participations, roles: ROLE_EMPLOYEE }
         - { path: ^/communaute, roles: ROLE_EMPLOYEE }

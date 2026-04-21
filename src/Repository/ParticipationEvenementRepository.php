@@ -16,6 +16,24 @@ class ParticipationEvenementRepository extends ServiceEntityRepository
         parent::__construct($registry, ParticipationEvenement::class);
     }
 
+    /**
+     * Récupère le prochain Num_Ordre_Participation disponible
+     * Utilise un Num_Ordre existant de la table ordre
+     */
+    public function getNextNumOrdre(): int
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        
+        // Récupérer un Num_Ordre valide existant de la table ordre
+        $numOrdre = $conn->fetchOne("SELECT Num_Ordre FROM ordre ORDER BY Num_Ordre DESC LIMIT 1");
+        
+        if (!$numOrdre) {
+            throw new \Exception("Aucun Num_Ordre disponible dans la table ordre");
+        }
+        
+        return (int) $numOrdre;
+    }
+
 //    /**
 //     * @return ParticipationEvenement[] Returns an array of ParticipationEvenement objects
 //     */

@@ -1,0 +1,51 @@
+{% extends 'navbarRH/base.html.twig' %}
+
+{% set page_title = 'HR One - Modifier Activité' %}
+{% set page_class = 'page-modifier-activite' %}
+{% set page_css = 'gestion-evenements.css' %}
+
+{% block content_title %}✏️ Modifier l'activité{% endblock %}
+
+{% block content_body %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="{{ path('rh_activites') }}" style="color: #2563eb; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+        ← Retour à la liste
+    </a>
+</div>
+
+<div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    {{ form_start(form) }}
+
+    <div style="margin-bottom: 1.5rem;">
+        {{ form_label(form.Titre, null, {'label_attr': {'style': 'display: block; font-weight: 600; color: #475569; margin-bottom: 0.5rem; font-size: 0.875rem;'}}) }}
+        {{ form_widget(form.Titre, {'attr': {'style': 'width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;'}}) }}
+        {{ form_errors(form.Titre) }}
+    </div>
+
+    <div style="margin-bottom: 1.5rem;">
+        {{ form_label(form.Description, null, {'label_attr': {'style': 'display: block; font-weight: 600; color: #475569; margin-bottom: 0.5rem; font-size: 0.875rem;'}}) }}
+        {{ form_widget(form.Description, {'attr': {'style': 'width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem; min-height: 120px;'}}) }}
+        {{ form_errors(form.Description) }}
+    </div>
+
+    <div style="display: flex; gap: 0.8rem; margin-top: 2rem; flex-wrap: wrap; align-items: center;">
+        <button type="submit" style="background: #2563eb; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.9rem;">
+            Enregistrer les modifications
+        </button>
+        <a href="{{ path('rh_activite_show', {id: activite.IDActivite}) }}" style="background: #f1f5f9; color: #475569; padding: 0.75rem 1.5rem; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: 600; font-size: 0.9rem;">
+            Annuler
+        </a>
+    </div>
+
+    {{ form_end(form) }}
+
+    <form method="post" action="{{ path('rh_activite_delete', {id: activite.IDActivite}) }}"
+          onsubmit="return confirm('Supprimer définitivement cette activité ?')"
+          style="margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 2rem;">
+        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ activite.IDActivite) }}">
+        <button type="submit" style="background: #fee2e2; color: #991b1b; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.9rem;">
+            🗑 Supprimer définitivement cette activité
+        </button>
+    </form>
+</div>
+{% endblock %}

@@ -55,7 +55,7 @@ class RegistrationController extends AbstractController
         }
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $profil = $profilRepository->find(4) ?? $profilRepository->find(3);
+            $profil = $profilRepository->find(4);
             if ($profil === null) {
                 throw $this->createNotFoundException('Profil candidat introuvable (ID_Profil 4).');
             }

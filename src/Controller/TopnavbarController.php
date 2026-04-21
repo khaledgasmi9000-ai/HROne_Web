@@ -4,10 +4,12 @@ namespace App\Controller;
 
 use App\Repository\CondidatRepository;
 use App\Repository\OffreRepository;
+use App\Repository\EvenementRepository;
 use App\Service\CandidateAiScoringService;
 use App\Service\CvTextExtractorService;
 use App\Service\ExternalJobBoardService;
 use App\Service\OfferQrCodeService;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -153,9 +155,36 @@ class TopnavbarController extends AbstractController
     }
 
     #[Route('/top/evenements', name: 'topnav_evenements')]
-    public function evenements(): Response
+    public function evenements(Request $request, EvenementRepository $evenementRepo, PaginatorInterface $paginator): Response
     {
-        return $this->render('Topnavbar/evenements.html.twig');
+        $search = $request->query->get('search', '');
+        $sort = $request->query->get('sort', '');
+
+        $queryBuilder = $evenementRepo->createQueryBuilder('e')
+            ->orderBy('e.ID_Evenement', 'DESC');
+
+        if ($search) {
+            $queryBuilder->andWhere('e.Titre LIKE :search OR e.Description LIKE :search OR e.Localisation LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($sort === 'date_asc') {
+            $queryBuilder->orderBy('e.ID_Evenement', 'ASC');
+        } elseif ($sort === 'titre') {
+            $queryBuilder->orderBy('e.Titre', 'ASC');
+        }
+
+        $pagination = $paginator->paginate(
+            $queryBuilder->getQuery(),
+            $request->query->getInt('page', 1),
+            6
+        );
+
+        return $this->render('Topnavbar/evenements.html.twig', [
+            'evenements' => $pagination,
+            'search' => $search,
+            'sort' => $sort,
+        ]);
     }
 
     #[Route('/top/participations', name: 'topnav_participations')]
@@ -173,7 +202,7 @@ class TopnavbarController extends AbstractController
     #[Route('/top/communaute', name: 'topnav_communaute')]
     public function communaute(): Response
     {
-        return $this->render('Topnavbar/communaute.html.twig');
+        return $this->redirectToRoute('community_index');
     }
 
     #[Route('/top/mes-candidatures', name: 'topnav_mes_candidatures')]

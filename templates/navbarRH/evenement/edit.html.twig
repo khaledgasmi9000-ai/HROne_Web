@@ -1,0 +1,105 @@
+{% extends 'navbarRH/base.html.twig' %}
+
+{% set page_title = 'HR One - Modifier Événement' %}
+{% set page_class = 'page-gestion-evenements' %}
+{% set page_css = 'gestion-evenements.css' %}
+
+{% block content_title %}✏️ Modifier l'événement{% endblock %}
+
+{% block content_body %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="{{ path('app_rh_evenement_index') }}" style="color: #2563eb; text-decoration: none; font-size: 0.9rem;">← Retour à la liste</a>
+</div>
+
+{% for label, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="alert alert-{{ label == 'error' ? 'danger' : label }}" style="padding: 1rem; margin-bottom: 1rem; border-radius: 6px; background: {% if label == 'error' %}#fee2e2{% else %}#fef3c7{% endif %}; color: {% if label == 'error' %}#991b1b{% else %}#92400e{% endif %};">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endfor %}
+
+<div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    {{ form_start(form) }}
+
+    <div style="margin-bottom: 1.5rem;">
+        {{ form_label(form.Titre, null, {'label_attr': {'style': 'display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;'}}) }}
+        {{ form_widget(form.Titre, {'attr': {'style': 'width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px;'}}) }}
+        {{ form_errors(form.Titre) }}
+    </div>
+
+    <div style="margin-bottom: 1.5rem;">
+        {{ form_label(form.Description, null, {'label_attr': {'style': 'display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;'}}) }}
+        {{ form_widget(form.Description, {'attr': {'style': 'width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px;'}}) }}
+        {{ form_errors(form.Description) }}
+    </div>
+
+    <div style="margin-bottom: 1.5rem;">
+        {{ form_label(form.Localisation, null, {'label_attr': {'style': 'display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;'}}) }}
+        {{ form_widget(form.Localisation, {'attr': {'style': 'width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px;'}}) }}
+        {{ form_errors(form.Localisation) }}
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div>
+            {{ form_label(form.dateDebut, null, {'label_attr': {'style': 'display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;'}}) }}
+            {{ form_widget(form.dateDebut, {'attr': {'style': 'width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px;'}}) }}
+            {{ form_errors(form.dateDebut) }}
+        </div>
+        <div>
+            {{ form_label(form.dateFin, null, {'label_attr': {'style': 'display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;'}}) }}
+            {{ form_widget(form.dateFin, {'attr': {'style': 'width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px;'}}) }}
+            {{ form_errors(form.dateFin) }}
+        </div>
+    </div>
+
+    <div style="margin-bottom: 1.5rem;">
+        {{ form_label(form.Image, null, {'label_attr': {'style': 'display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;'}}) }}
+        {{ form_widget(form.Image, {'attr': {'style': 'width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px;'}}) }}
+        {{ form_errors(form.Image) }}
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div>
+            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                {{ form_widget(form.est_payant) }}
+                <span style="font-weight: 600; color: #374151;">{{ form.est_payant.vars.label }}</span>
+            </label>
+        </div>
+        <div>
+            {{ form_label(form.prix, null, {'label_attr': {'style': 'display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;'}}) }}
+            {{ form_widget(form.prix, {'attr': {'style': 'width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px;'}}) }}
+        </div>
+        <div>
+            {{ form_label(form.nbMax, null, {'label_attr': {'style': 'display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;'}}) }}
+            {{ form_widget(form.nbMax, {'attr': {'style': 'width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px;'}}) }}
+        </div>
+    </div>
+
+    <div style="margin-bottom: 1.5rem;">
+        {{ form_label(form.activites, null, {'label_attr': {'style': 'display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;'}}) }}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem;">
+            {{ form_widget(form.activites) }}
+        </div>
+        {{ form_errors(form.activites) }}
+    </div>
+
+    <div style="display: flex; gap: 0.75rem; margin-top: 2rem;">
+        <button type="submit" style="padding: 0.75rem 1.5rem; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+            Enregistrer les modifications
+        </button>
+        <a href="{{ path('app_rh_evenement_index') }}" style="padding: 0.75rem 1.5rem; background: #f1f5f9; color: #475569; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: 600;">
+            Annuler
+        </a>
+    </div>
+
+    {{ form_end(form) }}
+
+    <form method="post" action="{{ path('app_rh_evenement_delete', {id: evenement.IDEvenement}) }}" onsubmit="return confirm('Supprimer définitivement cet événement ?')" style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e5e7eb;">
+        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ evenement.IDEvenement) }}">
+        <button type="submit" style="padding: 0.75rem 1.5rem; background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; border-radius: 6px; font-weight: 600; cursor: pointer;">
+            🗑 Supprimer définitivement cet événement
+        </button>
+    </form>
+</div>
+{% endblock %}

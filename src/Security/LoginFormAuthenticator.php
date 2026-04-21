@@ -81,13 +81,21 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
             }
         }
 
-        if (in_array('ROLE_CANDIDAT', $roles, true) || in_array('ROLE_EMPLOYEE', $roles, true)) {
+        if (in_array('ROLE_CANDIDAT', $roles, true)) {
+            if ($this->routeExists('topnav_offres')) {
+                return new RedirectResponse($this->urlGenerator->generate('topnav_offres'));
+            }
+
             if ($this->routeExists('app_offres_index')) {
                 return new RedirectResponse($this->urlGenerator->generate('app_offres_index'));
             }
         }
 
         if (in_array('ROLE_EMPLOYEE', $roles, true)) {
+            if ($this->routeExists('topnav_communaute')) {
+                return new RedirectResponse($this->urlGenerator->generate('topnav_communaute'));
+            }
+
             if ($this->routeExists('community_index')) {
                 return new RedirectResponse($this->urlGenerator->generate('community_index'));
             }

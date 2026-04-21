@@ -264,10 +264,28 @@
 </head>
 <body class="{% block body_class %}page-formations{% endblock %}">
 {% set current_route = app.request.attributes.get('_route') %}
+{% set front_role = app.user and is_granted('ROLE_EMPLOYEE')
+    ? 'employee'
+    : (app.user and is_granted('ROLE_CANDIDAT')
+        ? 'candidate'
+        : null)
+%}
+{% set shell_subtitle = front_role == 'employee'
+    ? 'Espace Employe'
+    : (front_role == 'candidate'
+        ? 'Espace Candidat'
+        : 'Plateforme RH')
+%}
+{% set home_route = front_role == 'employee'
+    ? 'topnav_communaute'
+    : (front_role == 'candidate'
+        ? 'topnav_offres'
+        : 'app_login')
+%}
 <div class="app-shell">
     <header class="top-navbar">
         <nav class="top-nav">
-            <a href="{{ path('community_index') }}" class="logo-brand">
+            <a href="{{ path(home_route) }}" class="logo-brand">
                 <svg class="logo-svg" width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="4" y="4" width="32" height="32" rx="6" fill="white" stroke="#2563eb" stroke-width="2"/>
                     <rect x="10" y="10" width="6" height="6" fill="#2563eb" rx="1"/>
@@ -278,18 +296,19 @@
                 </svg>
                 <div class="logo-text-group">
                     <div class="logo-title">HR One</div>
-                    <div class="logo-subtitle">Espace RH</div>
+                    <div class="logo-subtitle">{{ shell_subtitle }}</div>
                 </div>
             </a>
 
-            {% if app.user and not is_granted('ROLE_RH') and (is_granted('ROLE_CANDIDAT') or is_granted('ROLE_EMPLOYEE')) %}
-                <a class="nav-link {% if current_route in ['topnav_offres', 'app_offres_index'] %}active{% endif %}" href="{{ path('topnav_offres') }}">Offres d'emploi</a>
-                <a class="nav-link {% if current_route == 'topnav_mes_candidatures' %}active{% endif %}" href="{{ path('topnav_mes_candidatures') }}">Mes candidatures</a>
-            {% endif %}
-
-            {% if app.user and is_granted('ROLE_RH') %}
-                <a class="nav-link {% if current_route starts with 'community_admin' %}active{% endif %}" href="{{ path('community_admin_dashboard') }}">Dashboard RH</a>
-                <a class="nav-link {% if current_route starts with 'app_user_' %}active{% endif %}" href="{{ path('app_user_module') }}">Utilisateurs</a>
+            {% if front_role == 'employee' %}
+                <a class="nav-link {% if current_route in ['community_index', 'topnav_communaute'] %}active{% endif %}" href="{{ path('topnav_communaute') }}">Communaute</a>
+                <a class="nav-link {% if current_route in ['topnav_formations', 'app_formation_index', 'app_formation_show'] %}active{% endif %}" href="{{ path('topnav_formations') }}">Formations</a>
+                <a class="nav-link {% if current_route in ['topnav_participations', 'app_formation_participations'] %}active{% endif %}" href="{{ path('topnav_participations') }}">Mes participations</a>
+                <a class="nav-link {% if current_route in ['topnav_evenements'] %}active{% endif %}" href="{{ path('topnav_evenements') }}">Evenement</a>
+                <a class="nav-link {% if current_route in ['topnav_demande_conge'] %}active{% endif %}" href="{{ path('topnav_demande_conge') }}">Demande de conges</a>
+            {% elseif front_role == 'candidate' %}
+                <a class="nav-link {% if current_route in ['topnav_offres', 'app_offres_index'] %}active{% endif %}" href="{{ path('topnav_offres') }}">Offre d'emploi</a>
+                <a class="nav-link {% if current_route == 'topnav_mes_candidatures' %}active{% endif %}" href="{{ path('topnav_mes_candidatures') }}">Mes Condidatures</a>
             {% endif %}
 
             {% if not app.user %}
@@ -321,7 +340,7 @@
                     </svg>
                     <div>
                         <div class="footer-logo-title">HR One</div>
-                        <div class="footer-logo-subtitle">Espace RH</div>
+                        <div class="footer-logo-subtitle">{{ shell_subtitle }}</div>
                     </div>
                 </div>
                 <p class="footer-description">Plateforme RH complète pour gérer formations, communauté et flux RH en une interface unique.</p>
@@ -330,13 +349,15 @@
             <div class="footer-section">
                 <h3>Navigation</h3>
                 <ul class="footer-links">
-                    {% if app.user and not is_granted('ROLE_RH') and (is_granted('ROLE_CANDIDAT') or is_granted('ROLE_EMPLOYEE')) %}
-                        <li><a href="{{ path('topnav_offres') }}">Offres d'emploi</a></li>
-                        <li><a href="{{ path('topnav_mes_candidatures') }}">Mes candidatures</a></li>
-                    {% endif %}
-                    {% if app.user and is_granted('ROLE_RH') %}
-                        <li><a href="{{ path('community_admin_dashboard') }}">Dashboard</a></li>
-                        <li><a href="{{ path('app_user_module') }}">Utilisateurs</a></li>
+                    {% if front_role == 'employee' %}
+                        <li><a href="{{ path('topnav_communaute') }}">Communaute</a></li>
+                        <li><a href="{{ path('topnav_formations') }}">Formations</a></li>
+                        <li><a href="{{ path('topnav_participations') }}">Mes participations</a></li>
+                        <li><a href="{{ path('topnav_evenements') }}">Evenement</a></li>
+                        <li><a href="{{ path('topnav_demande_conge') }}">Demande de conges</a></li>
+                    {% elseif front_role == 'candidate' %}
+                        <li><a href="{{ path('topnav_offres') }}">Offre d'emploi</a></li>
+                        <li><a href="{{ path('topnav_mes_candidatures') }}">Mes Condidatures</a></li>
                     {% endif %}
                     {% if not app.user %}
                         <li><a href="{{ path('app_login') }}">Connexion</a></li>

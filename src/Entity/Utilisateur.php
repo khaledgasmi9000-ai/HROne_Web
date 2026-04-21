@@ -596,7 +596,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
                 $roles = ['ROLE_RH'];
             } elseif (str_contains($profilName, 'employ')) {
                 $roles = ['ROLE_EMPLOYEE'];
-            } elseif (str_contains($profilName, 'candidat')) {
+            } elseif (str_contains($profilName, 'candidat') || str_contains($profilName, 'condidat')) {
                 $roles = ['ROLE_CANDIDAT'];
             }
         }

@@ -434,13 +434,13 @@ class NavbarRHController extends AbstractController
     #[Route('/rh/gestion-evenements', name: 'rh_evenements')]
     public function evenements(): Response
     {
-        return $this->render('navbarRH/gestion-evenements.html.twig');
+        return $this->redirectToRoute('app_rh_evenement_index');
     }
 
     #[Route('/rh/gestion-des-evenements', name: 'rh_evenements_des')]
     public function evenementsDes(): Response
     {
-        return $this->redirectToRoute('rh_evenements');
+        return $this->redirectToRoute('app_rh_evenement_index');
     }
 
     #[Route('/rh/gestion-formations', name: 'rh_formations')]

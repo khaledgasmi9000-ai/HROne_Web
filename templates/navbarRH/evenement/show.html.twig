@@ -1,0 +1,101 @@
+{% extends 'navbarRH/base.html.twig' %}
+
+{% set page_title = 'HR One - ' ~ evenement.Titre %}
+{% set page_class = 'page-gestion-evenements' %}
+{% set page_css = 'gestion-evenements.css' %}
+
+{% block content_title %}🎉 {{ evenement.Titre }}{% endblock %}
+
+{% block content_body %}
+<div style="margin-bottom: 1.5rem; display: flex; gap: 0.75rem;">
+    <a href="{{ path('app_rh_evenement_inscriptions', {id: evenement.IDEvenement}) }}" style="padding: 0.6rem 1.2rem; background: #2563eb; color: white; border-radius: 6px; text-decoration: none; font-weight: 600;">
+        👥 Voir les Inscriptions
+    </a>
+    <a href="{{ path('app_rh_evenement_edit', {id: evenement.IDEvenement}) }}" style="padding: 0.6rem 1.2rem; background: #fef3c7; color: #92400e; border-radius: 6px; text-decoration: none; font-weight: 600;">
+        ✏️ Modifier
+    </a>
+    <a href="{{ path('app_rh_evenement_index') }}" style="padding: 0.6rem 1.2rem; background: #f1f5f9; color: #475569; border-radius: 6px; text-decoration: none; font-weight: 600;">
+        ← Retour
+    </a>
+</div>
+
+{% if evenement.Image and evenement.Image starts with 'http' %}
+<div style="margin-bottom: 2rem; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <div style="width: 100%; height: 300px; position: relative;">
+        <img src="{{ evenement.Image }}" alt="{{ evenement.Titre }}" style="width: 100%; height: 100%; object-fit: cover;">
+        <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 2rem; background: linear-gradient(transparent, rgba(0,0,0,0.7)); color: white;">
+            <h2 style="margin: 0; font-size: 2rem;">{{ evenement.Titre }}</h2>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div>
+            <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.5rem;">Titre</div>
+            <div style="font-size: 1.1rem; font-weight: 600; color: #1e293b;">{{ evenement.Titre }}</div>
+        </div>
+        <div>
+            <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.5rem;">Localisation</div>
+            <div style="color: #475569;">{{ evenement.Localisation ?? '—' }}</div>
+        </div>
+        <div>
+            <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.5rem;">Payant ?</div>
+            <div>
+                {% if evenement.estPayant %}
+                    <span style="display: inline-block; padding: 0.25rem 0.75rem; background: #fee2e2; color: #991b1b; border-radius: 12px; font-size: 0.875rem; font-weight: 600;">
+                        Oui — {{ evenement.prix }} DT
+                    </span>
+                {% else %}
+                    <span style="display: inline-block; padding: 0.25rem 0.75rem; background: #d1fae5; color: #065f46; border-radius: 12px; font-size: 0.875rem; font-weight: 600;">
+                        Gratuit
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+        <div>
+            <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.5rem;">Participants max</div>
+            <div style="color: #475569;">{{ evenement.nbMax ?? 'Illimité' }}</div>
+        </div>
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+        <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.5rem;">Période</div>
+        <div style="color: #475569;">
+            {% if evenement.ordreDebut %}
+                Du <strong>{{ evenement.ordreDebut.JJ }}/{{ evenement.ordreDebut.MM }}/{{ evenement.ordreDebut.AAAA }}</strong> 
+                à {{ evenement.ordreDebut.HH }}h{{ '%02d'|format(evenement.ordreDebut.MN) }}
+            {% endif %}
+            {% if evenement.ordreFin %}
+                <br>Au <strong>{{ evenement.ordreFin.JJ }}/{{ evenement.ordreFin.MM }}/{{ evenement.ordreFin.AAAA }}</strong> 
+                à {{ evenement.ordreFin.HH }}h{{ '%02d'|format(evenement.ordreFin.MN) }}
+            {% endif %}
+        </div>
+    </div>
+
+    {% if evenement.Description %}
+    <div style="margin-bottom: 2rem;">
+        <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.5rem;">Description</div>
+        <p style="line-height: 1.6; color: #475569;">{{ evenement.Description }}</p>
+    </div>
+    {% endif %}
+
+    <div>
+        <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.75rem;">
+            Activités associées ({{ evenement.activites|length }})
+        </div>
+        {% if evenement.activites|length > 0 %}
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            {% for activite in evenement.activites %}
+                <span style="display: inline-block; padding: 0.5rem 1rem; background: #dbeafe; color: #1e40af; border-radius: 12px; font-size: 0.875rem; font-weight: 500;">
+                    🏃 {{ activite.Titre }}
+                </span>
+            {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: #94a3b8;">Aucune activité associée.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -40,5 +40,10 @@ services:
             $mailerFromEmail: '%env(string:MAILER_FROM_EMAIL)%'
             $mailerFromName: '%env(string:MAILER_FROM_NAME)%'
 
+    # Nucleos DompdfBundle service alias for autowiring
+    Nucleos\DompdfBundle\Wrapper\DompdfWrapperInterface:
+        alias: Nucleos\DompdfBundle\Wrapper\DompdfWrapper
+        public: false
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
