@@ -12,6 +12,40 @@ use App\Repository\OrdreRepository;
 #[ORM\Table(name: 'ordre')]
 class Ordre
 {
+
+private const BASE_DATE = '2020-01-01 00:00:00';
+
+    /**
+     * Current time ? integer (seconds since BASE_DATE)
+     */
+    public static function GetNumOrdreNow(): int
+    {
+        return self::dateToNumOrdre(new \DateTime());
+    }
+
+    /**
+     * Convert DateTime ? integer
+     */
+    public static function dateToNumOrdre(\DateTime $date): int
+    {
+        $base = new \DateTime(self::BASE_DATE);
+
+        return $date->getTimestamp() - $base->getTimestamp();
+    }
+
+    /**
+     * Convert integer ? DateTime
+     */
+    public static function numOrdreToDate(int $numOrdre): \DateTime
+    {
+        $base = new \DateTime(self::BASE_DATE);
+
+        $date = clone $base;
+        $date->modify("+{$numOrdre} seconds");
+
+        return $date;
+    }
+    
     #[ORM\Id]
     #[ORM\Column(name: 'Num_Ordre', type: 'integer')]
     private ?int $Num_Ordre = null;

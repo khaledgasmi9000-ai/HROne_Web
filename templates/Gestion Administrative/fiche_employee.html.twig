@@ -1,0 +1,110 @@
+{% extends 'base_back.html.twig' %}
+
+{% block title %}Fiche Employé{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('styles/Gestion Administrative/fiche_employee.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="fiche-container">
+
+    <!-- HEADER -->
+    <div class="employee-header">
+        <h1>Fiche Employé</h1>
+        <div class="employee-meta">
+            <p><strong>Nom :</strong> {{ employee.utilisateur.nomUtilisateur ?? 'N/A' }}</p>
+            <p><strong>Département :</strong> {{ employee.departement.nom ?? 'Non défini' }}</p>
+            <p><strong>Salaire :</strong> {{ employee.SALAIRE ?? '-' }} TND</p>
+        </div>
+    </div>
+
+    <!-- GLOBAL STATS -->
+    <div class="employee-stats">
+        <div class="stat">
+            <span>Temps total</span>
+            <strong>{{ stats.totalTime }} h</strong>
+        </div>
+        <div class="stat">
+            <span>Outils utilisés</span>
+            <strong>{{ stats.toolsCount }}</strong>
+        </div>
+        <div class="stat">
+            <span>Coût estimé</span>
+            <strong>{{ stats.totalCost }} TND</strong>
+        </div>
+    </div>
+
+    <!-- TOP TOOLS -->
+    <div class="section">
+        <h2>Top outils (gérés)</h2>
+        <ul>
+            {% for tool in managedTopTools %}
+                <li>{{ tool.name }} → {{ tool.temps }} h</li>
+            {% else %}
+                <li>Aucune donnée</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Top outils non gérés</h2>
+        <ul>
+            {% for tool in unmanagedTopTools %}
+                <li>{{ tool.name }} → {{ tool.temps }} h</li>
+            {% else %}
+                <li>Aucune donnée</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    
+
+    <!-- TIME BREAKDOWN -->
+    <div class="section">
+        <h2>Analyse du temps</h2>
+        <ul>
+            <li>Temps productif → {{ breakdown.productif }} h</li>
+            <li>Temps non productif → {{ breakdown.nonProductif }} h</li>
+            <li>Temps idle → {{ breakdown.idle }} h</li>
+        </ul>
+    </div>
+
+    <!-- TOOLS TABLE -->
+    <div class="section">
+        <h2>Détail par outil</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Outil</th>
+                    <th>Temps (h)</th>
+                    <th>% Utilisation</th>
+                    <th>Coût salarial</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tool in tools %}
+                    <tr>
+                        <td>{{ tool.name }}</td>
+                        <td>{{ tool.temps }} h</td>
+                        <td>{{ tool.percent }}%</td>
+                        <td>{{ tool.cout > 0 ? tool.cout ~ ' TND' : '-' }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4">Aucune donnée</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="section summary">
+        <h2>Résumé</h2>
+        <p>{{ summary }}</p>
+    </div>
+
+</div>
+{% endblock %}

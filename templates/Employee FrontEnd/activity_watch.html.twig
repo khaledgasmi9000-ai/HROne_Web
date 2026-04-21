@@ -1,0 +1,30 @@
+{% extends 'Topnavbar/base.html.twig' %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('styles/Employee FrontEnd/activity_watch.css') }}">
+{% endblock %}
+
+{% block content_body %}
+
+    <div id="aw-status" class="aw-status hidden"></div>
+
+    {# CONTROLS #}
+    <div class="aw-controls">
+        <button id="startSession" class="btn btn-start">Start Session</button>
+        <button id="endSession" class="btn btn-end" disabled>End Session</button>
+    </div>
+
+    <div class="aw-accordion" id="aw-toggle">
+        <span class="arrow">▶</span>
+        <span class="title">Activity Watch</span>   
+    </div>
+
+    <div class="aw-wrapper collapsed" id="aw-container">
+        <iframe id="aw-frame" src="http://localhost:5600"></iframe>
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ asset('js/Employee FrontEnd/activity_watch.js') }}"></script>
+{% endblock %}

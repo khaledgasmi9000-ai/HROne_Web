@@ -1,0 +1,64 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #ffffff;
+    color: #000;
+}
+
+.fiche-container {
+    max-width: 900px;
+    margin: 30px auto; /* add vertical breathing space */
+    padding: 20px;
+
+    border: 2px solid #000;   /* 🔥 main structure */
+    box-sizing: border-box;   /* avoid overflow issues */
+}
+
+.employee-header {
+    border-bottom: 2px solid #000;
+    margin-bottom: 20px;
+}
+
+.employee-stats {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+}
+
+.employee-meta p {
+    margin: 3px 0;
+}
+
+.stat {
+    width: 23%;
+    text-align: center;
+    border: 1px solid #000;
+    padding: 10px;
+}
+
+/* SECTIONS */
+.section {
+    margin-top: 30px;
+    padding-top: 10px;
+}
+
+.section:first-of-type {
+    margin-top: 10px; /* tighter after header */
+}
+
+.section h2 {
+    border-bottom: 1px solid #000;
+    padding-bottom: 5px;
+}
+
+/* TABLE */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+table th, table td {
+    border: 1px solid #000;
+    padding: 8px;
+    text-align: left;
+}

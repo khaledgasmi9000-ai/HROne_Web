@@ -3,8 +3,6 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 
 use App\Repository\DemandeCongeRepository;
 
@@ -14,7 +12,7 @@ class DemandeConge
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(name: 'ID_Demende', type: 'integer')]
+    #[ORM\Column(type: 'integer')]
     private ?int $ID_Demende = null;
 
     public function getID_Demende(): ?int
@@ -29,7 +27,11 @@ class DemandeConge
     }
 
     #[ORM\ManyToOne(targetEntity: Employee::class, inversedBy: 'demandeConges')]
-    #[ORM\JoinColumn(name: 'ID_Employe', referencedColumnName: 'ID_Employe')]
+    #[ORM\JoinColumn(
+        name: 'ID_Employe',
+        referencedColumnName: 'ID_Employe',
+        nullable: false
+    )]
     private ?Employee $employee = null;
 
     public function getEmployee(): ?Employee
@@ -99,11 +101,6 @@ class DemandeConge
     {
         $this->Status = $Status;
         return $this;
-    }
-
-    public function getIDDemende(): ?int
-    {
-        return $this->ID_Demende;
     }
 
     public function getNbrJourDemande(): ?int

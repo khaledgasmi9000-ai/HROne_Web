@@ -9,6 +9,7 @@
     {% if page_css is defined and page_css %}
       <link rel="stylesheet" href="{{ asset('assets/Topnavbar/' ~ page_css) }}" />
     {% endif %}
+    {% block stylesheets %}{% endblock %}
   </head>
   <body class="{{ page_class|default('') }}" data-page="{{ page_key|default('') }}">
     {% set nav_mode = app.user and is_granted('ROLE_EMPLOYEE')
@@ -25,7 +26,8 @@
             <button class="nav-link" type="button" data-page="formations" data-href="{{ path('topnav_formations') }}">Formations</button>
             <button class="nav-link" type="button" data-page="participations" data-href="{{ path('topnav_participations') }}">Mes participations</button>
             <button class="nav-link" type="button" data-page="evenements" data-href="{{ path('topnav_evenements') }}">Evenement</button>
-            <button class="nav-link" type="button" data-page="demande-conge" data-href="{{ path('topnav_demande_conge') }}">Demande de conges</button>
+            <button class="nav-link" type="button" data-page="demande-conge" data-href="{{ path('demande_conge') }}">Demande de conges</button>
+            <button class="nav-link" type="button" data-page="demande-conge" data-href="{{ path('activity_watch') }}">Activity Watch</button>
           {% elseif nav_mode == 'candidate' %}
             <button class="nav-link" type="button" data-page="offres" data-href="{{ path('topnav_offres') }}">Offre d'emploi</button>
             <button class="nav-link" type="button" data-page="mes-candidatures" data-href="{{ path('topnav_mes_candidatures') }}">Mes Condidatures</button>
@@ -44,5 +46,6 @@
     </div>
 
     <script src="{{ asset('assets/Topnavbar/topNavbar.js') }}"></script>
+    {% block javascripts %}{% endblock %}
   </body>
 </html>
