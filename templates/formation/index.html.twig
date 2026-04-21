@@ -65,7 +65,7 @@
                     <strong>Capacite</strong>
                     <span>{{ featured.occupancy_label }}</span>
                 </div>
-                <a class="primary-link" href="{{ path('app_formation_show', {id: featured.id}) }}">Voir le detail</a>
+                <a class="primary-link" href="{{ path('app_formation_show', {id: featured.id, employee: selected_participant_id}) }}">Voir le detail</a>
             </div>
         </section>
     {% endif %}
@@ -75,6 +75,16 @@
             <div class="field-group field-group-wide">
                 <label for="q">Recherche</label>
                 <input id="q" type="text" name="q" value="{{ filters.q }}" placeholder="Titre, description, niveau...">
+            </div>
+            <div class="field-group">
+                <label for="employee">Employe</label>
+                <select id="employee" name="employee">
+                    {% for employee in demo_employees %}
+                        <option value="{{ employee.id }}" {% if filters.employee == employee.id %}selected{% endif %}>
+                            {{ employee.label }}
+                        </option>
+                    {% endfor %}
+                </select>
             </div>
             <div class="field-group">
                 <label for="mode">Mode</label>
@@ -95,9 +105,75 @@
             </div>
             <div class="field-actions">
                 <button type="submit">Filtrer</button>
-                <a href="{{ path('app_formation_index') }}">Reinitialiser</a>
+                <a href="{{ path('app_formation_index', selected_participant_id ? {employee: selected_participant_id} : {}) }}">Reinitialiser</a>
             </div>
         </form>
+
+        {% if recommendation_profile and recommended_formations is not empty %}
+            <section class="recommendation-panel">
+                <div class="recommendation-head">
+                    <div>
+                        <p class="eyebrow">Recommandation intelligente</p>
+                        <h2>Formations conseillees pour {{ selected_employee.label }}</h2>
+                        <p class="recommendation-copy">
+                            Suggestions basees sur les participations passees, la similarite entre formations, la popularite et la disponibilite.
+                        </p>
+                    </div>
+                    <div class="recommendation-summary">
+                        <span class="badge">{{ recommendation_profile.strategy }}</span>
+                        <span class="badge">{{ recommendation_profile.history_count }} participation{{ recommendation_profile.history_count > 1 ? 's' : '' }}</span>
+                        {% if recommendation_profile.history_count > 0 %}
+                            <span class="badge">Niveau prefere {{ recommendation_profile.preferred_level }}</span>
+                        {% endif %}
+                        {% if recommendation_profile.preferred_mode %}
+                            <span class="badge">Preference {{ recommendation_profile.preferred_mode }}</span>
+                        {% endif %}
+                        {% for keyword in recommendation_profile.interest_keywords %}
+                            <span class="badge badge-soft">{{ keyword }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="formation-grid recommendation-grid">
+                    {% for formation in recommended_formations %}
+                        <article class="formation-card recommendation-card">
+                            <div class="card-top">
+                                <span class="mode-pill">{{ formation.mode_label }}</span>
+                                <span class="badge badge-strong">Score {{ formation.recommendation_score }}</span>
+                            </div>
+                            <h3>{{ formation.title }}</h3>
+                            <p>{{ formation.excerpt }}</p>
+                            {% if formation.recommendation_explanation and formation.recommendation_explanation_source == 'ai' %}
+                                <div class="recommendation-source-row">
+                                    <span class="recommendation-source-badge is-ai">Explication IA</span>
+                                </div>
+                                <p class="recommendation-explanation">{{ formation.recommendation_explanation }}</p>
+                            {% endif %}
+                            <div class="badge-row recommendation-reasons">
+                                {% for reason in formation.recommendation_reasons %}
+                                    <span class="badge badge-soft">{{ reason }}</span>
+                                {% endfor %}
+                            </div>
+                            <dl class="meta-list">
+                                <div>
+                                    <dt>Niveau</dt>
+                                    <dd>{{ formation.level }}</dd>
+                                </div>
+                                <div>
+                                    <dt>Debut</dt>
+                                    <dd>{{ formation.date_start }}</dd>
+                                </div>
+                                <div>
+                                    <dt>Places</dt>
+                                    <dd>{{ formation.occupancy_label }}</dd>
+                                </div>
+                            </dl>
+                            <a class="card-link" href="{{ path('app_formation_show', {id: formation.id, employee: selected_participant_id}) }}">Consulter la formation</a>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
 
         <div class="formation-grid">
             {% for formation in formations %}
@@ -122,7 +198,7 @@
                             <dd>{{ formation.occupancy_label }}</dd>
                         </div>
                     </dl>
-                    <a class="card-link" href="{{ path('app_formation_show', {id: formation.id}) }}">Consulter la formation</a>
+                    <a class="card-link" href="{{ path('app_formation_show', {id: formation.id, employee: selected_participant_id}) }}">Consulter la formation</a>
                 </article>
             {% else %}
                 <div class="empty-state">
@@ -133,5 +209,3 @@
         </div>
     </section>
 {% endblock %}
-
-

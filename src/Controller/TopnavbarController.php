@@ -151,7 +151,7 @@ class TopnavbarController extends AbstractController
     #[Route('/top/formations', name: 'topnav_formations')]
     public function formations(): Response
     {
-        return $this->render('Topnavbar/formations.html.twig');
+        return $this->redirectToRoute('app_formation_index');
     }
 
     #[Route('/top/evenements', name: 'topnav_evenements')]
@@ -190,7 +190,7 @@ class TopnavbarController extends AbstractController
     #[Route('/top/participations', name: 'topnav_participations')]
     public function participations(): Response
     {
-        return $this->render('Topnavbar/participations.html.twig');
+        return $this->redirectToRoute('app_my_participations');
     }
 
     #[Route('/top/demande-conge', name: 'topnav_demande_conge')]

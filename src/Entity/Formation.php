@@ -14,8 +14,7 @@ use App\Repository\FormationRepository;
 class Formation
 {
       #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer', nullable: false)]
+    #[ORM\Column(name: 'ID_Formation', type: 'integer', nullable: false)]
     private ?int $ID_Formation = null;
 
     public function getID_Formation(): ?int
@@ -29,7 +28,7 @@ class Formation
         return $this;
     }
 
-    #[ORM\Column(type: 'string', nullable: false)]
+    #[ORM\Column(name: 'Titre', type: 'string', nullable: false)]
     private ?string $Titre = null;
 
     public function getTitre(): ?string
@@ -43,7 +42,7 @@ class Formation
         return $this;
     }
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    #[ORM\Column(name: 'Description', type: 'text', nullable: true)]
     private ?string $Description = null;
 
     public function getDescription(): ?string
@@ -57,7 +56,7 @@ class Formation
         return $this;
     }
 
-    #[ORM\Column(type: 'integer', nullable: false)]
+    #[ORM\Column(name: 'Num_Ordre_Creation', type: 'integer', nullable: false)]
     private ?int $Num_Ordre_Creation = null;
 
     public function getNum_Ordre_Creation(): ?int
@@ -71,7 +70,7 @@ class Formation
         return $this;
     }
 
-    #[ORM\Column(type: 'integer', nullable: false)]
+    #[ORM\Column(name: 'ID_Entreprise', type: 'integer', nullable: false)]
     private ?int $ID_Entreprise = null;
 
     public function getID_Entreprise(): ?int
@@ -85,7 +84,7 @@ class Formation
         return $this;
     }
 
-    #[ORM\Column(type: 'string', nullable: true)]
+    #[ORM\Column(name: 'Image', type: 'string', nullable: true)]
     private ?string $Image = null;
 
     public function getImage(): ?string
@@ -99,7 +98,7 @@ class Formation
         return $this;
     }
 
-    #[ORM\Column(type: 'string', nullable: true)]
+    #[ORM\Column(name: 'Mode', type: 'string', nullable: true)]
     private ?string $Mode = null;
 
     public function getMode(): ?string
@@ -113,7 +112,7 @@ class Formation
         return $this;
     }
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    #[ORM\Column(name: 'NombrePlaces', type: 'integer', nullable: true)]
     private ?int $NombrePlaces = null;
 
     public function getNombrePlaces(): ?int
@@ -127,7 +126,7 @@ class Formation
         return $this;
     }
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    #[ORM\Column(name: 'PlacesRestantes', type: 'integer', nullable: true)]
     private ?int $PlacesRestantes = null;
 
     public function getPlacesRestantes(): ?int
@@ -141,7 +140,7 @@ class Formation
         return $this;
     }
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    #[ORM\Column(name: 'Date_Debut', type: 'bigint', nullable: true)]
     private ?int $Date_Debut = null;
 
     public function getDate_Debut(): ?int
@@ -155,7 +154,7 @@ class Formation
         return $this;
     }
 
-    #[ORM\Column(type: 'integer', nullable: true)]
+    #[ORM\Column(name: 'Date_Fin', type: 'bigint', nullable: true)]
     private ?int $Date_Fin = null;
 
     public function getDate_Fin(): ?int
@@ -169,7 +168,7 @@ class Formation
         return $this;
     }
 
-    #[ORM\Column(type: 'string', nullable: true)]
+    #[ORM\Column(name: 'Niveau', type: 'string', nullable: true)]
     private ?string $Niveau = null;
 
     public function getNiveau(): ?string

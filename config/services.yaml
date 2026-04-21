@@ -4,6 +4,8 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    env(GROQ_API_KEY): ''
+    env(GROQ_MODEL): 'llama-3.1-8b-instant'
 
 services:
     # default configuration for services in *this* file
@@ -30,6 +32,11 @@ services:
             $projectDir: '%kernel.project_dir%'
 
     App\Service\CandidateAiScoringService:
+        arguments:
+            $apiKey: '%env(string:GROQ_API_KEY)%'
+            $model: '%env(string:GROQ_MODEL)%'
+
+    App\Service\AiFormationRecommendationExplanationService:
         arguments:
             $apiKey: '%env(string:GROQ_API_KEY)%'
             $model: '%env(string:GROQ_MODEL)%'

@@ -15,7 +15,7 @@ class Certification
 {
       
     #[ORM\Id]
-    #[ORM\Column(type: 'integer', nullable: false)]
+    #[ORM\Column(name: 'ID_Certif', type: 'integer', nullable: false)]
     private ?int $ID_Certif = null;
 
     public function getID_Certif(): ?int
@@ -29,7 +29,7 @@ class Certification
         return $this;
     }
 
-    #[ORM\Column(type: 'integer', nullable: false)]
+    #[ORM\Column(name: 'ID_Formation', type: 'integer', nullable: false)]
     private ?int $ID_Formation = null;
 
     public function getID_Formation(): ?int
@@ -43,7 +43,7 @@ class Certification
         return $this;
     }
 
-    #[ORM\Column(type: 'integer', nullable: false)]
+    #[ORM\Column(name: 'ID_Participant', type: 'integer', nullable: false)]
     private ?int $ID_Participant = null;
 
     public function getID_Participant(): ?int
@@ -57,7 +57,7 @@ class Certification
         return $this;
     }
 
-    #[ORM\Column(type: 'string', nullable: true)]
+    #[ORM\Column(name: 'Description_Certif', type: 'string', nullable: true)]
     private ?string $Description_Certif = null;
 
     public function getDescription_Certif(): ?string
@@ -71,15 +71,15 @@ class Certification
         return $this;
     }
 
-    #[ORM\Column(type: 'blob', nullable: true)]
-    private ?string $Fichier_PDF = null;
+    #[ORM\Column(name: 'Fichier_PDF', type: 'blob', nullable: true)]
+    private mixed $Fichier_PDF = null;
 
-    public function getFichier_PDF(): ?string
+    public function getFichier_PDF(): mixed
     {
         return $this->Fichier_PDF;
     }
 
-    public function setFichier_PDF(?string $Fichier_PDF): self
+    public function setFichier_PDF(mixed $Fichier_PDF): self
     {
         $this->Fichier_PDF = $Fichier_PDF;
         return $this;
