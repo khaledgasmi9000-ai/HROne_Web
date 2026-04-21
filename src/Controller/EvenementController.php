@@ -7,19 +7,19 @@ namespace App\Controller;
 use App\Entity\Evenement;
 use App\Entity\Ordre;
 // On importe le formulaire EvenementType qu'on a créé
+use App\Entity\ParticipationEvenement;
+use App\Entity\ListeAttente;
 use App\Form\EvenementType;
-// On importe le Repository pour récupérer les données de la table evenement
 use App\Repository\EvenementRepository;
-// EntityManagerInterface permet de faire persist (sauvegarder) et flush (envoyer en BDD)
+use App\Service\EmailService;
+use App\Service\ShadowUserService;
 use Doctrine\ORM\EntityManagerInterface;
 // AbstractController contient des méthodes utiles : render, redirectToRoute, addFlash...
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 // Request contient toutes les données envoyées par le navigateur (formulaire POST, GET...)
 use Symfony\Component\HttpFoundation\Request;
-// Response est l'objet retourné par chaque méthode du controller (la page HTML)
 use Symfony\Component\HttpFoundation\Response;
-// Route permet de définir l'URL qui appelle chaque méthode
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 // Toutes les routes de ce controller commencent par /evenement
 #[Route('/evenement')]
@@ -160,6 +160,25 @@ class EvenementController extends AbstractController
     }
 
     // =========================================================
+    // AFFICHER LES INSCRIPTIONS D'UN EVENEMENT (BACKEND)
+    // =========================================================
+    #[Route('/{id}/inscriptions', name: 'evenement_inscriptions', methods: ['GET'])]
+    public function inscriptions(Evenement $evenement, EntityManagerInterface $em): Response
+    {
+        // On récupère les participations confirmées
+        $acceptes = $em->getRepository(\App\Entity\ParticipationEvenement::class)->findBy(['evenement' => $evenement]);
+        
+        // On récupère la liste d'attente
+        $enAttente = $em->getRepository(\App\Entity\ListeAttente::class)->findBy(['evenement' => $evenement]);
+
+        return $this->render('evenement/inscriptions.html.twig', [
+            'evenement' => $evenement,
+            'acceptes' => $acceptes,
+            'en_attente' => $enAttente,
+        ]);
+    }
+    
+    // =========================================================
     // MODIFIER : affiche le formulaire pré-rempli et sauvegarde
     // URL : GET  /evenement/{id}/edit → affiche formulaire rempli
     //       POST /evenement/{id}/edit → enregistre les modifications
@@ -186,6 +205,9 @@ class EvenementController extends AbstractController
             $form->get('dateFin')->setData(new \DateTime($dateStr));
         }
 
+        // --- NOUVEAU : Pré-remplir le champ 'activites' (non-mappé) ---
+        $form->get('activites')->setData($evenement->getActivites());
+
         // On remplit le formulaire avec les nouvelles données POST
         $form->handleRequest($request);
 
@@ -199,7 +221,6 @@ class EvenementController extends AbstractController
             $dateFinData = $form->get('dateFin')->getData();
 
             if ($dateDebutData) {
-                // Si l'ordre existe on le modifie, sinon on le crée
                 $ordreDebut = $evenement->getOrdreDebut() ?? new Ordre();
                 $ordreDebut->setAAAA((int)$dateDebutData->format('Y'));
                 $ordreDebut->setMM((int)$dateDebutData->format('m'));
@@ -223,14 +244,42 @@ class EvenementController extends AbstractController
                 $evenement->setOrdreFin($ordreFin);
             }
 
-            // Pas besoin de persist() car l'objet existe déjà en BDD
-            // flush() exécute la requête SQL UPDATE
+            // ==========================================
+            // NOUVEAU : Mise à jour des Activités (Table detail_evenement)
+            // ==========================================
+            // 1. On supprime les anciens détails pour cet événement
+            foreach ($evenement->getDetails() as $oldDetail) {
+                $em->remove($oldDetail);
+            }
+            $em->flush(); // On force la suppression avant de recréer si besoin
+
+            // 2. On ajoute les nouvelles activités sélectionnées
+            $selectedActivites = $form->get('activites')->getData();
+            foreach ($selectedActivites as $activite) {
+                $detail = new \App\Entity\DetailEvenement();
+                $detail->setEvenement($evenement);
+                $detail->setActivite($activite);
+                $detail->setOrdreDebut($evenement->getOrdreDebut());
+                $detail->setOrdreFin($evenement->getOrdreFin());
+                $em->persist($detail);
+                $evenement->addDetail($detail);
+            }
+
             $em->flush();
 
             $this->addFlash('success', 'Événement modifié avec succès !');
 
             // On redirige vers la liste
             return $this->redirectToRoute('evenement_index');
+        }
+
+        // Diagnostic : si le formulaire est refusé, on affiche les erreurs
+        if ($form->isSubmitted() && !$form->isValid()) {
+            $errors = [];
+            foreach ($form->getErrors(true) as $error) {
+                $errors[] = $error->getMessage();
+            }
+            $this->addFlash('error', 'Erreurs de validation : ' . implode(' | ', $errors));
         }
 
         // Sinon on affiche le formulaire pré-rempli
@@ -262,5 +311,86 @@ class EvenementController extends AbstractController
 
         // On redirige toujours vers la liste
         return $this->redirectToRoute('evenement_index');
+    }
+
+    /**
+     * SUPPRIMER UNE PARTICIPATION (ET PROMOTION AUTO)
+     * -------------------------------------------------------------------------
+     * C'est ici que se trouve votre LOGIQUE MÉTIER la plus avancée.
+     * Lorsqu'un utilisateur est supprimé, on ne laisse pas sa place vide :
+     * on "promeut" automatiquement la première personne de la liste d'attente.
+     * -------------------------------------------------------------------------
+     */
+    #[Route('/participation/{id}/delete', name: 'evenement_participation_delete', methods: ['POST'])]
+    public function deleteParticipation(
+        ParticipationEvenement $participation, 
+        EntityManagerInterface $em, 
+        EmailService $emailService,
+        ShadowUserService $shadowUserService
+    ): Response
+    {
+        $evenement = $participation->getEvenement();
+        $em->remove($participation);
+        $em->flush();
+
+        // ÉTAPE 1 : On récupère le "premier" de la liste d'attente (FIFO : First In First Out)
+        $attenteRepo = $em->getRepository(ListeAttente::class);
+        $premierEnAttente = $attenteRepo->findOneBy(
+            ['evenement' => $evenement],
+            ['dateDemande' => 'ASC'] // Règle d'équité : le plus ancien en attente passe en premier
+        );
+
+        if ($premierEnAttente) {
+            // ÉTAPE 2 : Création de la participation à partir de l'attente
+            $nouvelleParticipation = new ParticipationEvenement();
+            
+            // ÉTAPE 3 : Création d'un NOUVEL ID utilisateur (Shadow User)
+            // C'est ingénieux car vous n'avez pas de système de login complet, 
+            // mais vous gérez quand même l'unicité via ce service.
+            $participantId = $shadowUserService->createShadowUser($premierEnAttente->getEmail(), $premierEnAttente->getNomComplet());
+            
+            $nouvelleParticipation->setIdParticipant($participantId);
+            $peRepo = $em->getRepository(ParticipationEvenement::class);
+            $nouvelleParticipation->setNumOrdreParticipation($peRepo->getNextNumOrdre());
+            
+            $nouvelleParticipation->setEvenement($evenement);
+            $nouvelleParticipation->setNomComplet($premierEnAttente->getNomComplet());
+            $nouvelleParticipation->setEmail($premierEnAttente->getEmail());
+            
+            // ÉTAPE 4 : Transférer les activités choisies par l'utilisateur
+            foreach ($premierEnAttente->getActivites() as $act) {
+                $nouvelleParticipation->addActivite($act);
+            }
+
+            // ÉTAPE 5 : Persistance et suppression de l'ancien enregistrement d'attente
+            $em->persist($nouvelleParticipation);
+            $em->remove($premierEnAttente);
+            $em->flush();
+
+            // ÉTAPE 6 : Notification Email (L'effet "Pro")
+            // Le service s'occupe de l'envoi SMTP en arrière-plan.
+            $emailService->sendPromotionNotice($nouvelleParticipation);
+
+            $this->addFlash('success', 'Participant supprimé. ' . $nouvelleParticipation->getNomComplet() . ' a été automatiquement inscrit(e) à sa place !');
+        } else {
+            $this->addFlash('success', 'Participant supprimé avec succès.');
+        }
+
+        return $this->redirectToRoute('evenement_inscriptions', ['id' => $evenement->getIDEvenement()]);
+    }
+
+    /**
+     * SUPPRIMER UN PARTICIPANT DE LA LISTE D'ATTENTE
+     */
+    #[Route('/attente/{id}/delete', name: 'evenement_attente_delete', methods: ['POST'])]
+    public function deleteWaitlist(ListeAttente $attente, EntityManagerInterface $em): Response
+    {
+        $evenement = $attente->getEvenement();
+        $em->remove($attente);
+        $em->flush();
+
+        $this->addFlash('success', 'Participant retiré de la liste d\'attente.');
+
+        return $this->redirectToRoute('evenement_inscriptions', ['id' => $evenement->getIDEvenement()]);
     }
 }

@@ -20,6 +20,7 @@
             <thead>
                 <tr>
                     <th>#</th>
+                    <th>Image</th>
                     <th>Titre</th>
                     <th>Localisation</th>
                     <th>Payant</th>
@@ -33,6 +34,13 @@
             {% for ev in evenements %}
                 <tr>
                     <td><strong>#{{ ev.IDEvenement }}</strong></td>
+                    <td>
+                        {% if ev.Image and ev.Image starts with 'http' %}
+                            <img src="{{ ev.Image }}" alt="{{ ev.Titre }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        {% else %}
+                            <div style="width: 50px; height: 50px; background: #eee; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 1.2rem;">🖼️</div>
+                        {% endif %}
+                    </td>
                     <td><strong>{{ ev.Titre }}</strong></td>
                     <td>{{ ev.Localisation ?? '—' }}</td>
                     <td>

@@ -1,0 +1,106 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscriptions — {{ evenement.Titre }}{% endblock %}
+
+{% block body %}
+<div class="page-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+    <h1 class="page-title" style="margin:0;">📝 Inscriptions : {{ evenement.Titre }}</h1>
+    <a href="{{ path('evenement_index') }}" class="btn btn-secondary">← Retour aux événements</a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+    
+    {# LISTE DES ACCEPTÉS #}
+    <div class="card" style="padding: 1.5rem; background: #fff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid #16a34a;">
+        <h2 style="font-size: 1.2rem; color: #16a34a; margin-top: 0;">✅ Places Confirmées ({{ acceptes|length }} / {{ evenement.nbMax ?? '∞' }})</h2>
+        <p style="color: #64748b; font-size: 0.9rem;">Participants dont l'inscription est validée.</p>
+        
+        {% if acceptes|length > 0 %}
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #f1f5f9; text-align: left;">
+                        <th style="padding: 10px; color: #64748b; font-size: 0.85rem;">Nom & Prénom</th>
+                        <th style="padding: 10px; color: #64748b; font-size: 0.85rem;">Activités</th>
+                        <th style="padding: 10px; color: #64748b; font-size: 0.85rem;">Contact</th>
+                        <th style="padding: 10px; color: #64748b; font-size: 0.85rem;">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ins in acceptes %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 10px;"><strong>{{ ins.nomComplet }}</strong></td>
+                        <td style="padding: 10px;">
+                            {% for act in ins.activites %}
+                                <span style="display: inline-block; padding: 2px 8px; background: #eff6ff; color: #2563eb; border-radius: 12px; font-size: 0.75rem; margin-bottom: 2px;">{{ act.titre }}</span>
+                            {% else %}
+                                <span style="color: #94a3b8; font-size: 0.75rem;">Aucune</span>
+                            {% endfor %}
+                        </td>
+                        <td style="padding: 10px; font-size: 0.85rem;">
+                            <a href="mailto:{{ ins.email }}" style="color: #2563eb; text-decoration: none;">{{ ins.email }}</a>
+                        </td>
+                        <td style="padding: 10px; font-size: 0.85rem; color: #64748b;">—</td>
+                        <td style="padding: 10px; text-align: right;">
+                            <form method="post" action="{{ path('evenement_participation_delete', {'id': ins.idParticipant}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette inscription ?');" style="display:inline;">
+                                <button class="btn btn-sm btn-outline-danger" style="padding: 2px 8px; font-size: 0.75rem;">Annuler</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div style="padding: 2rem; text-align: center; color: #94a3b8; background: #f8fafc; border-radius: 8px; margin-top: 1rem;">
+                Aucune inscription confirmée pour le moment.
+            </div>
+        {% endif %}
+    </div>
+
+    {# LISTE D'ATTENTE #}
+    <div class="card" style="padding: 1.5rem; background: #fff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid #d97706;">
+        <h2 style="font-size: 1.2rem; color: #d97706; margin-top: 0;">⏳ Liste d'Attente ({{ en_attente|length }})</h2>
+        <p style="color: #64748b; font-size: 0.9rem;">Participants en attente d'une place libre.</p>
+        
+        {% if en_attente|length > 0 %}
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #f1f5f9; text-align: left;">
+                        <th style="padding: 10px; color: #64748b; font-size: 0.85rem;">Nom & Prénom</th>
+                        <th style="padding: 10px; color: #64748b; font-size: 0.85rem;">Activités</th>
+                        <th style="padding: 10px; color: #64748b; font-size: 0.85rem;">Contact</th>
+                        <th style="padding: 10px; color: #64748b; font-size: 0.85rem;">Date Demande</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ins in en_attente %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 10px;"><strong>{{ ins.nomComplet }}</strong></td>
+                        <td style="padding: 10px;">
+                            {% for act in ins.activites %}
+                                <span style="display: inline-block; padding: 2px 8px; background: #fff7ed; color: #c2410c; border-radius: 12px; font-size: 0.75rem; margin-bottom: 2px;">{{ act.titre }}</span>
+                            {% else %}
+                                <span style="color: #94a3b8; font-size: 0.75rem;">Aucune</span>
+                            {% endfor %}
+                        </td>
+                        <td style="padding: 10px; font-size: 0.85rem;">
+                            <a href="mailto:{{ ins.email }}" style="color: #2563eb; text-decoration: none;">{{ ins.email }}</a>
+                        </td>
+                        <td style="padding: 10px; font-size: 0.85rem; color: #64748b;">{{ ins.dateDemande ? ins.dateDemande|date('d/m/Y H:i') : '—' }}</td>
+                        <td style="padding: 10px; text-align: right;">
+                            <form method="post" action="{{ path('evenement_attente_delete', {'id': ins.idAttente}) }}" onsubmit="return confirm('Retirer cette personne de la liste d\'attente ?');">
+                                <button class="btn btn-sm btn-outline-warning" style="padding: 2px 8px; font-size: 0.75rem;">Retirer</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div style="padding: 2rem; text-align: center; color: #94a3b8; background: #f8fafc; border-radius: 8px; margin-top: 1rem;">
+                La liste d'attente est vide.
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

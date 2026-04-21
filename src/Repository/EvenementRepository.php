@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Evenement;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -41,10 +42,11 @@ class EvenementRepository extends ServiceEntityRepository
         return ($maxId ?: 0) + 1;
     }
 
+
     /**
-     * RECHERCHE & TRI : Méthode dynamique pour le Front-End
+     * RECHERCHE & TRI : Méthode dynamique pour le Front-End (Pagination)
      */
-    public function findBySearchAndSort(?string $search, ?string $sort): array
+    public function findBySearchAndSort(?string $search, ?string $sort): Query
     {
         $qb = $this->createQueryBuilder('e');
 
@@ -71,6 +73,7 @@ class EvenementRepository extends ServiceEntityRepository
                 break;
         }
 
-        return $qb->getQuery()->getResult();
+        // On retourne l'objet Query directement (requis par KnpPaginator) au lieu de faire getResult()
+        return $qb->getQuery();
     }
 }

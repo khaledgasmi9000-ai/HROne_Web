@@ -69,9 +69,13 @@
 
     <div class="form-group">
         {{ form_label(form.Image) }}
-        {{ form_widget(form.Image) }}
+        {{ form_widget(form.Image, { 'id': 'image-input' }) }}
+        <div id="image-preview-container" style="margin-top: 10px; border: 1px dashed #ddd; border-radius: 8px; padding: 10px; text-align: center; display: none;">
+            <p style="font-size: 0.8rem; color: #666; margin-bottom: 5px;">Aperçu de l'image :</p>
+            <img id="image-preview" src="" alt="Aperçu" style="max-width: 100%; max-height: 200px; border-radius: 4px; object-fit: contain;">
+        </div>
         {% for error in form.Image.vars.errors %}
-            <p class="error-msg">⚠ {{ error.message }}</p>
+            <p class="error-msg" style="color: #ef4444; font-size: 0.85rem; margin-top: 5px;">⚠ {{ error.message }}</p>
         {% endfor %}
     </div>
 
@@ -116,5 +120,32 @@
     </div>
 
     {{ form_end(form) }}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const imageInput = document.getElementById('image-input');
+            const previewContainer = document.getElementById('image-preview-container');
+            const previewImg = document.getElementById('image-preview');
+
+            function updatePreview() {
+                const url = imageInput.value;
+                if (url && url.startsWith('http')) {
+                    previewImg.src = url;
+                    previewContainer.style.display = 'block';
+                } else {
+                    previewContainer.style.display = 'none';
+                }
+            }
+
+            // Mettre à jour au changement
+            imageInput.addEventListener('input', updatePreview);
+            updatePreview();
+
+            // Cacher l'image si elle échoue à charger
+            previewImg.onerror = function() {
+                previewContainer.style.display = 'none';
+            };
+        });
+    </script>
 </div>
 {% endblock %}

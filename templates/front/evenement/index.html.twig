@@ -41,7 +41,7 @@
     <div class="events-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
         {% for ev in evenements %}
             <div class="event-card" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                {% if ev.Image %}
+                {% if ev.Image and ev.Image starts with 'http' %}
                     <img src="{{ ev.Image }}" alt="{{ ev.Titre }}" style="width: 100%; height: 180px; object-fit: cover;">
                 {% else %}
                     <div style="width: 100%; height: 180px; background: #f8fafc; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 3rem;">📅</div>
@@ -71,5 +71,18 @@
                 <p style="color: #64748b;">Aucun événement n'est disponible pour le moment.</p>
             </div>
         {% endfor %}
+    </div>
+
+    {# AFFICHAGE DE LA PAGINATION #}
+    <div style="margin-top: 2rem; display: flex; justify-content: center;">
+        <style>
+            .pagination { display: flex; gap: 0.5rem; list-style: none; padding: 0; }
+            .pagination li { display: inline-block; }
+            .pagination li a, .pagination li span { padding: 8px 16px; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; color: #475569; text-decoration: none; font-weight: 600; transition: all 0.2s; }
+            .pagination li a:hover { background: #f8fafc; border-color: #94a3b8; }
+            .pagination li.active span { background: #2563eb; color: #fff; border-color: #2563eb; }
+            .pagination li.disabled span { color: #cbd5e1; background: #f8fafc; border-color: #e2e8f0; }
+        </style>
+        {{ knp_pagination_render(evenements) }}
     </div>
 {% endblock %}

@@ -35,8 +35,7 @@ class Evenement
     }
 
     #[ORM\Column(name: "Titre", type: 'string', nullable: false)]
-    #[Assert\NotBlank(message: "Le titre est obligatoire.")] // Sécurité : ne peut pas être vide
-    #[Assert\Length(min: 3, max: 100)] // Sécurité : entre 3 et 100 lettres
+    #[Assert\NotBlank(message: "Le titre est obligatoire.")]
     private ?string $Titre = null;
 
     public function getTitre(): ?string
@@ -125,7 +124,7 @@ class Evenement
         return $this;
     }
 
-    #[ORM\Column(name: "Image", type: 'string', nullable: true)]
+    #[ORM\Column(name: "Image", type: 'string', length: 255, nullable: true)]
     #[Assert\Url(message: "L'URL de l'image n'est pas valide.")]
     private ?string $Image = null;
 
@@ -251,23 +250,6 @@ class Evenement
         return $this;
     }
 
-    // -------------------------------------------------------------
-    // LOGIQUE MÉTIER (Vérifications personnalisées)
-    // -------------------------------------------------------------
-    
-    /**
-     * Vérification personnalisée : si c'est payant, le prix est obligatoire
-     */
-    #[Assert\Callback]
-    public function validatePrice(ExecutionContextInterface $context): void
-    {
-        if ($this->est_payant && ($this->prix === null || $this->prix <= 0)) {
-            $context->buildViolation('Le prix est obligatoire si l\'événement est payant.')
-                ->atPath('prix')
-                ->addViolation();
-        }
-    }
-
     /**
      * HELPER : Retourne la date de début réelle sous forme d'objet DateTime
      */
@@ -287,7 +269,7 @@ class Evenement
     }
 
     /**
-     * MÉTIER 1 : Badge de Prix automatique
+     * MÉTIER : Badge de Prix automatique
      */
     public function getBadgeLabel(): string
     {
@@ -297,23 +279,23 @@ class Evenement
     }
 
     /**
-     * MÉTIER 1 : Couleur du Badge
+     * MÉTIER : Couleur du Badge
      */
     public function getBadgeColor(): string
     {
-        if ($this->getBadgeLabel() === "OFFERT") return "#dcfce7"; // Vert
-        if ($this->getBadgeLabel() === "PREMIUM") return "#fef3c7"; // Or/Ambre
-        return "#f1f5f9"; // Gris
+        if ($this->getBadgeLabel() === "OFFERT") return "#dcfce7";
+        if ($this->getBadgeLabel() === "PREMIUM") return "#fef3c7";
+        return "#f1f5f9";
     }
 
     /**
-     * MÉTIER 3 : Calcul de la durée en heures
+     * MÉTIER : Calcul de la durée en heures
      */
     public function getDurationHours(): int
     {
         $debut = $this->getRealDateDebut();
-        $fin = $this->getRealDateFin();
-        $diff = $debut->diff($fin);
+        $f = $this->getRealDateFin();
+        $diff = $debut->diff($f);
         return ($diff->days * 24) + $diff->h;
     }
 }

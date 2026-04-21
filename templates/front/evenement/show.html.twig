@@ -7,25 +7,145 @@
         {# Partie Gauche : Image et bouton #}
         <div style="flex: 1; min-width: 300px;">
             <div style="background: #fff; padding: 1.5rem; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                {% if evenement.Image %}
+                {% if evenement.Image and evenement.Image starts with 'http' %}
                     <img src="{{ evenement.Image }}" alt="{{ evenement.Titre }}" style="width: 100%; height: 300px; object-fit: cover; border-radius: 8px;">
                 {% else %}
                     <div style="width: 100%; height: 300px; background: #f8fafc; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #cbd5e1; font-size: 5rem;">📅</div>
                 {% endif %}
 
+                {# Compteur de places #}
+                <div style="margin-top: 1rem; padding: 0.8rem; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; text-align: center;">
+                    {% if placesRestantes is not null %}
+                        {% if placesRestantes > 0 %}
+                            <span style="color: #16a34a; font-weight: 700;">🎟️ {{ placesRestantes }} place{{ placesRestantes > 1 ? 's' : '' }} restante{{ placesRestantes > 1 ? 's' : '' }}</span>
+                        {% else %}
+                            <span style="color: #dc2626; font-weight: 700;">🚫 Complet — Plus de places !</span>
+                        {% endif %}
+                    {% else %}
+                        <span style="color: #2563eb; font-weight: 600;">♾️ Places illimitées</span>
+                    {% endif %}
+                    <div style="color: #64748b; font-size: 0.85rem; margin-top: 0.3rem;">{{ nbInscrits }} inscrit{{ nbInscrits > 1 ? 's' : '' }}</div>
+                </div>
+
                 <div style="margin-top: 1.5rem;">
-                    <a href="#" style="display: block; background: #2563eb; color: #fff; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 1.1rem;">
-                        S'inscrire à cet événement
-                    </a>
+                    {# Bouton S'inscrire — Toujours actif pour permettre liste d'attente #}
+                    <button onclick="toggleInscriptionForm()" id="btnInscrire"
+                        style="display: block; width: 100%; background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; text-align: center; padding: 14px; border-radius: 8px; border: none; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(37,99,235,0.3);">
+                        {% if placesRestantes is not null and placesRestantes <= 0 %}
+                            ⏳ Rejoindre la liste d'attente
+                        {% else %}
+                            📝 S'inscrire à cet événement
+                        {% endif %}
+                    </button>
+
                     <a href="{{ path('app_front_evenement_index') }}" style="display: block; margin-top: 1rem; color: #64748b; text-align: center; text-decoration: none; font-size: 0.9rem;">
                         ← Retour à la liste
                     </a>
+                </div>
+            </div>
+
+            {# ============================================================ #}
+            {# FORMULAIRE D'INSCRIPTION (Caché par défaut, affiché au clic) #}
+            {# ============================================================ #}
+            <div id="inscriptionFormContainer" style="display: none; margin-top: 1.5rem; animation: slideDown 0.4s ease;">
+                <div style="background: #fff; padding: 2rem; border: 2px solid #2563eb; border-radius: 12px; box-shadow: 0 8px 25px rgba(37,99,235,0.15);">
+                    <h3 style="margin: 0 0 0.5rem; color: #0f172a; font-size: 1.3rem;">📋 Formulaire d'inscription</h3>
+                    <p style="color: #64748b; font-size: 0.9rem; margin: 0 0 1.5rem;">Remplissez vos informations pour vous inscrire à <strong>{{ evenement.Titre }}</strong></p>
+
+                    {{ form_start(inscriptionForm, {'attr': {'style': 'display: flex; flex-direction: column; gap: 1rem;'}}) }}
+                        
+                        {# Nom Complet #}
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 0.3rem; font-size: 0.9rem;">
+                                {{ form_label(inscriptionForm.nomComplet) }}
+                            </label>
+                            {{ form_widget(inscriptionForm.nomComplet, {'attr': {'style': 'width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; transition: border 0.2s; box-sizing: border-box;'}}) }}
+                            {{ form_errors(inscriptionForm.nomComplet) }}
+                        </div>
+
+                        {# Email #}
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 0.3rem; font-size: 0.9rem;">
+                                {{ form_label(inscriptionForm.email) }}
+                            </label>
+                            {{ form_widget(inscriptionForm.email, {'attr': {'style': 'width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box;'}}) }}
+                            {{ form_errors(inscriptionForm.email) }}
+                        </div>
+
+                        {# Mode de paiement #}
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 0.3rem; font-size: 0.9rem;">
+                                {{ form_label(inscriptionForm.modePaiement) }}
+                            </label>
+                            {{ form_widget(inscriptionForm.modePaiement, {'attr': {'style': 'width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box;'}}) }}
+                            {{ form_errors(inscriptionForm.modePaiement) }}
+                        </div>
+
+                        {# Activité (Checkboxes) #}
+                        {% if evenement.activites|length > 0 %}
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                                🎯 Choisissez vos activités (plusieurs choix possibles) :
+                            </label>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                {% for child in inscriptionForm.activites %}
+                                    <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; padding: 0.5rem; border-radius: 6px; transition: background 0.2s;"
+                                           onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+                                        {{ form_widget(child, {'attr': {'style': 'width: 18px; height: 18px; accent-color: #2563eb; cursor: pointer;'}}) }}
+                                        <span style="color: #334155; font-size: 0.95rem;">{{ child.vars.label }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {# Description / Remarques #}
+                        <div style="grid-column: 1 / -1; margin-bottom: 0.5rem;">
+                            <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 0.3rem; font-size: 0.9rem;">
+                                {{ form_label(inscriptionForm.description) }}
+                            </label>
+                            {{ form_widget(inscriptionForm.description, {'attr': {'style': 'width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box;'}}) }}
+                            {{ form_errors(inscriptionForm.description) }}
+                        </div>
+
+                        {# Bouton Soumettre #}
+                        <div style="margin-top: 0.5rem;">
+                            <button type="submit" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; border: none; border-radius: 8px; font-size: 1.05rem; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(22,163,74,0.3);">
+                                ✅ Confirmer l'inscription
+                            </button>
+                        </div>
+
+                        {# Bouton Annuler #}
+                        <button type="button" onclick="toggleInscriptionForm()"
+                            style="width: 100%; padding: 10px; background: none; border: 1px solid #e2e8f0; border-radius: 8px; color: #64748b; cursor: pointer; font-size: 0.9rem; transition: all 0.2s;">
+                            ✖ Annuler
+                        </button>
+
+                    {{ form_end(inscriptionForm) }}
                 </div>
             </div>
         </div>
 
         {# Partie Droite : Informations sur l'événement #}
         <div style="flex: 2; min-width: 300px;">
+
+            {# Messages Flash (succès / warning / erreur) #}
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div style="padding: 1rem 1.5rem; margin-bottom: 1rem; border-radius: 8px; font-weight: 600;
+                        {% if label == 'success' %}
+                            background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;
+                        {% elseif label == 'warning' %}
+                            background: #fffbeb; color: #d97706; border: 1px solid #fde68a;
+                        {% elseif label == 'error' %}
+                            background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;
+                        {% endif %}
+                    ">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endfor %}
+
             <h1 style="color: #0f172a; margin-bottom: 0.5rem;">{{ evenement.Titre }}</h1>
             <p style="font-size: 1.2rem; color: #64748b; margin-bottom: 1.5rem;">📍 {{ evenement.Localisation ?? 'Non spécifiée' }}</p>
 
@@ -68,4 +188,43 @@
             </div>
         </div>
     </div>
+
+    {# ============================================================ #}
+    {# JAVASCRIPT : Toggle du formulaire d'inscription              #}
+    {# ============================================================ #}
+    <style>
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-15px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        #inscriptionFormContainer.show {
+            display: block !important;
+            animation: slideDown 0.4s ease;
+        }
+    </style>
+    <script>
+        function toggleInscriptionForm() {
+            const container = document.getElementById('inscriptionFormContainer');
+            const btn = document.getElementById('btnInscrire');
+
+            if (container.classList.contains('show')) {
+                container.classList.remove('show');
+                container.style.display = 'none';
+                btn.innerHTML = '📝 S\'inscrire à cet événement';
+                btn.style.background = 'linear-gradient(135deg, #2563eb, #7c3aed)';
+            } else {
+                container.classList.add('show');
+                container.style.display = 'block';
+                btn.innerHTML = '⬆️ Masquer le formulaire';
+                btn.style.background = 'linear-gradient(135deg, #64748b, #475569)';
+                // Scroll vers le formulaire
+                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // Si flash message d'erreur, ouvrir le formulaire automatiquement
+        {% for message in app.flashes('error') %}
+            document.addEventListener('DOMContentLoaded', () => toggleInscriptionForm());
+        {% endfor %}
+    </script>
 {% endblock %}

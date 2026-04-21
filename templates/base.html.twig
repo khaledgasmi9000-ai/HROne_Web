@@ -40,7 +40,6 @@
         .checkbox-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
         .checkbox-list label { display: flex; align-items: center; gap: 5px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 5px 12px; border-radius: 20px; font-weight: 400; }
     </style>
-</head>
 <body>
     <div class="layout">
         {# Sidebar originale #}
@@ -58,7 +57,7 @@
             <nav class="nav">
                 <a id="btnDashboard" class="nav-link" href="{{ path('evenement_index') }}">Tableau de bord</a>
                 <a id="btnUsers" class="nav-link" href="#">Gestion des utilisateurs</a>
-                <a id="btnActivityWatch" class="nav-link {{ app.request.attributes.get('_route') starts with 'activite' ? 'active' : '' }}" href="{{ path('activite_index') }}">Activity Watch</a>
+                <a id="btnActivityWatch" class="nav-link {{ app.request.attributes.get('_route') starts with 'activite' ? 'active' : '' }}" href="{{ path('activite_index') }}">Activites</a>
                 <a id="btnEvenements" class="nav-link {{ app.request.attributes.get('_route') starts with 'evenement' ? 'active' : '' }}" href="{{ path('evenement_index') }}">Gestion des evenements</a>
                 <a id="btnEmployee" class="nav-link" href="#">Gestion administrative</a>
                 <a id="btnGestionConge" class="nav-link" href="#">Gestion des congés</a>

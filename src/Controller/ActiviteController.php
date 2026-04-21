@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\Request;
 // Response est l'objet retourné par chaque méthode (la page HTML)
 use Symfony\Component\HttpFoundation\Response;
 // Route permet de définir l'URL qui déclenche chaque méthode
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 // Toutes les routes de ce controller commencent par /activite
 #[Route('/activite')]

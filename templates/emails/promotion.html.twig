@@ -1,0 +1,52 @@
+{% extends 'emails/layout.html.twig' %}
+
+{% block content %}
+    <h2 style="color: #1e293b; margin-top: 0;">🎉 Bonne Nouvelle !</h2>
+    
+    <p>Bonjour {{ participation.nomComplet }}, une place s'est libérée ! Votre inscription est désormais validée :</p>
+    
+    {# TICKET EMBED #}
+    <div style="margin: 20px 0; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        {# Haut du Ticket #}
+        <div style="background-color: #10b981; padding: 20px; color: #ffffff; text-align: center;">
+            <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8;">Ticket Confirmé</span>
+            <h3 style="margin: 5px 0 0; font-size: 20px;">{{ participation.evenement.titre }}</h3>
+        </div>
+        
+        {# Corps du Ticket #}
+        <div style="padding: 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td style="padding-bottom: 15px;">
+                        <span style="display: block; font-size: 11px; color: #64748b; text-transform: uppercase;">Participant</span>
+                        <strong style="font-size: 16px; color: #1e293b;">{{ participation.nomComplet }}</strong>
+                    </td>
+                    <td style="padding-bottom: 15px; text-align: right;">
+                        <span style="display: block; font-size: 11px; color: #64748b; text-transform: uppercase;">Référence</span>
+                        <strong style="font-size: 14px; color: #2563eb;">#HR1-{{ participation.IDParticipant }}</strong>
+                    </td>
+                </tr>
+            </table>
+
+            <div style="margin-top: 20px; border-top: 1px dashed #e2e8f0; padding-top: 15px;">
+                <span style="display: block; font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 10px;">🎯 Vos Activités</span>
+                <ul style="margin: 0; padding-left: 15px; font-size: 14px; color: #475569;">
+                    {% for activite in participation.activites %}
+                        <li style="margin-bottom: 5px;">{{ activite.titre }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <p style="margin-top: 20px;">Nous sommes ravis que vous puissiez finalement vous joindre à nous.</p>
+    
+    <div style="text-align: center;">
+        <a href="{{ url('app_front_participation_details', {id: participation.IDParticipant}) }}" class="btn">Voir ou imprimer en ligne</a>
+    </div>
+
+    <p style="margin-top: 40px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+        À très bientôt,<br>
+        <span style="font-weight: 700; color: #1e3a8a;">L'équipe RH HROne</span>
+    </p>
+{% endblock %}

@@ -14,6 +14,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Table(name: 'activite')]
 class Activite
 {
+    // -------------------------------------------------------------------------
+    // PROPRIÉTÉS DE L'ACTIVITÉ
+    // -------------------------------------------------------------------------
+    // Une activité est un composant d'un événement (ex: Atelier, Conférence).
+    // -------------------------------------------------------------------------
     // Identifiant unique de l'activité (Clé primaire)
     #[ORM\Id]
     #[ORM\Column(name: 'ID_Activite', type: 'integer')]
@@ -66,9 +71,13 @@ class Activite
 
 
 
-    // -------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // RELATION AVEC DETAIL_EVENEMENT (Liaison vers Evenement)
-    // -------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Une activité peut être liée à plusieurs événements via cette relation.
+    // C'est une relation "OneToMany" car une Activite peut apparaître dans 
+    // plusieurs lignes de la table DetailEvenement.
+    // -------------------------------------------------------------------------
     #[ORM\OneToMany(targetEntity: DetailEvenement::class, mappedBy: 'activite')]
     private Collection $details;
 

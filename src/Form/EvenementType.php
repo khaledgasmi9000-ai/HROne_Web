@@ -73,7 +73,7 @@ class EvenementType extends AbstractType
                 'attr'     => ['placeholder' => 'Ex: Tunis, Salle A...'],
             ])
 
-            // Champ : Image (facultatif)
+            // Champ : Image (URL)
             ->add('Image', TextType::class, [
                 'label'    => 'URL de l\'image',
                 'required' => false,
