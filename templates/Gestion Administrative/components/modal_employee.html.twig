@@ -1,0 +1,83 @@
+<div id="employeeModal" class="modal hidden">
+    <div class="modal-content">
+
+        <h2 id="modalTitle">Ajouter un employé</h2>
+
+        <!-- ✅ ERROR (outside grid, hidden by default) -->
+        <div id="employeeError" class="error-message hidden"></div>
+
+        <form id="employeeForm">
+
+            <!-- ✅ GRID ONLY FOR FIELDS -->
+            <div class="form-grid">
+
+                <div class="form-group full-width">
+                    <label>Nom</label>
+                    <input type="text" id="empName" class="input-field">
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Email</label>
+                    <input type="email" id="empEmail" class="input-field">
+                </div>
+
+                <div class="form-group">
+                    <label>Téléphone</label>
+                    <input type="text" id="empPhone" class="input-field">
+                </div>
+
+                <div class="form-group">
+                    <label>CIN</label>
+                    <input type="text" id="empCIN" class="input-field">
+                </div>
+
+                <div class="form-group">
+                    <label>Date naissance</label>
+                    <input type="date" id="empBirth" class="input-field">
+                </div>
+
+                <div class="form-group">
+                    <label>Genre</label>
+                    <select id="empGender" class="input-field">
+                        <option value="">-- Choisir --</option>
+                        <option value="M">Homme</option>
+                        <option value="F">Femme</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Solde congé</label>
+                    <input type="number" id="empSolde" class="input-field">
+                </div>
+
+                <div class="form-group">
+                    <label>Salaire</label>
+                    <input type="number" id="empSalaire" class="input-field">
+                </div>
+
+                <div class="form-group">
+                    <label>Heures / mois</label>
+                    <input type="number" id="empHeures" class="input-field">
+                </div>
+
+                <div class="form-group">
+                    <label>Département</label>
+                    <select id="empDepartement" class="input-field">
+                        <option value="">-- Choisir --</option>
+                        {% for dep in departements %}
+                            <option value="{{ dep.IDDepartement }}">{{ dep.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="modal-actions">
+                <button type="button" id="closeEmployeeModal" class="btn cancel">Annuler</button>
+                <button type="submit" class="btn success">Valider</button>
+            </div>
+
+        </form>
+    </div>
+</div>

@@ -13,20 +13,26 @@
         "easycorp/easyadmin-bundle": "^4.10",
         "endroid/qr-code-bundle": "6.0",
         "knplabs/knp-paginator-bundle": "^6.0",
+        "knplabs/knp-snappy-bundle": "^1.10",
         "liip/imagine-bundle": "^2.8",
         "nucleos/dompdf-bundle": "4.3",
+        "phpoffice/phpspreadsheet": "^5.7",
         "phpoffice/phpword": "*",
         "smalot/pdfparser": "*",
         "stichoza/google-translate-php": "*",
         "symfony/asset": "6.4",
+        "symfony/asset-mapper": "6.4.*",
         "symfony/console": "6.4.*",
         "symfony/dotenv": "6.4.*",
         "symfony/flex": "^2",
         "symfony/framework-bundle": "6.4.*",
+        "symfony/http-client": "6.4.*",
         "symfony/mailer": "6.4",
         "symfony/messenger": "6.4",
         "symfony/runtime": "*",
+        "symfony/stimulus-bundle": "^2.35",
         "symfony/twig-bundle": "6.4.*",
+        "symfony/ux-chartjs": "^2.35",
         "symfony/yaml": "6.4.*",
         "vich/uploader-bundle": "^1.22"
     },
@@ -64,7 +70,8 @@
     "scripts": {
         "auto-scripts": {
             "cache:clear": "symfony-cmd",
-            "assets:install %PUBLIC_DIR%": "symfony-cmd"
+            "assets:install %PUBLIC_DIR%": "symfony-cmd",
+            "importmap:install": "symfony-cmd"
         },
         "post-install-cmd": [
             "@auto-scripts"
