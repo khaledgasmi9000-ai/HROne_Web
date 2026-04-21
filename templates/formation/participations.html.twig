@@ -1,4 +1,4 @@
-{% extends 'base_front.html.twig' %}
+﻿{% extends 'base_front.html.twig' %}
 {% block title %}HR One - Mes participations{% endblock %}
 {% block stylesheets %}
     <link rel="stylesheet" href="/styles/formations.css">
@@ -22,20 +22,47 @@
                 <a class="text-link" href="{{ path('app_formation_index') }}">Retour au catalogue</a>
             </div>
 
-            {# Message selon résultat #}
-            {% if email is defined and email != '' %}
-                {% if selected_employee %}
-                    <div class="flash-success" style="margin-bottom:1rem;">
-                        Participations de : <strong>{{ selected_employee.label }}</strong> — {{ selected_employee.email }}
-                    </div>
-                {% else %}
-                    <div class="flash-error" style="margin-bottom:1rem;">
-                        Aucun compte trouve pour cet email.
-                    </div>
-                {% endif %}
+            {% if email is defined and email != '' and not selected_employee %}
+                <div class="flash-error" style="margin-bottom:1rem;">
+                    Aucun compte trouve pour cet email.
+                </div>
             {% endif %}
 
-            {# Liste des participations #}
+            <section class="detail-card participation-calendar-card">
+                <div class="participation-calendar-head">
+                    <div class="participation-calendar-copy">
+                        <p class="eyebrow">Planning</p>
+                        <h2>Calendrier des formations</h2>
+                    </div>
+                    {% if selected_employee %}
+                        <div class="calendar-chip-stack">
+                            <span class="calendar-chip">{{ selected_employee.label }}</span>
+                            <span class="calendar-chip calendar-chip-soft">{{ participations|length }} formation{% if participations|length > 1 %}s{% endif %}</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if selected_employee %}
+                    <div
+                        id="participation-calendar"
+                        class="participation-calendar"
+                        data-events='{{ calendar_events|default([])|json_encode|e('html_attr') }}'
+                    ></div>
+                    <div class="calendar-legend">
+                        <span class="calendar-legend-item">
+                            <span class="calendar-legend-dot"></span>
+                            Formation inscrite
+                        </span>
+                        <span class="calendar-legend-note">Cliquez sur une formation pour ouvrir sa fiche detail.</span>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <h3>Calendrier indisponible</h3>
+                        <p>Le calendrier s affichera ici des qu une inscription sera associee a votre session.</p>
+                    </div>
+                {% endif %}
+            </section>
+
             <div class="participation-list">
                 {% for row in participations %}
                     <article class="participation-card">
@@ -76,3 +103,86 @@
         </section>
     </section>
 {% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    {% if selected_employee %}
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const calendarElement = document.getElementById('participation-calendar');
+
+                if (!calendarElement || typeof FullCalendar === 'undefined') {
+                    return;
+                }
+
+                const calendarEvents = JSON.parse(calendarElement.dataset.events || '[]');
+
+                const calendar = new FullCalendar.Calendar(calendarElement, {
+                    locale: 'fr',
+                    timeZone: 'local',
+                    initialView: 'dayGridMonth',
+                    firstDay: 1,
+                    height: 640,
+                    fixedWeekCount: true,
+                    dayMaxEvents: false,
+                    displayEventTime: false,
+                    eventDisplay: 'block',
+                    headerToolbar: {
+                        start: 'prev,next',
+                        center: 'title',
+                        end: 'dayGridMonth'
+                    },
+                    buttonText: {
+                        month: 'Mois',
+                    },
+                    dayHeaderFormat: { weekday: 'short' },
+                    events: calendarEvents,
+                    noEventsContent: 'Aucune formation a afficher sur cette periode.',
+                    viewDidMount: function () {
+                        calendarElement.setAttribute('data-calendar-view', calendar.view.type);
+                    },
+                    eventContent: function (arg) {
+                        const props = arg.event.extendedProps || {};
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'fc-event-card';
+
+                        const title = document.createElement('div');
+                        title.className = 'fc-event-card-title';
+                        title.textContent = arg.event.title;
+                        wrapper.appendChild(title);
+
+                        const meta = [props.mode, props.level].filter(Boolean).join(' | ');
+
+                        if (meta !== '') {
+                            const metaLine = document.createElement('div');
+                            metaLine.className = 'fc-event-card-meta';
+                            metaLine.textContent = meta;
+                            wrapper.appendChild(metaLine);
+                        }
+
+                        return { domNodes: [wrapper] };
+                    },
+                    eventDidMount: function (info) {
+                        const props = info.event.extendedProps || {};
+                        const details = [props.mode, props.level].filter(Boolean).join(' - ');
+
+                        if (details !== '') {
+                            info.el.title = info.event.title + ' - ' + details;
+                        }
+                    },
+                    eventClick: function (info) {
+                        if (!info.event.url) {
+                            return;
+                        }
+
+                        info.jsEvent.preventDefault();
+                        window.location.href = info.event.url;
+                    }
+                });
+
+                calendar.render();
+            });
+        </script>
+    {% endif %}
+{% endblock %}
+

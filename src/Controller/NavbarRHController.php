@@ -446,7 +446,7 @@ class NavbarRHController extends AbstractController
     #[Route('/rh/gestion-formations', name: 'rh_formations')]
     public function formations(): Response
     {
-        return $this->render('navbarRH/gestion-formations.html.twig');
+        return $this->redirectToRoute('app_admin_formation_index');
     }
 
     #[Route('/rh/gestion-des-formations', name: 'rh_formations_des')]

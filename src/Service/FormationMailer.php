@@ -3,30 +3,54 @@
 namespace App\Service;
 
 use App\Entity\Formation;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Twig\Environment;
 
-/**
- * Local fallback mailer.
- *
- * The original module used Symfony Mailer, but this project does not currently
- * ship with that package. We keep the same public API and persist email content
- * to local logs so the formation workflow still works end-to-end.
- */
 class FormationMailer
 {
+    public function __construct(
+        private readonly MailerInterface $mailer,
+        private readonly string $fromAddress = 'no-reply@hr-one.local'
+    ) {
+    }
+
     public function sendRegistrationConfirmation(string $recipientEmail, string $participantName, Formation $formation): void
     {
-        $payload = [
-            'type' => 'registration_confirmation',
-            'to' => $recipientEmail,
-            'participant' => trim($participantName) !== '' ? $participantName : 'participant',
-            'formation_title' => $formation->getTitre() ?: 'Formation',
+        $title = $formation->getTitre() ?: 'Formation';
+        $ticketReference = $this->generateTicketReference($formation, $recipientEmail);
+        $qrPayload = sprintf(
+            "Ticket: %s\nParticipant: %s\nFormation: %s\nMode: %s\nNiveau: %s\nDate debut: %s\nDate fin: %s",
+            $ticketReference,
+            trim($participantName) !== '' ? $participantName : 'participant',
+            $title,
+            $formation->getMode() ?: 'Non defini',
+            $formation->getNiveau() ?: 'Non defini',
+            $this->formatStoredDate($formation->getDateDebut()),
+            $this->formatStoredDate($formation->getDateFin())
+        );
+        $email = (new TemplatedEmail())
+            ->from($this->fromAddress)
+            ->to($recipientEmail)
+            ->subject('Confirmation d inscription - ' . $title)
+            ->text($this->buildRegistrationBody($participantName, $formation))
+            ->htmlTemplate('emails/formation_registration.html.twig');
+
+        $logoCid = $this->attachLogo($email);
+
+        $email->context([
+            'participant_name' => trim($participantName) !== '' ? $participantName : 'participant',
+            'formation_title' => $title,
             'formation_mode' => $formation->getMode() ?: 'Non defini',
             'formation_level' => $formation->getNiveau() ?: 'Non defini',
             'formation_start' => $this->formatStoredDate($formation->getDateDebut()),
             'formation_end' => $this->formatStoredDate($formation->getDateFin()),
-        ];
+            'ticket_reference' => $ticketReference,
+            'qr_code_url' => 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' . rawurlencode($qrPayload),
+            'logo_cid' => $logoCid,
+        ]);
 
-        $this->writeLog($payload);
+        $this->mailer->send($email);
     }
 
     public function sendCertificateEmail(
@@ -36,36 +60,126 @@ class FormationMailer
         string $pdfContent,
         string $filename
     ): void {
-        $payload = [
-            'type' => 'certificate_ready',
-            'to' => $recipientEmail,
-            'participant' => trim($participantName) !== '' ? $participantName : 'participant',
-            'formation_title' => $formation->getTitre() ?: 'Formation',
-            'issued_at' => date('Y-m-d H:i:s'),
-            'attachment_filename' => $filename,
-            'attachment_size' => strlen($pdfContent),
-        ];
+        $title = $formation->getTitre() ?: 'Formation';
+        $email = (new TemplatedEmail())
+            ->from($this->fromAddress)
+            ->to($recipientEmail)
+            ->subject('Certificat de formation - ' . $title)
+            ->text($this->buildCertificateBody($participantName, $formation));
 
-        $this->writeLog($payload);
+        $logoCid = $this->attachLogo($email);
+
+        $email
+            ->html($this->buildCertificateHtml($participantName, $formation, $logoCid))
+            ->attach($pdfContent, $filename, 'application/pdf');
+
+        $this->mailer->send($email);
     }
 
-    /**
-     * @param array<string, mixed> $payload
-     */
-    private function writeLog(array $payload): void
+    private function buildRegistrationBody(string $participantName, Formation $formation): string
     {
-        $logDir = dirname(__DIR__, 2) . '/var/log/formation-mails';
-        if (!is_dir($logDir)) {
-            @mkdir($logDir, 0775, true);
+        $lines = [
+            sprintf('Bonjour %s,', trim($participantName) !== '' ? $participantName : 'participant'),
+            '',
+            'Votre inscription a bien ete enregistree.',
+            sprintf('Formation : %s', $formation->getTitre() ?: 'Formation'),
+            sprintf('Mode : %s', $formation->getMode() ?: 'Non defini'),
+            sprintf('Niveau : %s', $formation->getNiveau() ?: 'Non defini'),
+        ];
+
+        if ($formation->getDateDebut() !== null) {
+            $lines[] = sprintf('Date debut : %s', (string) $formation->getDateDebut());
         }
 
-        $line = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        if (!is_string($line)) {
-            return;
+        if ($formation->getDateFin() !== null) {
+            $lines[] = sprintf('Date fin : %s', (string) $formation->getDateFin());
         }
 
-        $file = $logDir . '/mail-' . date('Ymd') . '.log';
-        @file_put_contents($file, '[' . date('H:i:s') . '] ' . $line . PHP_EOL, FILE_APPEND);
+        $lines[] = '';
+        $lines[] = 'Merci,';
+        $lines[] = 'Equipe HR One';
+
+        return implode(PHP_EOL, $lines);
+    }
+
+    private function buildCertificateBody(string $participantName, Formation $formation): string
+    {
+        return implode(PHP_EOL, [
+            sprintf('Bonjour %s,', trim($participantName) !== '' ? $participantName : 'participant'),
+            '',
+            'Votre certificat de formation est disponible en piece jointe.',
+            sprintf('Formation : %s', $formation->getTitre() ?: 'Formation'),
+            sprintf('Date emission : %s', date('d/m/Y')),
+            '',
+            'Equipe HR One',
+        ]);
+    }
+
+    private function buildCertificateHtml(string $participantName, Formation $formation, string $logoCid): string
+    {
+        $participantName = htmlspecialchars(trim($participantName) !== '' ? $participantName : 'participant', ENT_QUOTES, 'UTF-8');
+        $formationTitle = htmlspecialchars($formation->getTitre() ?: 'Formation', ENT_QUOTES, 'UTF-8');
+        $headerLogoCell = '';
+
+        if ($logoCid !== '') {
+            $safeLogoCid = htmlspecialchars($logoCid, ENT_QUOTES, 'UTF-8');
+            $headerLogoCell = <<<HTML
+      <td style="width:88px;vertical-align:middle;padding-right:16px;">
+        <div style="width:72px;height:72px;background:#ffffff;border-radius:18px;padding:8px;box-sizing:border-box;border:1px solid rgba(203,213,225,0.35);">
+          <img src="{$safeLogoCid}" alt="HR One" style="display:block;width:100%;height:100%;object-fit:contain;border:0;">
+        </div>
+      </td>
+HTML;
+        }
+
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><title>Certificat de formation</title></head>
+<body style="margin:0;padding:24px;background:#f4f7fb;font-family:Arial,sans-serif;color:#1f2937;">
+  <div style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #dbe4f0;border-radius:16px;overflow:hidden;">
+    <div style="background:#0f172a;padding:22px 28px;color:#ffffff;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
+        <tr>
+{$headerLogoCell}
+          <td style="vertical-align:middle;">
+            <div style="font-size:24px;font-weight:700;line-height:1.2;color:#ffffff;">HR One</div>
+            <div style="margin-top:6px;font-size:14px;line-height:1.5;color:#cbd5e1;">Certificat de formation</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div style="padding:28px;">
+      <p style="margin:0 0 16px;font-size:16px;line-height:1.7;">Bonjour <strong>{$participantName}</strong>,</p>
+      <p style="margin:0 0 18px;font-size:15px;line-height:1.7;color:#475569;">Votre certificat pour la formation <strong>{$formationTitle}</strong> est pret. Vous le trouverez en piece jointe a cet e-mail.</p>
+      <p style="margin:0;font-size:15px;line-height:1.7;color:#475569;">Equipe HR One</p>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+    }
+
+    private function attachLogo(TemplatedEmail $email): string
+    {
+        $logoPath = dirname(__DIR__, 2) . '/public/images/logo-rh.png';
+
+        if (!is_file($logoPath)) {
+            return '';
+        }
+
+        $contentId = 'logo-rh';
+        $email->embedFromPath($logoPath, $contentId);
+
+        return 'cid:' . $contentId;
+    }
+
+    private function generateTicketReference(Formation $formation, string $recipientEmail): string
+    {
+        $formationId = $formation->getIDFormation() ?? 0;
+        $emailHash = strtoupper(substr(sha1(mb_strtolower($recipientEmail)), 0, 6));
+
+        return sprintf('FRM-%04d-%s', $formationId, $emailHash);
     }
 
     private function formatStoredDate(?int $value): string
@@ -75,8 +189,10 @@ class FormationMailer
         }
 
         $raw = (string) $value;
+
         if (strlen($raw) === 8) {
             $date = \DateTimeImmutable::createFromFormat('Ymd', $raw);
+
             if ($date instanceof \DateTimeImmutable) {
                 return $date->format('d/m/Y');
             }

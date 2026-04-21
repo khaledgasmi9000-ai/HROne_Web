@@ -11,6 +11,7 @@ use App\Repository\ParticipationFormationRepository;
 use App\Repository\UtilisateurRepository;
 use App\Service\CertificatePdfGenerator;
 use App\Service\FormationMailer;
+use App\Service\FormationRecommendationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -34,18 +35,43 @@ final class FormationController extends AbstractController
     }
 
     #[Route('/formations', name: 'app_formation_index', methods: ['GET'])]
-    public function index(Request $request, FormationRepository $formationRepository): Response
+    public function index(
+        Request $request,
+        FormationRepository $formationRepository,
+        UtilisateurRepository $utilisateurRepository,
+        FormationRecommendationService $formationRecommendationService
+    ): Response
     {
         $mode = $request->query->get('mode');
         $level = $request->query->get('level');
         $keyword = $request->query->get('q');
         $formations = $formationRepository->searchForCatalog($mode, $keyword, $level);
         $featured = $formationRepository->findFeaturedFormation();
+        $selectedEmployee = $this->resolveCurrentEmployee($utilisateurRepository);
+        $selectedParticipantId = $selectedEmployee['id'] ?? null;
+        $demoEmployees = $this->buildDemoEmployees($utilisateurRepository);
+        $recommendationContext = $formationRecommendationService->recommendForParticipant($selectedParticipantId, $formations);
 
         return $this->render('formation/index.html.twig', [
             'formations' => array_map([$this, 'mapFormation'], $formations),
             'featured' => $featured ? $this->mapFormation($featured) : null,
+            'selected_participant_id' => $selectedParticipantId,
+            'selected_employee' => $selectedEmployee,
+            'demo_employees' => $demoEmployees,
+            'recommendation_profile' => $recommendationContext['profile'],
+            'recommended_formations' => array_map(function (array $recommendation): array {
+                return array_merge(
+                    $this->mapFormation($recommendation['formation']),
+                    [
+                        'recommendation_score' => $recommendation['score'],
+                        'recommendation_reasons' => $recommendation['reasons'],
+                        'recommendation_explanation' => $recommendation['explanation'],
+                        'recommendation_explanation_source' => $recommendation['explanation_source'],
+                    ]
+                );
+            }, $recommendationContext['recommendations']),
             'filters' => [
+                'employee' => $selectedParticipantId,
                 'mode' => $mode,
                 'level' => $level,
                 'q' => $keyword,
@@ -74,16 +100,14 @@ final class FormationController extends AbstractController
             throw $this->createNotFoundException('Formation introuvable.');
         }
 
-        $demoEmployees = $this->buildDemoEmployees($utilisateurRepository);
-        $selectedParticipantId = $this->resolveParticipantId($request, $demoEmployees);
-        $selectedEmployee = $this->findSelectedEmployee($selectedParticipantId, $demoEmployees);
+        $selectedEmployee = $this->resolveCurrentEmployee($utilisateurRepository);
+        $selectedParticipantId = $selectedEmployee['id'] ?? null;
         $activeParticipation = $selectedParticipantId !== null
             ? $participationFormationRepository->findActiveParticipation($formation->getIDFormation() ?? 0, $selectedParticipantId)
             : null;
 
         return $this->render('formation/show.html.twig', [
             'formation' => $this->mapFormation($formation),
-            'demo_employees' => $demoEmployees,
             'selected_participant_id' => $selectedParticipantId,
             'selected_employee' => $selectedEmployee,
             'active_participation' => $activeParticipation,
@@ -107,11 +131,11 @@ final class FormationController extends AbstractController
             throw $this->createNotFoundException('Formation introuvable.');
         }
 
-        $demoEmployees = $this->buildDemoEmployees($utilisateurRepository);
-        $participantId = $this->resolveParticipantId($request, $demoEmployees);
+        $selectedEmployee = $this->resolveCurrentEmployee($utilisateurRepository);
+        $participantId = $selectedEmployee['id'] ?? null;
 
         if ($participantId === null) {
-            $this->addFlash('error', 'Selectionnez un employe avant de demander une inscription.');
+            $this->addFlash('error', 'Connectez-vous avec un compte employe pour vous inscrire a une formation.');
 
             return $this->redirectToRoute('app_formation_show', ['id' => $id]);
         }
@@ -122,33 +146,13 @@ final class FormationController extends AbstractController
             return $this->redirectToRoute('app_formation_show', ['id' => $id, 'employee' => $participantId]);
         }
 
-        $registrationIdentity = [
-            'nom' => trim((string) $request->request->get('nom', '')),
-            'prenom' => trim((string) $request->request->get('prenom', '')),
-            'email' => trim((string) $request->request->get('email', '')),
-        ];
+        $registrationIdentity = $selectedEmployee;
 
-        if ($registrationIdentity['nom'] === '' || $registrationIdentity['prenom'] === '' || $registrationIdentity['email'] === '') {
-            $this->addFlash('error', 'Nom, prenom et email sont obligatoires pour participer a la formation.');
+        if ($registrationIdentity === null || trim((string) ($registrationIdentity['email'] ?? '')) === '') {
+            $this->addFlash('error', 'Impossible de retrouver un compte employe valide pour cette inscription.');
 
             return $this->redirectToRoute('app_formation_show', ['id' => $id, 'employee' => $participantId]);
         }
-
-        if (!filter_var($registrationIdentity['email'], FILTER_VALIDATE_EMAIL)) {
-            $this->addFlash('error', 'L email saisi est invalide.');
-
-            return $this->redirectToRoute('app_formation_show', ['id' => $id, 'employee' => $participantId]);
-        }
-
-        $matchedEmployee = $utilisateurRepository->findEmployeeByEmail($registrationIdentity['email']);
-
-        if ($matchedEmployee === null) {
-            $this->addFlash('error', 'L email saisi n existe pas dans la base utilisateur.');
-
-            return $this->redirectToRoute('app_formation_show', ['id' => $id, 'employee' => $participantId]);
-        }
-
-        $participantId = (int) $matchedEmployee['id'];
 
         if ($participationFormationRepository->hasActiveParticipation($id, $participantId)) {
             $this->addFlash('error', 'Cet employe est deja inscrit a cette formation.');
@@ -156,19 +160,24 @@ final class FormationController extends AbstractController
             return $this->redirectToRoute('app_formation_show', ['id' => $id, 'employee' => $participantId]);
         }
 
-        $activeParticipations = $participationFormationRepository->findActiveByParticipant($participantId);
+        $existingParticipations = $participationFormationRepository->findByParticipantOrdered($participantId);
 
-        foreach ($activeParticipations as $existingParticipation) {
+        foreach ($existingParticipations as $existingParticipation) {
             $existingFormationId = $existingParticipation->getIDFormation();
+            $existingStatus = mb_strtolower(trim((string) ($existingParticipation->getStatut() ?? '')));
 
-            if ($existingFormationId === null || $existingFormationId === $id) {
+            if (
+                $existingFormationId === null ||
+                $existingFormationId === $id ||
+                $existingStatus === 'annule'
+            ) {
                 continue;
             }
 
             $existingFormation = $formationRepository->find($existingFormationId);
 
             if ($existingFormation instanceof Formation && $this->hasDateOverlap($formation, $existingFormation)) {
-                $this->addFlash('error', 'Inscription refusee : cette formation chevauche une autre formation deja reservee sur la meme periode.');
+                $this->addFlash('error', 'Inscription refusee : vous avez deja une autre formation sur la meme periode. Annulez-la ou choisissez une autre date.');
 
                 return $this->redirectToRoute('app_formation_show', ['id' => $id, 'employee' => $participantId]);
             }
@@ -184,12 +193,10 @@ final class FormationController extends AbstractController
 
         $entityManager->persist($participation);
         $entityManager->flush();
-        $request->getSession()->set('participant_email', $registrationIdentity['email']);
-
         try {
             $formationMailer->sendRegistrationConfirmation(
                 $registrationIdentity['email'],
-                trim($registrationIdentity['prenom'] . ' ' . $registrationIdentity['nom']),
+                trim(($registrationIdentity['first_name'] ?? '') . ' ' . ($registrationIdentity['last_name'] ?? '')),
                 $formation
             );
         } catch (\Throwable) {
@@ -218,11 +225,11 @@ final class FormationController extends AbstractController
             throw $this->createNotFoundException('Formation introuvable.');
         }
 
-        $demoEmployees = $this->buildDemoEmployees($utilisateurRepository);
-        $participantId = $this->resolveParticipantId($request, $demoEmployees);
+        $selectedEmployee = $this->resolveCurrentEmployee($utilisateurRepository);
+        $participantId = $selectedEmployee['id'] ?? null;
 
         if ($participantId === null) {
-            $this->addFlash('error', 'Employe introuvable pour cette annulation.');
+            $this->addFlash('error', 'Connectez-vous avec un compte employe pour annuler cette inscription.');
 
             return $this->redirectToRoute('app_formation_show', ['id' => $id]);
         }
@@ -253,32 +260,22 @@ final class FormationController extends AbstractController
         UtilisateurRepository $utilisateurRepository
     ): Response
     {
-        // Récupérer l'email depuis l'URL (?email=xxx)
-        $email = (string) $request->getSession()->get('participant_email', '');
-        $selectedParticipantId = null;
-        $selectedEmployee = null;
+        $selectedEmployee = $this->resolveCurrentEmployee($utilisateurRepository);
+        $email = (string) ($selectedEmployee['email'] ?? '');
+        $selectedParticipantId = $selectedEmployee['id'] ?? null;
         $rows = [];
 
-        if ($email !== '') {
-            // Chercher l'employé par son email
-            $matchedEmployee = $utilisateurRepository->findEmployeeByEmail($email);
+        if ($selectedParticipantId !== null) {
+            $participations = $participationFormationRepository->findByParticipantOrdered($selectedParticipantId);
 
-            if ($matchedEmployee !== null) {
-                $selectedParticipantId = $matchedEmployee['id'];
-                $selectedEmployee = $matchedEmployee;
+            foreach ($participations as $participation) {
+                $formation = $formationRepository->find($participation->getIDFormation());
 
-                // Récupérer toutes ses participations
-                $participations = $participationFormationRepository->findByParticipantOrdered($selectedParticipantId);
-
-                foreach ($participations as $participation) {
-                    $formation = $formationRepository->find($participation->getIDFormation());
-
-                    if ($formation instanceof Formation) {
-                        $rows[] = [
-                            'participation' => $participation,
-                            'formation'     => $this->mapFormation($formation),
-                        ];
-                    }
+                if ($formation instanceof Formation) {
+                    $rows[] = [
+                        'participation' => $participation,
+                        'formation'     => $this->mapFormation($formation),
+                    ];
                 }
             }
         }
@@ -288,6 +285,7 @@ final class FormationController extends AbstractController
             'selected_employee'       => $selectedEmployee,
             'email'                   => $email,
             'participations'          => $rows,
+            'calendar_events'         => $this->buildParticipationCalendarEvents($rows, $selectedParticipantId),
         ]);
     }
 
@@ -472,6 +470,8 @@ final class FormationController extends AbstractController
             $errors = $this->validateFormData($formData);
 
             if ($errors === []) {
+                $formData['image'] = $this->resolveStoredImagePath($request, $formData['image']);
+                $formation->setID_Formation($formationRepository->getNextId());
                 $this->hydrateFormation($formation, $formData);
                 $entityManager->persist($formation);
                 $entityManager->flush();
@@ -492,7 +492,12 @@ final class FormationController extends AbstractController
     }
 
     #[Route('/rh/formations/{id}/edit', name: 'app_admin_formation_edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
-    public function adminEdit(Formation $formation, Request $request, EntityManagerInterface $entityManager): Response
+    public function adminEdit(
+        Formation $formation,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        ParticipationFormationRepository $participationFormationRepository
+    ): Response
     {
         $errors = [];
         $formData = $this->buildFormData($formation, null);
@@ -502,7 +507,13 @@ final class FormationController extends AbstractController
             $errors = $this->validateFormData($formData);
 
             if ($errors === []) {
+                $formData['image'] = $this->resolveStoredImagePath($request, $formData['image']);
                 $this->hydrateFormation($formation, $formData);
+
+                if ($participationFormationRepository->countActiveByFormation($formation->getIDFormation() ?? 0) === 0) {
+                    $formation->setPlacesRestantes($formation->getNombrePlaces());
+                }
+
                 $entityManager->flush();
 
                 $this->addFlash('success', 'La formation a ete modifiee avec succes.');
@@ -580,39 +591,21 @@ final class FormationController extends AbstractController
 
     private function hasDateOverlap(Formation $currentFormation, Formation $existingFormation): bool
     {
-        $currentStart = $this->normalizeComparableDate($currentFormation->getDateDebut());
-        $currentEnd = $this->normalizeComparableDate($currentFormation->getDateFin());
-        $existingStart = $this->normalizeComparableDate($existingFormation->getDateDebut());
-        $existingEnd = $this->normalizeComparableDate($existingFormation->getDateFin());
+        $currentStart = $this->createDateFromStoredValue($currentFormation->getDateDebut());
+        $currentEnd = $this->createDateFromStoredValue($currentFormation->getDateFin()) ?? $currentStart;
+        $existingStart = $this->createDateFromStoredValue($existingFormation->getDateDebut());
+        $existingEnd = $this->createDateFromStoredValue($existingFormation->getDateFin()) ?? $existingStart;
 
-        if ($currentStart === null || $currentEnd === null || $existingStart === null || $existingEnd === null) {
+        if (
+            !$currentStart instanceof \DateTimeImmutable ||
+            !$currentEnd instanceof \DateTimeImmutable ||
+            !$existingStart instanceof \DateTimeImmutable ||
+            !$existingEnd instanceof \DateTimeImmutable
+        ) {
             return false;
         }
 
         return $currentStart <= $existingEnd && $existingStart <= $currentEnd;
-    }
-
-    private function normalizeComparableDate(?int $value): ?int
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $raw = preg_replace('/\D/', '', (string) $value) ?? '';
-
-        if ($raw === '') {
-            return null;
-        }
-
-        if (strlen($raw) >= 8) {
-            return (int) substr($raw, 0, 8);
-        }
-
-        if (strlen($raw) === 10 || strlen($raw) === 9) {
-            return (int) date('Ymd', (int) $raw);
-        }
-
-        return null;
     }
 
     private function resolveStoredImagePath(Request $request, string $currentValue): string
@@ -667,6 +660,91 @@ final class FormationController extends AbstractController
 
         return $raw;
     }
+
+    /**
+     * @param array<int, array{participation: ParticipationFormation, formation: array<string, mixed>}> $rows
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildParticipationCalendarEvents(array $rows, ?int $participantId): array
+    {
+        if ($participantId === null) {
+            return [];
+        }
+
+        $events = [];
+
+        foreach ($rows as $row) {
+            $formation = $row['formation'];
+            $start = $this->createDateFromStoredValue($formation['date_start'] ?? null);
+            $endInclusive = $this->createDateFromStoredValue($formation['date_end'] ?? null) ?? $start;
+
+            if (!$start instanceof \DateTimeImmutable || !$endInclusive instanceof \DateTimeImmutable) {
+                continue;
+            }
+
+            $events[] = [
+                'title' => (string) ($formation['title'] ?? 'Formation'),
+                'start' => $start->format('Y-m-d'),
+                'end' => $endInclusive->modify('+1 day')->format('Y-m-d'),
+                'allDay' => true,
+                'url' => $this->generateUrl('app_formation_show', [
+                    'id' => $formation['id'] ?? 0,
+                    'employee' => $participantId,
+                ]),
+                'backgroundColor' => '#dbeafe',
+                'borderColor' => '#60a5fa',
+                'textColor' => '#0f172a',
+                'classNames' => ['participation-calendar-event'],
+                'extendedProps' => [
+                    'typeLabel' => 'formation',
+                    'mode' => (string) ($formation['mode_label'] ?? ''),
+                    'level' => (string) ($formation['level'] ?? ''),
+                    'status' => (string) ($row['participation']->getStatut() ?? 'inscrit'),
+                ],
+            ];
+        }
+
+        return $events;
+    }
+
+    private function createDateFromStoredValue(mixed $value): ?\DateTimeImmutable
+    {
+        $raw = preg_replace('/\D/', '', (string) $value) ?? '';
+
+        if ($raw === '') {
+            return null;
+        }
+
+        if (strlen($raw) === 8) {
+            $date = \DateTimeImmutable::createFromFormat('d/m/Y', (string) $value);
+
+            if ($date instanceof \DateTimeImmutable) {
+                return $date->setTime(0, 0, 0);
+            }
+
+            $date = \DateTimeImmutable::createFromFormat('Ymd', $raw);
+
+            if ($date instanceof \DateTimeImmutable) {
+                return $date->setTime(0, 0, 0);
+            }
+        }
+
+        if (strlen($raw) >= 14) {
+            $date = \DateTimeImmutable::createFromFormat('YmdHis', substr($raw, 0, 14));
+
+            if ($date instanceof \DateTimeImmutable) {
+                return $date;
+            }
+        }
+
+        if (strlen($raw) === 10 || strlen($raw) === 9) {
+            return (new \DateTimeImmutable())->setTimestamp((int) $raw)->setTime(0, 0, 0);
+        }
+
+        return null;
+    }
+
     /**
      * @return array<string, string>
      */
@@ -951,6 +1029,44 @@ final class FormationController extends AbstractController
     }
 
     /**
+     * @return array{id: int, label: string, email: string, first_name: string, last_name: string}|null
+     */
+    private function resolveCurrentEmployee(UtilisateurRepository $utilisateurRepository): ?array
+    {
+        $user = $this->getUser();
+
+        if (!$user instanceof \App\Entity\Utilisateur) {
+            return null;
+        }
+
+        if (!in_array('ROLE_EMPLOYEE', $user->getRoles(), true)) {
+            return null;
+        }
+
+        $id = (int) ($user->getIDUTILISATEUR() ?? $user->getID_UTILISATEUR() ?? 0);
+        $label = trim((string) ($user->getNomUtilisateur() ?? $user->getNom_Utilisateur() ?? ''));
+        $email = trim((string) ($user->getEmail() ?? ''));
+
+        if ($email !== '') {
+            $matchedEmployee = $utilisateurRepository->findEmployeeByEmail($email);
+
+            if ($matchedEmployee !== null) {
+                return $matchedEmployee;
+            }
+        }
+
+        [$firstName, $lastName] = $this->splitEmployeeName($label);
+
+        return [
+            'id' => $id,
+            'label' => $label !== '' ? $label : sprintf('Utilisateur #%d', $id),
+            'email' => $email,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+        ];
+    }
+
+    /**
      * @return array{overview: string, modules: string[]}
      */
     private function extractFormationContent(string $description): array
@@ -1007,22 +1123,3 @@ final class FormationController extends AbstractController
         return $response;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -21,78 +21,74 @@ class FormationRepository extends ServiceEntityRepository
      */
     public function searchForCatalog(?string $mode = null, ?string $keyword = null, ?string $level = null): array
     {
-        $qb = $this->createQueryBuilder('f');
+        $qb = $this->createQueryBuilder('f')
+            ->orderBy('f.Num_Ordre_Creation', 'ASC')
+            ->addOrderBy('f.Titre', 'ASC');
 
-        $normalizedMode = mb_strtolower(trim((string) $mode));
-        if ($normalizedMode !== '') {
-            $qb->andWhere('LOWER(f.Mode) = :mode')
-                ->setParameter('mode', $normalizedMode);
+        if ($mode && \in_array($mode, ['presentiel', 'en_ligne'], true)) {
+            $qb->andWhere('f.Mode = :mode')
+                ->setParameter('mode', $mode);
         }
 
-        $normalizedLevel = mb_strtolower(trim((string) $level));
-        if ($normalizedLevel !== '') {
-            $qb->andWhere('LOWER(f.Niveau) = :level')
-                ->setParameter('level', $normalizedLevel);
+        if ($level && \in_array($level, ['Debutant', 'Intermediaire', 'Avance'], true)) {
+            $qb->andWhere('f.Niveau = :level')
+                ->setParameter('level', $level);
         }
 
-        $normalizedKeyword = mb_strtolower(trim((string) $keyword));
-        if ($normalizedKeyword !== '') {
-            $qb->andWhere(
-                'LOWER(f.Titre) LIKE :keyword OR LOWER(COALESCE(f.Description, \'\')) LIKE :keyword OR LOWER(COALESCE(f.Niveau, \'\')) LIKE :keyword'
-            )->setParameter('keyword', '%' . $normalizedKeyword . '%');
+        if ($keyword) {
+            $terms = preg_split('/\s+/', mb_strtolower(trim($keyword))) ?: [];
+            $terms = array_values(array_filter($terms, static fn (string $term): bool => $term !== ''));
+
+            foreach ($terms as $index => $term) {
+                $parameter = 'keyword_' . $index;
+                $qb->andWhere(sprintf(
+                    '(LOWER(f.Titre) LIKE :%1$s OR LOWER(f.Description) LIKE :%1$s OR LOWER(f.Niveau) LIKE :%1$s)',
+                    $parameter
+                ))
+                ->setParameter($parameter, '%' . $term . '%');
+            }
         }
 
-        return $qb
-            ->orderBy('f.Date_Debut', 'ASC')
-            ->addOrderBy('f.Titre', 'ASC')
-            ->getQuery()
-            ->getResult();
+        return $qb->getQuery()->getResult();
     }
 
-    public function findFeaturedFormation(): ?Formation
+  public function findFeaturedFormation(): ?Formation
     {
-        $featured = $this->createQueryBuilder('f')
-            ->andWhere('COALESCE(f.PlacesRestantes, 0) > 0')
-            ->orderBy('f.Date_Debut', 'ASC')
-            ->addOrderBy('f.PlacesRestantes', 'DESC')
+        $available = $this->createQueryBuilder('f')
+            ->andWhere('f.PlacesRestantes > 0')
+            ->orderBy('f.Num_Ordre_Creation', 'ASC')
+            ->addOrderBy('f.Titre', 'ASC')
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
 
-        if ($featured instanceof Formation) {
-            return $featured;
+        if ($available instanceof Formation) {
+            return $available;
         }
 
         return $this->createQueryBuilder('f')
-            ->orderBy('f.Date_Debut', 'ASC')
+            ->orderBy('f.Num_Ordre_Creation', 'ASC')
             ->addOrderBy('f.Titre', 'ASC')
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
     }
 
-    public function getDefaultEnterpriseId(): int
+   public function getDefaultEnterpriseId(): int
     {
-        $enterpriseId = (int) ($this->createQueryBuilder('f')
+        $min = $this->createQueryBuilder('f')
             ->select('MIN(f.ID_Entreprise)')
             ->getQuery()
-            ->getSingleScalarResult() ?? 0);
+            ->getSingleScalarResult();
 
-        if ($enterpriseId > 0) {
-            return $enterpriseId;
-        }
-
-        try {
-            $fromEnterpriseTable = (int) ($this->getEntityManager()->getConnection()->fetchOne('SELECT MIN(ID_Entreprise) FROM entreprise') ?? 0);
-            if ($fromEnterpriseTable > 0) {
-                return $fromEnterpriseTable;
-            }
-        } catch (\Throwable) {
-            // Fallback below keeps the form usable even if entreprise table lookup fails.
-        }
-
-        return 1;
+        return max(1, (int) $min);
     }
+
+    /**
+     * @param list<int> $formationIds
+     *
+     * @return array<int, Formation>
+     */
 
     public function getNextOrderNumber(): int
     {
@@ -102,5 +98,39 @@ class FormationRepository extends ServiceEntityRepository
             ->getSingleScalarResult() ?? 0);
 
         return max(1, $maxOrder + 1);
+    }
+
+    public function getNextId(): int
+    {
+        $maxId = (int) ($this->createQueryBuilder('f')
+            ->select('MAX(f.ID_Formation)')
+            ->getQuery()
+            ->getSingleScalarResult() ?? 0);
+
+        return max(1, $maxId + 1);
+    }
+     public function findByIds(array $formationIds): array
+    {
+        if ($formationIds === []) {
+            return [];
+        }
+
+        $formations = $this->createQueryBuilder('f')
+            ->andWhere('f.ID_Formation IN (:ids)')
+            ->setParameter('ids', array_map('intval', $formationIds))
+            ->getQuery()
+            ->getResult();
+
+        $mapped = [];
+
+        foreach ($formations as $formation) {
+            if (!$formation instanceof Formation || $formation->getIDFormation() === null) {
+                continue;
+            }
+
+            $mapped[$formation->getIDFormation()] = $formation;
+        }
+
+        return $mapped;
     }
 }

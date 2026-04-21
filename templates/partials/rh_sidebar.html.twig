@@ -21,7 +21,7 @@
         <a class="nav-link {{ current_route in ['rh_entretiens', 'rh_entretiens_des'] ? 'active' : '' }}" href="{{ path('rh_entretiens') }}">Gestion des entretiens</a>
         <a class="nav-link {{ current_route in ['rh_evenements', 'rh_evenements_des'] ? 'active' : '' }}" href="{{ path('rh_evenements') }}">Gestion des evenements</a>
         <a class="nav-link {{ current_route starts with 'rh_activite' ? 'active' : '' }}" href="{{ path('rh_activites') }}">Activités</a>
-        <a class="nav-link {{ current_route in ['rh_formations', 'rh_formations_des'] ? 'active' : '' }}" href="{{ path('rh_formations') }}">Gestion des formations</a>
+        <a class="nav-link {{ current_route in ['rh_formations', 'rh_formations_des', 'app_admin_formation_index', 'app_admin_formation_new', 'app_admin_formation_edit', 'app_admin_formation_participants', 'app_admin_formation_participant_complete', 'app_admin_formation_participant_certificate'] ? 'active' : '' }}" href="{{ path('app_admin_formation_index') }}">Gestion des formations</a>
         <a class="nav-link {{ current_route starts with 'community_admin' ? 'active' : '' }}" href="{{ path('community_admin_dashboard') }}">Gestion communaute</a>
         {% if app.user %}
             <a class="nav-link" href="{{ path('app_logout') }}">Deconnexion</a>

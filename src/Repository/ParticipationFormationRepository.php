@@ -11,6 +11,11 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class ParticipationFormationRepository extends ServiceEntityRepository
 {
+        /**
+     * @var list<string>
+     */
+    private const ACTIVE_STATUSES = ['inscrit', 'en_cours'];
+    
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, ParticipationFormation::class);
@@ -31,9 +36,15 @@ class ParticipationFormationRepository extends ServiceEntityRepository
         return $this->findActiveParticipation($formationId, $participantId) instanceof ParticipationFormation;
     }
 
-    public function findActiveParticipation(int $formationId, int $participantId): ?ParticipationFormation
+     public function findActiveParticipation(int $formationId, int $participantId): ?ParticipationFormation
     {
-        return $this->buildActiveQuery($formationId, $participantId)
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.ID_Formation = :formationId')
+            ->andWhere('p.ID_Participant = :participantId')
+            ->andWhere('p.Statut IS NULL OR p.Statut IN (:statuses)')
+            ->setParameter('formationId', $formationId)
+            ->setParameter('participantId', $participantId)
+            ->setParameter('statuses', self::ACTIVE_STATUSES)
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
@@ -42,6 +53,13 @@ class ParticipationFormationRepository extends ServiceEntityRepository
     /**
      * @return ParticipationFormation[]
      */
+     public function findParticipation(int $formationId, int $participantId): ?ParticipationFormation
+    {
+        return $this->findOneBy([
+            'ID_Formation' => $formationId,
+            'ID_Participant' => $participantId,
+        ]);
+    }
     public function findActiveByParticipant(int $participantId): array
     {
         return $this->createQueryBuilder('p')
@@ -54,17 +72,20 @@ class ParticipationFormationRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function removeActiveParticipation(int $formationId, int $participantId): void
+    public function removeActiveParticipation(int $formationId, int $participantId): int
     {
-        $participations = $this->buildActiveQuery($formationId, $participantId)
+        return $this->createQueryBuilder('p')
+            ->update()
+            ->set('p.Statut', ':status')
+            ->andWhere('p.ID_Formation = :formationId')
+            ->andWhere('p.ID_Participant = :participantId')
+            ->andWhere('p.Statut IS NULL OR p.Statut IN (:statuses)')
+            ->setParameter('formationId', $formationId)
+            ->setParameter('participantId', $participantId)
+            ->setParameter('statuses', self::ACTIVE_STATUSES)
+            ->setParameter('status', 'annule')
             ->getQuery()
-            ->getResult();
-
-        foreach ($participations as $participation) {
-            if ($participation instanceof ParticipationFormation) {
-                $this->getEntityManager()->remove($participation);
-            }
-        }
+            ->execute();
     }
 
     /**
@@ -88,31 +109,30 @@ class ParticipationFormationRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('p')
             ->andWhere('p.ID_Formation = :formationId')
             ->setParameter('formationId', $formationId)
-            ->orderBy('p.Num_Ordre_Participation', 'ASC')
+            ->orderBy('p.Num_Ordre_Participation', 'DESC')
             ->getQuery()
             ->getResult();
     }
 
-    public function removeByFormationId(int $formationId): void
+    public function countActiveByFormation(int $formationId): int
     {
-        $items = $this->findBy(['ID_Formation' => $formationId]);
-
-        foreach ($items as $item) {
-            if ($item instanceof ParticipationFormation) {
-                $this->getEntityManager()->remove($item);
-            }
-        }
+        return (int) $this->createQueryBuilder('p')
+            ->select('COUNT(p.ID_Formation)')
+            ->andWhere('p.ID_Formation = :formationId')
+            ->andWhere('p.Statut IS NULL OR p.Statut IN (:statuses)')
+            ->setParameter('formationId', $formationId)
+            ->setParameter('statuses', self::ACTIVE_STATUSES)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
-    private function buildActiveQuery(int $formationId, int $participantId)
+    public function removeByFormationId(int $formationId): int
     {
         return $this->createQueryBuilder('p')
+            ->delete()
             ->andWhere('p.ID_Formation = :formationId')
-            ->andWhere('p.ID_Participant = :participantId')
-            ->andWhere('p.Statut IS NULL OR p.Statut IN (:activeStatuses)')
             ->setParameter('formationId', $formationId)
-            ->setParameter('participantId', $participantId)
-            ->setParameter('activeStatuses', ['inscrit', 'en_cours'])
-            ->orderBy('p.Num_Ordre_Participation', 'DESC');
+            ->getQuery()
+            ->execute();
     }
-}
+    }

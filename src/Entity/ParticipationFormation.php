@@ -13,7 +13,7 @@ use App\Repository\ParticipationFormationRepository;
 class ParticipationFormation
 {
       #[ORM\Id]
-    #[ORM\Column(type: 'integer', nullable: false)]
+    #[ORM\Column(name: 'ID_Formation', type: 'integer', nullable: false)]
     private ?int $ID_Formation = null;
 
     public function getID_Formation(): ?int
@@ -28,7 +28,7 @@ class ParticipationFormation
     }
 
       #[ORM\Id]
-    #[ORM\Column(type: 'integer', nullable: false)]
+    #[ORM\Column(name: 'ID_Participant', type: 'integer', nullable: false)]
     private ?int $ID_Participant = null;
 
     public function getID_Participant(): ?int
@@ -42,8 +42,7 @@ class ParticipationFormation
         return $this;
     }
 
-      #[ORM\Id]
-    #[ORM\Column(type: 'integer', nullable: false)]
+    #[ORM\Column(name: 'Num_Ordre_Participation', type: 'bigint', nullable: false)]
     private ?int $Num_Ordre_Participation = null;
 
     public function getNum_Ordre_Participation(): ?int
@@ -57,7 +56,7 @@ class ParticipationFormation
         return $this;
     }
 
-    #[ORM\Column(type: 'string', nullable: true)]
+    #[ORM\Column(name: 'Statut', type: 'string', nullable: true)]
     private ?string $Statut = null;
 
     public function getStatut(): ?string
@@ -71,7 +70,7 @@ class ParticipationFormation
         return $this;
     }
 
-    #[ORM\Column(type: 'string', nullable: true)]
+    #[ORM\Column(name: 'Certificat', type: 'string', nullable: true)]
     private ?string $Certificat = null;
 
     public function getCertificat(): ?string
