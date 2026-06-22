@@ -1,0 +1,35 @@
+<div id="exportModal" class="modal hidden">
+    <div class="modal-content">
+
+        <h2 id="exportModalTitle">Export</h2>
+
+        <!-- STEP 1 -->
+        <div id="exportStepForm">
+            <div class="form-group">
+                <label>Format</label>
+                <select id="exportFormat" class="input-field">
+                    <option value="csv">CSV</option>
+                    <option value="excel">Excel (.xlsx)</option>
+                    <option value="pdf">PDF</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div id="exportStepLoading" class="hidden center">
+            <div class="spinner"></div>
+            <p>Génération du fichier...</p>
+        </div>
+
+        <!-- STEP 3 -->
+        <div id="exportStepResult" class="hidden center">
+            <p id="exportResultMessage"></p>
+        </div>
+
+        <div class="modal-actions">
+            <button id="closeExportModal" class="btn cancel">Fermer</button>
+            <button id="confirmExport" class="btn success">Valider</button>
+        </div>
+
+    </div>
+</div>

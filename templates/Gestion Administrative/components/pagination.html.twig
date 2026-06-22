@@ -1,0 +1,53 @@
+{% if totalPages > 1 %}
+
+{% set currentPage = currentPage|default(1) %}
+{% set rowsPerPage = rowsPerPage|default(1) %}
+{% set currentCount = currentCount|default(0) %}
+{% set totalEmployees = totalEmployees|default(0) %}
+
+{% set start = currentPage - 1 %}
+{% set end = currentPage + 1 %}
+
+{% if start < 1 %}
+    {% set start = 1 %}
+    {% set end = start + 2 %}
+{% endif %}
+
+{% if end > totalPages %}
+    {% set end = totalPages %}
+    {% set start = end - 2 %}
+{% endif %}
+
+{% if start < 1 %}
+    {% set start = 1 %}
+{% endif %}
+
+{% set startEntry = (currentPage - 1) * rowsPerPage + 1 %}
+{% set endEntry = startEntry + currentCount - 1 %}
+
+<div class="table-pagination">
+
+    <div class="pagination-info">
+        Affichage de {{ startEntry }} à {{ endEntry }} sur {{ totalEmployees }} entrées
+    </div>
+
+    <div class="pagination-controls">
+
+        <button class="page-btn nav" data-action="prev">←</button>
+
+        {% for i in start..end %}
+            {% if i > 0 and i <= totalPages %}
+                <button class="page-btn {{ i == currentPage ? 'active' : '' }}"
+                        data-page="{{ i }}">
+                    {{ i }}
+                </button>
+            {% endif %}
+        {% endfor %}
+
+        <button class="page-btn nav" data-action="next">→</button>
+
+    </div>
+
+</div>
+
+{% endif %}

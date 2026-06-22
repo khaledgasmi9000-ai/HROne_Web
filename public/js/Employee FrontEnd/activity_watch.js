@@ -1,0 +1,102 @@
+document.addEventListener('DOMContentLoaded', () => {
+
+    let currentSessionId = null;
+
+    const startBtn = document.getElementById('startSession');
+    const endBtn = document.getElementById('endSession');
+    const container = document.getElementById('aw-container');
+    const statusDiv = document.getElementById('aw-status');
+    const iframe = document.getElementById('aw-frame');
+    const accordion = document.getElementById('aw-toggle');
+    let isConnected = false;
+
+    // SAFETY CHECK (important)
+    if (!accordion) return;
+
+    const arrow = accordion.querySelector('.arrow');
+
+    /* =========================
+       CHECK ACTIVITYWATCH
+    ========================= */
+    async function checkActivityWatch() {
+        try {
+            const res = await fetch('/api/activitywatch/status');
+            const data = await res.json();
+
+            if (data.status !== 'running') throw new Error();
+
+            statusDiv.classList.remove('hidden', 'error');
+            statusDiv.classList.add('success');
+            statusDiv.innerText = "ActivityWatch is running";
+
+            iframe.style.display = 'block';
+            startBtn.disabled = false;
+            isConnected = true;
+
+        } catch (e) {
+            statusDiv.classList.add('error');
+            statusDiv.innerText = "ActivityWatch is not running. Please start it.";
+
+            iframe.style.display = 'none';
+            startBtn.disabled = true;
+            endBtn.disabled = true;
+            isConnected = false;
+        }
+    }
+
+    /* =========================
+       SESSION HANDLING
+    ========================= */
+    startBtn.addEventListener('click', async () => {
+        const res = await fetch('/api/session/start', { method: 'POST' });
+        const data = await res.json();
+
+        startBtn.disabled = true;
+        endBtn.disabled = false;
+    });
+
+    endBtn.addEventListener('click', async () => {
+        await fetch(`/api/session/end`, { method: 'POST' });
+        
+
+        startBtn.disabled = false;
+        endBtn.disabled = true;
+    });
+
+    /* =========================
+       TOGGLE IFRAME
+    ========================= */
+    accordion.addEventListener('click', () => {
+        if(!isConnected) return;
+        container.classList.toggle('collapsed');
+        accordion.classList.toggle('open');
+
+        arrow.textContent = container.classList.contains('collapsed') ? '▶' : '▼';
+    });
+
+    async function checkSessionState() {
+        try {
+            const res = await fetch('/api/session/status');
+            const data = await res.json();
+
+            if (data.active) {
+                startBtn.disabled = true;
+                endBtn.disabled = false;
+            } else {
+                startBtn.disabled = !isConnected;
+                endBtn.disabled = true;
+            }
+
+        } catch (e) {
+            console.error('Session state check failed');
+        }
+    }
+
+    /* =========================
+       INIT
+    ========================= */
+
+    checkActivityWatch();
+    checkSessionState();
+
+});

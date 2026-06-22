@@ -14,7 +14,7 @@ class Entreprise
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name : "ID_Entreprise",type: 'integer')]
     private ?int $ID_Entreprise = null;
 
     public function getID_Entreprise(): ?int
@@ -56,40 +56,12 @@ class Entreprise
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Offre::class, mappedBy: 'entreprise')]
-    private Collection $offres;
-
-    /**
-     * @return Collection<int, Offre>
-     */
-    public function getOffres(): Collection
-    {
-        if (!$this->offres instanceof Collection) {
-            $this->offres = new ArrayCollection();
-        }
-        return $this->offres;
-    }
-
-    public function addOffre(Offre $offre): self
-    {
-        if (!$this->getOffres()->contains($offre)) {
-            $this->getOffres()->add($offre);
-        }
-        return $this;
-    }
-
-    public function removeOffre(Offre $offre): self
-    {
-        $this->getOffres()->removeElement($offre);
-        return $this;
-    }
-
     #[ORM\OneToMany(targetEntity: Utilisateur::class, mappedBy: 'entreprise')]
     private Collection $utilisateurs;
 
     public function __construct()
     {
-        $this->offres = new ArrayCollection();
+        //$this->offres = new ArrayCollection();
         $this->utilisateurs = new ArrayCollection();
     }
 

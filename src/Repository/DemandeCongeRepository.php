@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\DemandeConge;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Entity\Ordre;
 
 /**
  * @extends ServiceEntityRepository<DemandeConge>
@@ -16,28 +17,87 @@ class DemandeCongeRepository extends ServiceEntityRepository
         parent::__construct($registry, DemandeConge::class);
     }
 
-//    /**
-//     * @return DemandeConge[] Returns an array of DemandeConge objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('d')
-//            ->andWhere('d.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('d.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function findAllConges(): array
+    {
+        return $this->createQueryBuilder('dc')
+            ->select([
+                'dc.ID_Demende',
+                'u.Nom_Utilisateur',
+                'od.Num_Ordre AS Num_Ordre_Debut_Conge',
+                'ofi.Num_Ordre AS Num_Ordre_Fin_Conge',
+                'dc.Nbr_Jour_Demande'
+            ])
+            ->join('dc.employee', 'e')
+            ->join('e.utilisateur', 'u')
+            ->leftJoin('dc.ordreDebut', 'od')
+            ->leftJoin('dc.ordreFin', 'ofi')
+            ->where('dc.Status = 0')
+            ->getQuery()
+            ->getArrayResult();
+    }
 
-//    public function findOneBySomeField($value): ?DemandeConge
-//    {
-//        return $this->createQueryBuilder('d')
-//            ->andWhere('d.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    public function deleteConge(int $id): bool
+    {
+        $em = $this->getEntityManager();
+
+        $conge = $this->find($id);
+        if (!$conge) {
+            return false;
+        }
+
+        $em->remove($conge);
+        $em->flush();
+
+        return true;
+    }
+    
+    public function updateCongeStatus(int $id, int $status): bool
+    {
+        $em = $this->getEntityManager();
+
+        $conge = $this->find($id);
+        if (!$conge) {
+            return false;
+        }
+
+        $conge->setStatus($status);
+
+        $em->flush();
+
+        return true;
+    }
+
+    public function createConge(int $idEmployee, string $start, string $end, int $nbrJours): DemandeConge
+    {
+        $em = $this->getEntityManager();
+
+        $employee = $em->getReference(\App\Entity\Employee::class, $idEmployee);
+
+        // $ordreDebut = $em->getRepository(Ordre::class)
+        //     ->find(Ordre::dateToNumOrdre(new \DateTime($start)));
+
+        // $ordreFin = $em->getRepository(Ordre::class)
+        //     ->find(Ordre::dateToNumOrdre(new \DateTime($end)));
+
+        $numOrdreDebut = Ordre::dateToNumOrdre(new \DateTime($start));
+        $numOrdreFin   = Ordre::dateToNumOrdre(new \DateTime($end));
+
+
+        $ordreRepo = $em->getRepository(Ordre::class);
+
+        $ordreDebut = $ordreRepo->getOrCreateOrdre($numOrdreDebut);
+        $ordreFin   = $ordreRepo->getOrCreateOrdre($numOrdreFin);
+
+        $conge = new DemandeConge();
+        $conge->setEmployee($employee);
+        $conge->setOrdreDebut($ordreDebut);
+        $conge->setOrdreFin($ordreFin);
+        $conge->setNbrJourDemande($nbrJours);
+        $conge->setStatus(0);
+
+        $em->persist($conge);
+        $em->flush();
+
+        return $conge;
+    }
 }

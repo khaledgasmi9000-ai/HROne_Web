@@ -1,0 +1,93 @@
+{% extends 'Gestion Administrative/layout.html.twig' %}
+{% set activeTab = 'stats' %}
+
+{% block title %}Statistiques avancées{% endblock %}
+
+{% block employee_content %}
+
+<!-- ================= KPI ================= -->
+<div class="kpi-grid">
+
+    <div class="kpi-card">
+        <span class="kpi-title">Temps actif total</span>
+        <h2 class="kpi-value">{{ stats.totalActiveTime|default(0)|number_format(2, '.', ' ') }} h</h2>
+    </div>
+
+    <div class="kpi-card">
+        <span class="kpi-title">Taux de productivité</span>
+        <h2 class="kpi-value">
+            {{ stats.productivityRate|default(0)|number_format(2, '.', ' ') }} %
+        </h2>
+    </div>
+
+    <div class="kpi-card">
+        <span class="kpi-title">Coût total outils</span>
+        <h2 class="kpi-value">
+            {{ stats.totalCost|default(0)|number_format(2, '.', ' ') }}
+        </h2>
+    </div>
+
+    <div class="kpi-card">
+        <span class="kpi-title">Coût / heure active</span>
+        <h2 class="kpi-value">
+            {{ stats.costPerHour|default(0)|number_format(2, '.', ' ') }}
+        </h2>
+    </div>
+
+</div>
+
+
+<!-- ================= CHARTS ================= -->
+<div class="charts-grid">
+
+    <!-- Tool Usage -->
+    <div class="chart-card">
+        <h3>Utilisation des outils</h3>
+        <div class="chart-container">
+            {{ render_chart(toolUsageChart) }}
+        </div>
+    </div>
+
+    <!-- Cost vs Usage -->
+    <div class="chart-card">
+        <h3>Coût vs utilisation</h3>
+        <div class="chart-container">
+            {{ render_chart(costUsageChart) }}
+        </div>
+    </div>
+
+    <!-- Productivity Breakdown -->
+    <div class="chart-card">
+        <h3>Répartition du temps</h3>
+        <div class="chart-container">
+            {{ render_chart(productivityChart) }}
+        </div>
+    </div>
+
+    <!-- Department Performance -->
+    <div class="chart-card">
+        <h3>Performance par département</h3>
+        <div class="chart-container">
+            {{ render_chart(departmentChart) }}
+        </div>
+    </div>
+
+</div>
+
+
+<!-- ================= INSIGHTS ================= -->
+<div class="insights-card">
+    <h3>Insights</h3>
+
+    {% if stats.insights is defined and stats.insights|length > 0 %}
+        <ul>
+            {% for insight in stats.insights %}
+                <li>{{ insight }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Aucun insight disponible</p>
+    {% endif %}
+</div>
+
+{% endblock %}

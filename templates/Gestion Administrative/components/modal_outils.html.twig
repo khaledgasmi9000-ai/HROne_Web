@@ -1,0 +1,48 @@
+<div id="toolModal" class="modal hidden">
+    <div class="modal-content">
+
+        <h2 id="toolModalTitle">Ajouter un outil</h2>
+
+        <div id="toolError" class="error-message hidden"></div>
+
+        <form id="toolForm">
+
+            <div class="form-group">
+                <label>Nom</label>
+                <input type="text" id="toolName" class="input-field">
+            </div>
+
+            <div class="form-group">
+                <label>Identifiant universel (exe)</label>
+                <input type="text" id="toolExe" class="input-field" placeholder="ex: chrome.exe">
+            </div>
+
+            <div class="form-group">
+                <label>Hash App</label>
+                <input type="text" id="toolHash" class="input-field">
+            </div>
+
+            <div class="form-group">
+                <label>Coût mensuel</label>
+                <input type="number" id="toolCost" class="input-field" value="0" step="0.01" min="0">
+            </div>
+
+            <div class="form-group">
+                <label>Catégorie</label>
+                <select id="toolCategorie" class="input-field">
+                    <option value="">-- Choisir --</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.getIDCategorie() }}">{{ cat.getNom() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" id="closeToolModal" class="btn cancel">Annuler</button>
+                <button type="submit" class="btn success">Valider</button>
+            </div>
+
+        </form>
+
+    </div>
+</div>

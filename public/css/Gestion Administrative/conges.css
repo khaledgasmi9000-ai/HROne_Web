@@ -1,0 +1,27 @@
+/* Small buttons */
+.btn-sm {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 6px;
+}
+
+/* Accept */
+.btn.success {
+    background: rgba(34, 197, 94, 0.2);
+    color: var(--success);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+/* Reject */
+.btn.danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+/* spacing */
+.conge-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}

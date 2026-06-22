@@ -1,0 +1,84 @@
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.kpi-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.kpi-title {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.kpi-value {
+    font-size: 26px;
+    font-weight: 600;
+    color: #222;
+}
+
+/* ================= CHART GRID ================= */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* ================= CHART CARD ================= */
+.chart-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-card h3 {
+    margin-bottom: 15px;
+    font-size: 16px;
+    color: #333;
+}
+
+/* ================= CHART CONTAINER ================= */
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 300px; /* 🔥 CRITICAL FIX */
+}
+
+/* Force canvas to fill container */
+.chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* ================= INSIGHTS ================= */
+.insights-card {
+    margin-top: 20px;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 12px;
+}
+
+.insights-card h3 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.insights-card ul {
+    padding-left: 20px;
+}
+
+.insights-card li {
+    margin-bottom: 8px;
+    color: #555;
+}

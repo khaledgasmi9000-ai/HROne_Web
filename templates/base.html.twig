@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}HR One{% endblock %}</title>
+
+    <link rel="stylesheet" href="{{ asset('css/navbarRH.css') }}">
+
+    {% block stylesheets %}{% endblock %}
+</head>
+
+<body class="page-gestion-users" >
+{# data-total-pages="{{ totalPages }}" #}
+    <div class="layout">
+
+        <!-- SIDEBAR (always visible) -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo">
+                    <img src="{{ asset('logo.png') }}" alt="HR One" />
+                </div>
+                <div>
+                    <div class="brand-name">HR One</div>
+                    <div class="brand-sub">Espace RH</div>
+                </div>
+            </div>
+
+            {% set currentRoute = app.request.attributes.get('_route') %}
+
+            <nav class="nav">
+                <a class="nav-link" href="#">Gestion des utilisateurs</a>
+                <a class="nav-link" href="#">Historique des actions</a>
+
+                <!-- THIS is your working route -->
+                <a class="nav-link {{ currentRoute in ['employee_overview', 'employee_outils', 'employee_conges'] ? 'active' : ''}}"
+                href="{{ path('employee_overview') }}">
+                    Gestion administrative
+                </a>
+
+                <a class="nav-link {{ currentRoute == 'demande_conge' ? 'active' : '' }}"
+                href="{{ path('demande_conge')}}">
+                    Demande de conge
+                </a>
+
+                <a class="nav-link {{ currentRoute == 'activity_watch' ? 'active' : '' }}"
+                href="{{ path('activity_watch') }}">
+                    Activity Watch
+                </a>
+                <a class="nav-link" href="#">Gestion des entretiens</a>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT (changes per page) -->
+        <main class="content">
+            {% block body %}{% endblock %}
+        </main>
+
+    </div>
+
+    <script src="{{ asset('js/navbarRH.js') }}"></script>
+    {% block javascripts %}{% endblock %}
+        {% block importmap %}{{ importmap('app') }}{% endblock %}
+</body>
+</html>

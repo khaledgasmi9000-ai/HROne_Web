@@ -1,0 +1,129 @@
+:root {
+    --bg-main: #0f172a;
+    --bg-card: #1e293b;
+    --bg-hover: #334155;
+
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+
+    --primary: #7c3aed;
+    --primary-light: #a78bfa;
+
+    --success: #22c55e;
+    --danger: #ef4444;
+
+    --border: #334155;
+}
+
+/* PAGE */
+.conge-page {
+    display: flex;
+    justify-content: center;
+    margin-top: 60px;
+    /* background: rgba(0,0,0,0.6); */
+}
+
+/* CARD */
+.conge-card {
+    background: var(--bg-card);
+    padding: 28px;
+    border-radius: 12px;
+    width: 420px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+}
+
+/* TITLE */
+.conge-card h2 {
+    margin-bottom: 20px;
+    font-size: 18px;
+    color: var(--text-main);
+}
+
+/* FORM */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.form-group label {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* INPUTS (🔥 force visibility) */
+.input-field {
+    background: var(--bg-main) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-main) !important;
+    padding: 10px 12px;
+    border-radius: 8px;
+    width: 100%;
+}
+
+/* FIX DATE INPUT ICON VISIBILITY */
+input[type="date"] {
+    color-scheme: dark;
+}
+
+/* INFO BLOCK (🔥 NOW CLEAR) */
+.conge-info {
+    display: flex;
+    gap: 10px;
+    margin: 12px 0 16px;
+}
+
+.conge-info div {
+    flex: 1;
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.conge-info span {
+    display: block;
+    margin-top: 5px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+/* ERROR */
+.error {
+    color: var(--danger);
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+/* BUTTON */
+.conge-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.btn.success {
+    background: var(--success);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+/* HOVER */
+.btn.success:hover {
+    background: #22c55e;
+    transform: translateY(-2px);
+}
+
+/* HIDDEN */
+.hidden {
+    display: none !important;
+}

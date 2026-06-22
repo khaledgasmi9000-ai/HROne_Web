@@ -1,0 +1,32 @@
+<div id="outilAssociationModal" class="modal hidden">
+    <div class="modal-content">
+
+        <!-- TITLE -->
+        <h2>Gérer les outils</h2>
+
+        <!-- ERROR (optional, consistent with system) -->
+        <div id="outilError" class="error-message hidden"></div>
+
+        <!-- SEARCH -->
+        <div class="form-group">
+            <input 
+                type="text" 
+                id="searchTools"
+                class="input-field"
+                placeholder="Rechercher un outil..."
+            />
+        </div>
+
+        <!-- TOOLS LIST -->
+        <div id="toolsList" class="form-group" style="max-height: 300px; overflow-y: auto;">
+            <!-- Injected dynamically -->
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="modal-actions">
+            <button class="btn cancel" onclick="closeOutilAssociationModal()">Annuler</button>
+            <button class="btn success" onclick="saveOutilAssociation()">Enregistrer</button>
+        </div>
+
+    </div>
+</div>

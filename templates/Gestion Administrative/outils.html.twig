@@ -1,0 +1,129 @@
+{% extends 'Gestion Administrative/layout.html.twig' %}
+{% set activeTab = 'outils' %}
+
+{% block title %}Outils{% endblock %}
+
+{% block employee_content %}
+
+<!-- Table Section -->
+<div class="table-section">
+
+    <div class="table-header">
+
+        <!-- LEFT: ordering (checkboxes) -->
+        <div class="table-controls-left">
+            <label class="checkbox-control">
+                <input type="checkbox" id="orderUsers" {{ orderUsers ? 'checked' : '' }}>
+                <span>Par nombre d’utilisateurs</span>
+            </label>
+
+            <label class="checkbox-control">
+                <input type="checkbox" id="orderTime" {{ orderTime ? 'checked' : '' }}>
+                <span>Par temps moyen</span>
+            </label>
+
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="toolSearch" 
+                    value="{{ app.request.get('search') }}"
+                    placeholder="Rechercher un outil..." 
+                />
+
+                <button id="searchBtnTool" class="btn secondary with-icon">
+                    <span class="icon">🔍</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- RIGHT: buttons -->
+        <div class="table-controls-right">
+            <button onclick="openExportModal({
+                url: window.exportOutilsUrl,
+                filename: 'outils',
+                title: 'Exporter les outils'
+            })" class="btn secondary with-icon">
+                <span class="icon">⬇</span>
+                Export
+            </button>
+
+            <button onclick="openImportModal()" class="btn secondary with-icon">
+                <span class="icon">⬆</span>
+                Import
+            </button>
+
+            <button id="btnAddTool" class="btn primary with-icon">
+                <span class="icon">＋</span>
+                Ajouter
+            </button>
+        </div>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-container fixed">
+        <table>
+            <thead>
+                <tr>
+                    <th style="display:none;">ID</th>
+                    <th>Nom</th>
+                    <th>Temps moyen</th>
+                    <th>Nombre d'utilisateurs</th>
+                    <th>Categorie</th>
+                    <th>Cout mensuel</th>
+                    <th></th> {# Actions column #}
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for tool in tools %}
+                    <tr data-id="{{ tool.id }}">
+                        <td style="display:none;">{{ tool.id }}</td>
+
+                        <td class="tool-name">{{ tool.name }}</td>
+                        <td>{{ tool.avgTime }} h</td>
+                        <td>{{ tool.users }}</td>
+                        <td>{{ tool.categorie ?? '-' }}</td>
+                        <td>{{ tool.monthly_cost|number_format(2, ',', ' ') }}</td>
+                        <td class="actions-cell">
+                            {% include 'Gestion Administrative/components/row_actions.html.twig' with {
+                                employeeId: tool.id,
+                                context: 'outils',
+                            } %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                       <td colspan="6">Aucun outil trouvé</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- PAGINATION -->
+    {% include 'Gestion Administrative/components/pagination.html.twig' with {
+        currentPage: currentPage,
+        totalPages: totalPages,
+        rowsPerPage: rowsPerPage,
+        totalEmployees: totalTools,
+        currentCount: tools|length
+    } %}
+
+    <!-- MODAL -->
+    {% include 'Gestion Administrative/components/modal_outils.html.twig' %}
+    {% include 'Gestion Administrative/components/modal_export.html.twig' %}
+    {% include 'Gestion Administrative/components/modal_import_outils.html.twig' %}
+</div>
+
+<script>
+    window.deleteToolUrlTemplate = "{{ path('tool_delete', {'id': 'TOOL_ID'}) }}";
+    window.getToolUrl = "{{ path('tool_get', {'id': 'TOOL_ID'}) }}";
+    window.createToolUrl = "{{ path('tool_create') }}";
+    window.updateToolUrl = "{{ path('tool_update', {'id': 'TOOL_ID'}) }}";
+    window.exportOutilsUrl = "{{ path('tool_export') }}";
+    window.importToolsUrl = "{{ path('tool_import') }}";
+    window.toolFicheUrlTemplate = "{{ path('tool_fiche', {'id': 'TOOL_ID'}) }}";
+</script>
+
+{% endblock %}
